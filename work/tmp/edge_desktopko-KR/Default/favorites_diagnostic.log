@@ -1,0 +1,12 @@
+2026-11-15 04:29:28.336: [INFO] CurrentProfilePath: c:\Users\Administrator\Documents\Kb5213479\2026-11-15\windows-installer-sim\work\tmp\edge_desktopko-KR\Default
+2026-11-15 04:29:28.336: [INFO] Profiles total count: 1
+2026-11-15 04:29:28.336: [INFO] Profile: name=用户配置 1 path=c:\Users\Administrator\Documents\Kb5213479\2026-11-15\windows-installer-sim\work\tmp\edge_desktopko-KR\Default lastActive=2026-11-15T04:29:28.321Z
+2026-11-15 04:29:28.336: [INFO] LastUsedProfileDir: c:\Users\Administrator\Documents\Kb5213479\2026-11-15\windows-installer-sim\work\tmp\edge_desktopko-KR\Default
+2026-11-15 04:29:28.336: [INFO] MostRecentlyActiveProfile: name=用户配置 1 path=c:\Users\Administrator\Documents\Kb5213479\2026-11-15\windows-installer-sim\work\tmp\edge_desktopko-KR\Default lastActive=2026-11-15T04:29:28.321Z
+2026-11-15 04:29:28.336: [INFO] OnDoneLoading sync enabled: 0
+2026-11-15 04:29:28.336: [INFO] BookmarkModelLoaded, ids_reassigned: 0
+2026-11-15 04:29:28.336: [INFO] BookmarksLoadDropped droppedNodes=0
+2026-11-15 04:29:28.336: [INFO] BookmarksSnapshot Startup total=0 bar=0 other=0 mobile=0 showBar=0 showBarNTP=1
+2026-11-15 04:29:28.836: [INFO] VisibilityChanged: 0
+2026-11-15 04:29:29.157: [INFO] RecordSyncInitDuration has_sync_been_enabled: 0 state: 0
+2026-11-15 04:29:33.705: [INFO] BookmarksSnapshot Shutdown total=0 bar=0 other=0 mobile=0 showBar=0 showBarNTP=1

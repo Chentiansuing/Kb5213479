@@ -1,0 +1,12 @@
+{
+  "name": "windows11-setup-sim",
+  "version": "3.0.0",
+  "private": true,
+  "description": "Windows 11 安装程序模拟器（多文件版，依赖本地静态服务器）",
+  "scripts": {
+    "start": "serve -l 8765 ."
+  },
+  "devDependencies": {
+    "serve": "^14.2.1"
+  }
+}

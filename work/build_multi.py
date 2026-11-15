@@ -1,40 +1,37 @@
-"""把单文件成品拆成"带外部依赖"的多文件 Web 工程。
+"""把工程拆成"带外部依赖"的多文件 Web 工程（v2.1，单文件版已放弃）。
 
 产出 outputs/web/：
   index.html                 仅结构 + <link>/<script src> 引用
   styles/app.css             基础样式
   styles/windows.css         窗口管理 + 语言切换样式
-  locales/zh-CN.json         语言包（fetch 加载）
+  locales/index.json         语言清单（驱动顶部语言按钮）
+  locales/zh-CN.json         语言包（fetch 加载，5 种语言）
+  locales/zh-TW.json
   locales/en-US.json
   locales/ja-JP.json
-  scripts/i18n.js            异步语言包加载器（依赖 fetch → 必须 http）
+  locales/ko-KR.json
+  scripts/i18n.js            清单 + 语言包异步加载器（依赖 fetch → 必须 http）
   scripts/app.js             主逻辑（依赖 i18n.ready）
   serve.py                   本地静态服务器
   package.json               显式声明 serve 依赖
   启动（需本地服务器）.bat
 """
-import ast, json, pathlib, re
+import json, pathlib, re, sys
 
 ROOT = pathlib.Path(r"c:\Users\Administrator\Documents\Kb5213479\2026-11-15\windows-installer-sim")
 PARTS = ROOT / "work" / "parts"
-BUILD = ROOT / "work" / "build_final.py"
 OUT = ROOT / "outputs" / "web"
+VERSION = "3.0.0"
 
-# ---------- 1. 从 build_final.py 取语言字典与语言切换 CSS ----------
-src = BUILD.read_text(encoding="utf-8")
-tree = ast.parse(src)
-LANG_JSON = None
-LANG_CSS = None
-for node in tree.body:
-    if isinstance(node, ast.Assign) and len(node.targets) == 1 and isinstance(node.targets[0], ast.Name):
-        name = node.targets[0].id
-        if name == "LANG_JSON":
-            LANG_JSON = ast.literal_eval(node.value)
-        elif name == "lang_css":
-            LANG_CSS = ast.literal_eval(node.value)
-assert LANG_JSON and LANG_CSS, "未能从 build_final.py 提取 LANG_JSON / lang_css"
+sys.path.insert(0, str(ROOT / "work"))
+from locales_data import LANG_JSON, LANG_CSS, LANG_LABELS, LANG_ORDER  # noqa: E402
+from extra_v3 import EXTRA_V3  # noqa: E402
 
-# ---------- 2. 切 CSS ----------
+for _code in LANG_ORDER:
+    LANG_JSON[_code].update(EXTRA_V3[_code])
+assert all(len(v) == len(LANG_JSON[LANG_ORDER[0]]) for v in LANG_JSON.values()), "语言包键数不一致"
+
+# ---------- 1. 切 CSS ----------
 head = (PARTS / "01_head.html").read_text(encoding="utf-8")
 css2 = (PARTS / "02_css2.html").read_text(encoding="utf-8")
 
@@ -47,20 +44,120 @@ win_css = marker + win_css
 win_css = win_css.rsplit("</style>", 1)[0]
 base_css += "\n" + pre
 
-# ---------- 3. 拼 body ----------
+# ---------- 2. 拼 body ----------
 body = ""
 for name in ("03_setup.html", "04_flow.html", "05_oobe_desktop.html"):
     body += (PARTS / name).read_text(encoding="utf-8") + "\n"
 
-# ---------- 4. 取主脚本 ----------
-script = (PARTS / "06_script.html").read_text(encoding="utf-8")
-script = script.strip()
-# 06 分块末尾可能带着整页的收尾标签，先摘掉
+# ---------- 2.1 给静态文案补 data-i18n ----------
+TAG_RE = re.compile(r'<(/?)([a-zA-Z][a-zA-Z0-9-]*)((?:[^>"\']|"[^"]*"|\'[^\']*\')*)>')
+VOID_TAGS = {"area", "base", "br", "col", "embed", "hr", "img", "input",
+             "link", "meta", "param", "source", "track", "wbr", "path", "circle",
+             "rect", "line", "polyline", "polygon", "stop", "use"}
+SAFE_TAGS = {"h1", "h2", "h3", "h4", "p", "span", "div", "label", "button",
+             "b", "strong", "td", "th", "li", "a", "small", "em", "option"}
+
+
+def _norm(s):
+    """忽略中英文引号差异后再比对（中文文案里『』与“”混用）。"""
+    for ch in "『』“”\"'「」":
+        s = s.replace(ch, "")
+    return s.strip()
+
+
+def patch_i18n(html, zh):
+    """把纯文本元素按简体中文原文补上 data-i18n，使静态界面也能切语言。"""
+    text2key = {}
+    for k, v in zh.items():
+        if not v or len(v.strip()) < 2 or '{' in v or '<' in v or '&' in v:
+            continue
+        text2key.setdefault(_norm(v), k)
+
+    inserts = []
+    stack = []
+    for m in TAG_RE.finditer(html):
+        closing, tag, attrs = m.group(1), m.group(2).lower(), m.group(3)
+        if closing:
+            while stack:
+                t, cstart, ostart, oend = stack.pop()
+                if t != tag:
+                    continue
+                content = html[cstart:m.start()]
+                if '<' not in content and tag in SAFE_TAGS:
+                    key = text2key.get(_norm(content))
+                    if key and 'data-i18n' not in html[ostart:oend]:
+                        inserts.append((oend - 1, f' data-i18n="{key}"'))
+                break
+        elif tag not in VOID_TAGS and not attrs.rstrip().endswith('/'):
+            stack.append((tag, m.end(), m.start(), m.end()))
+
+    for pos, attr in reversed(inserts):
+        html = html[:pos] + attr + html[pos:]
+    return html, len(inserts)
+
+
+body, patched = patch_i18n(body, LANG_JSON["zh-CN"])
+print(f"静态文案补标: {patched} 处")
+
+
+def patch_br_labels(html, zh):
+    """处理「文字<br>文字」这类两行标签（如桌面「重新安装 Windows」）。"""
+    text2key = {}
+    for k, v in zh.items():
+        v = v.strip()
+        if len(v) < 2 or '{' in v or '<' in v or '&' in v:
+            continue
+        text2key.setdefault(_norm(v), k)
+
+    br_re = re.compile(r'<([a-zA-Z][a-zA-Z0-9-]*)([^>]*)>([^<>]*)<br\s*/?>([^<>]*)</\1>')
+    count = 0
+
+    def repl(m):
+        nonlocal count
+        tag, attrs, a, b = m.group(1), m.group(2), m.group(3), m.group(4)
+        if "data-i18n" in attrs:
+            return m.group(0)
+        key = text2key.get(_norm(a + b)) or text2key.get(_norm(a + " " + b))
+        if not key:
+            return m.group(0)
+        count += 1
+        text = (a.strip() + " " + b.strip()) if text2key.get(_norm(a + " " + b)) else (a + b).strip()
+        return f'<{tag}{attrs} data-i18n="{key}">{text}</{tag}>'
+
+    return br_re.sub(repl, html), count
+
+
+body, br_fixed = patch_br_labels(body, LANG_JSON["zh-CN"])
+print(f"换行标签补标: {br_fixed} 处")
+
+
+def wrap_inline_labels(html, zh):
+    """图文混排的元素（图标 + 文本）用 <span data-i18n> 包住尾部文本。"""
+    vals = {}
+    for k, v in zh.items():
+        v = v.strip()
+        if len(v) < 2 or '{' in v or '<' in v or '&' in v:
+            continue
+        vals.setdefault(_norm(v), (v, k))
+    count = 0
+    for v, k in vals.values():
+        pat = re.compile(r'(</span>|</svg>)(\s*)' + re.escape(v) + r'(?=[<\s]|$)')
+        html, n = pat.subn(
+            lambda m: f'{m.group(1)}{m.group(2)}<span data-i18n="{k}">{v}</span>', html)
+        count += n
+    return html, count
+
+
+body, wrapped = wrap_inline_labels(body, LANG_JSON["zh-CN"])
+print(f"图文混排补标: {wrapped} 处")
+
+# ---------- 3. 取主脚本 ----------
+script = (PARTS / "06_script.html").read_text(encoding="utf-8").strip()
 script = script.replace("</body>", "").replace("</html>", "").strip()
 assert script.startswith("<script>") and script.endswith("</script>"), "06_script.html 结构异常"
 app_js = script[len("<script>"):-len("</script>")].strip()
 
-# ---------- 5. 启动段改为等待语言包 ----------
+# ---------- 4. 启动段改为等待语言包 ----------
 old_boot = """  initDisk(); renderDisk(); $('#deviceInput').value = state.deviceName; _apply();
   updateVersionBadge('boot');
 
@@ -77,7 +174,7 @@ new_boot = """  window.__installer = { go: go, state: state, openWindow: AppWind
     renderDisk();
     $('#deviceInput').value = state.deviceName;
     _apply();
-    updateVersionBadge('boot');
+    updateVersionBadge();
     var startId = (location.hash || '').replace('#', '');
     if (startId && document.getElementById('s-' + startId)) { go(startId); }
     else { go('boot'); }
@@ -91,37 +188,50 @@ new_boot = """  window.__installer = { go: go, state: state, openWindow: AppWind
 assert old_boot in app_js, "主脚本启动段没匹配上，无法改为异步启动"
 app_js = app_js.replace(old_boot, new_boot, 1)
 
-# ---------- 6. 组装各文件 ----------
+# ---------- 5. 组装各文件 ----------
 OUT.mkdir(parents=True, exist_ok=True)
 (OUT / "styles").mkdir(exist_ok=True)
 (OUT / "scripts").mkdir(exist_ok=True)
 (OUT / "locales").mkdir(exist_ok=True)
 
 (OUT / "styles" / "app.css").write_text(
-    "/* Windows 11 Setup Simulator 2.0 — 基础样式（外部依赖） */\n" + base_css, encoding="utf-8")
+    f"/* Windows 11 Setup Simulator {VERSION} — 基础样式（外部依赖） */\n" + base_css, encoding="utf-8")
 
 (OUT / "styles" / "windows.css").write_text(
-    "/* Windows 11 Setup Simulator 2.0 — 窗口管理与语言切换（外部依赖） */\n" + win_css + "\n" + LANG_CSS,
+    f"/* Windows 11 Setup Simulator {VERSION} — 窗口管理与语言切换（外部依赖） */\n" + win_css + "\n" + LANG_CSS,
     encoding="utf-8")
 
-for code, d in LANG_JSON.items():
+# 语言清单 + 各语言包
+manifest = [{"code": code, "label": LANG_LABELS[code]} for code in LANG_ORDER]
+(OUT / "locales" / "index.json").write_text(
+    json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+for code in LANG_ORDER:
     (OUT / "locales" / f"{code}.json").write_text(
-        json.dumps(d, ensure_ascii=False, indent=2), encoding="utf-8")
+        json.dumps(LANG_JSON[code], ensure_ascii=False, indent=2), encoding="utf-8")
 
-I18N_JS = r"""/* 语言包加载器 —— 依赖外部 locales/*.json（fetch，必须 http/https 环境） */
+I18N_JS = r"""/* 语言包加载器 v2.1 —— 依赖外部 locales/index.json + locales/<code>.json
+ * 必须通过 http/https 访问（file:// 下 fetch 会被浏览器拦截）。
+ */
 (function () {
   'use strict';
 
-  var SUPPORTED = ['zh-CN', 'en-US', 'ja-JP'];
+  var MANIFEST = 'locales/index.json';
   var FALLBACK = 'zh-CN';
   var dict = {};
   var failed = [];
-
+  var langs = [];          // [{code,label}]
   var current = FALLBACK;
+
   try {
     var saved = localStorage.getItem('windows11_setup_lang');
-    if (saved && SUPPORTED.indexOf(saved) >= 0) current = saved;
+    if (saved) current = saved;
   } catch (e) { /* localStorage 不可用则用默认 */ }
+
+  // 支持 ?lang=ko-KR 直接以指定语言打开（便于分享与截图验证）
+  try {
+    var q = new URLSearchParams(location.search).get('lang');
+    if (q) current = q;
+  } catch (e) { /* 老浏览器忽略 */ }
 
   function lookup(code, k) {
     var pack = dict[code];
@@ -162,7 +272,7 @@ I18N_JS = r"""/* 语言包加载器 —— 依赖外部 locales/*.json（fetch�
   }
 
   function switchTo(code) {
-    if (SUPPORTED.indexOf(code) < 0 || !dict[code]) return false;
+    if (!dict[code]) return false;
     current = code;
     try { localStorage.setItem('windows11_setup_lang', code); } catch (e) {}
     apply();
@@ -170,56 +280,92 @@ I18N_JS = r"""/* 语言包加载器 —— 依赖外部 locales/*.json（fetch�
     return true;
   }
 
+  // 顶部语言按钮完全由清单驱动
+  function renderButtons() {
+    var host = document.getElementById('langSwitch');
+    if (!host) return;
+    host.innerHTML = '';
+    langs.forEach(function (item, i) {
+      if (i) {
+        var sep = document.createElement('div');
+        sep.className = 'sep';
+        host.appendChild(sep);
+      }
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.dataset.lang = item.code;
+      b.textContent = item.label;
+      host.appendChild(b);
+    });
+  }
+
   document.addEventListener('click', function (e) {
     var btn = e.target.closest('.lang-switch button[data-lang]');
     if (btn) switchTo(btn.dataset.lang);
   });
 
-  // 占位接口：脚本先绑定事件，语言包到位后再真正刷新
   window.__i18n = {
     t: t,
     apply: function () {},
     switch: switchTo,
     langs: dict,
-    supported: SUPPORTED,
+    supported: [],
     failed: failed,
     get current() { return current; },
     ready: null
   };
 
-  var ready = Promise.all(SUPPORTED.map(function (code) {
-    return fetch('locales/' + code + '.json', { cache: 'no-cache' })
-      .then(function (res) {
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        return res.json();
-      })
-      .then(function (json) { dict[code] = json; })
-      .catch(function (err) {
-        failed.push(code);
-        console.error('[i18n] 语言包加载失败：locales/' + code + '.json —', err.message);
-      });
-  })).then(function () {
-    if (!dict[current]) current = FALLBACK;
-    window.__i18n.apply = apply;
-    window.__i18n.langs = dict;
-    window.__i18n.ready = Promise.resolve(true);
-    apply();
-    document.dispatchEvent(new CustomEvent('langchange', { detail: { lang: current, initial: true } }));
-    return true;
-  });
+  var ready = fetch(MANIFEST, { cache: 'no-cache' })
+    .then(function (res) {
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return res.json();
+    })
+    .then(function (list) {
+      if (!Array.isArray(list) || !list.length) throw new Error('清单为空');
+      langs = list;
+    })
+    .catch(function (err) {
+      failed.push('index.json');
+      console.error('[i18n] 语言清单加载失败：' + MANIFEST + ' —', err.message);
+      langs = [{ code: 'zh-CN', label: '简体中文' }];
+    })
+    .then(function () {
+      var codes = langs.map(function (x) { return x.code; });
+      if (codes.indexOf(current) < 0) current = codes.indexOf(FALLBACK) >= 0 ? FALLBACK : codes[0];
+      window.__i18n.supported = codes;
+      renderButtons();
+      return Promise.all(langs.map(function (item) {
+        return fetch('locales/' + item.code + '.json', { cache: 'no-cache' })
+          .then(function (res) {
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            return res.json();
+          })
+          .then(function (json) { dict[item.code] = json; })
+          .catch(function (err) {
+            failed.push(item.code);
+            console.error('[i18n] 语言包加载失败：locales/' + item.code + '.json —', err.message);
+          });
+      }));
+    })
+    .then(function () {
+      if (!dict[current]) {
+        var ok = window.__i18n.supported.filter(function (c) { return dict[c]; });
+        current = ok.indexOf(FALLBACK) >= 0 ? FALLBACK : (ok[0] || FALLBACK);
+      }
+      window.__i18n.apply = apply;
+      window.__i18n.langs = dict;
+      apply();
+      document.dispatchEvent(new CustomEvent('langchange', { detail: { lang: current, initial: true } }));
+      return true;
+    });
 
   window.__i18n.ready = ready;
 })();
 """
 (OUT / "scripts" / "i18n.js").write_text(I18N_JS, encoding="utf-8")
-
 (OUT / "scripts" / "app.js").write_text(app_js + "\n", encoding="utf-8")
 
-SWITCH_HTML = """<div class="lang-switch" id="langSwitch">
-  <button data-lang="zh-CN">简体中文</button><div class="sep"></div>
-  <button data-lang="en-US">English</button><div class="sep"></div>
-  <button data-lang="ja-JP">日本語</button>
-</div>"""
+SWITCH_HTML = '<div class="lang-switch" id="langSwitch"></div>'
 
 index_html = f"""<!DOCTYPE html>
 <html lang="zh-CN">
@@ -228,23 +374,24 @@ index_html = f"""<!DOCTYPE html>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Windows 11 安装程序</title>
 
-<!-- 外部依赖：样式 -->
-<link rel="stylesheet" href="styles/app.css">
-<link rel="stylesheet" href="styles/windows.css">
+<!-- 外部依赖：样式（带版本号，避免更新后仍命中旧缓存） -->
+<link rel="stylesheet" href="styles/app.css?v={VERSION}">
+<link rel="stylesheet" href="styles/windows.css?v={VERSION}">
 </head>
 <body>
 {body}
+<!-- 语言按钮由 locales/index.json 清单渲染 -->
 {SWITCH_HTML}
 
 <!-- 外部依赖：语言包加载器 + 主逻辑（语言包为 locales/*.json，需通过本地服务器访问） -->
-<script src="scripts/i18n.js"></script>
-<script src="scripts/app.js"></script>
+<script src="scripts/i18n.js?v={VERSION}"></script>
+<script src="scripts/app.js?v={VERSION}"></script>
 </body>
 </html>
 """
 (OUT / "index.html").write_text(index_html, encoding="utf-8")
 
-(OUT / "serve.py").write_text('''"""本地静态服务器：语言包通过 fetch 加载，必须走 http 协议。"""
+(OUT / "serve.py").write_text(f'''"""本地静态服务器：语言包通过 fetch 加载，必须走 http 协议。"""
 import http.server
 import os
 import socketserver
@@ -255,12 +402,12 @@ os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 
 class Handler(http.server.SimpleHTTPRequestHandler):
-    extensions_map = {
+    extensions_map = {{
         **http.server.SimpleHTTPRequestHandler.extensions_map,
         ".json": "application/json; charset=utf-8",
         ".js": "application/javascript; charset=utf-8",
         ".css": "text/css; charset=utf-8",
-    }
+    }}
 
     def end_headers(self):
         self.send_header("Cache-Control", "no-store")
@@ -271,8 +418,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
 
 with socketserver.TCPServer(("127.0.0.1", PORT), Handler) as httpd:
-    url = f"http://127.0.0.1:{PORT}/index.html"
-    print(f"Windows 11 Setup Simulator 2.0 已启动：{url}")
+    url = f"http://127.0.0.1:{{PORT}}/index.html"
+    print(f"Windows 11 Setup Simulator {VERSION} 已启动：{{url}}")
     print("按 Ctrl+C 停止服务")
     try:
         webbrowser.open(url)
@@ -283,7 +430,7 @@ with socketserver.TCPServer(("127.0.0.1", PORT), Handler) as httpd:
 
 (OUT / "package.json").write_text(json.dumps({
     "name": "windows11-setup-sim",
-    "version": "2.0.0",
+    "version": VERSION,
     "private": True,
     "description": "Windows 11 安装程序模拟器（多文件版，依赖本地静态服务器）",
     "scripts": {"start": "serve -l 8765 ."},
@@ -293,7 +440,7 @@ with socketserver.TCPServer(("127.0.0.1", PORT), Handler) as httpd:
 BAT = """@echo off
 chcp 65001 >nul
 cd /d "%~dp0"
-echo 正在启动本地服务器（语言包需要 http 环境）...
+echo 正在启动本地服务器（样式与语言包需要 http 环境）...
 start "" /min python serve.py
 timeout /t 2 >nul
 start "" msedge --app=http://127.0.0.1:8765/index.html

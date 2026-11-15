@@ -73,11 +73,10 @@
   }
   function closeModal() { modalOpen = false; okHandler = null; $('#modal').classList.remove('open'); }
 
-  function updateVersionBadge(screenId) {
+  function updateVersionBadge() {
     var badge = $('#versionBadge');
     if (!badge) return;
-    badge.textContent = 'v2.0';
-    badge.classList.toggle('setup', screenId !== 'desktop');
+    badge.textContent = 'v3.0';
   }
 
   /* ============================================================
@@ -123,12 +122,13 @@
           '<div class="win-icon">' + icon + '</div>' +
           '<div class="win-title">' + title + '</div>' +
           '<div class="win-ctrls">' +
-            '<button class="win-btn min" title="最小化">' + this._svg('min') + '</button>' +
-            '<button class="win-btn max" title="最大化">' + this._svg('max') + '</button>' +
-            '<button class="win-btn close" title="关闭">' + this._svg('close') + '</button>' +
+            '<button class="win-btn min" title="' + _t('win_min') + '">' + this._svg('min') + '</button>' +
+            '<button class="win-btn max" title="' + _t('win_max') + '">' + this._svg('max') + '</button>' +
+            '<button class="win-btn close" title="' + _t('win_close') + '">' + this._svg('close') + '</button>' +
           '</div>' +
         '</div>' +
-        '<div class="win-body"></div>';
+        '<div class="win-body"></div>' +
+        '<div class="win-resize" title=""></div>';
 
       layer.appendChild(win);
       state.openWindows[id] = win;
@@ -143,9 +143,9 @@
 
     _defaultTitle: function (type) {
       var map = {
-        explorer: '此电脑', cmd: '管理员: C:\\Windows\\System32\\cmd.exe',
-        edge: 'Microsoft Edge', recycle: '回收站', settings: '设置',
-        terminal: 'Windows Terminal'
+        explorer: _t('icon_pc'), cmd: '管理员: C:\\Windows\\System32\\cmd.exe',
+        edge: 'Microsoft Edge', recycle: _t('icon_recycle'), settings: _t('app_settings'),
+        terminal: 'Windows Terminal', setup: _t('setup_title')
       };
       return map[type] || type;
     },
@@ -161,6 +161,8 @@
         return '<svg viewBox="0 0 24 24" fill="none"><path d="M5 8h14l-1.2 11.4a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 8Z" stroke="#4a5a6b" stroke-width="1.5"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8" stroke="#4a5a6b" stroke-width="1.5"/></svg>';
       if (type === 'settings')
         return '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" fill="#0067c0"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2" stroke="#0067c0" stroke-width="1.5" stroke-linecap="round"/></svg>';
+      if (type === 'setup')
+        return '<svg viewBox="0 0 24 24"><rect x="2" y="2" width="9" height="9" fill="#0067c0"/><rect x="13" y="2" width="9" height="9" fill="#0067c0"/><rect x="2" y="13" width="9" height="9" fill="#0067c0"/><rect x="13" y="13" width="9" height="9" fill="#0067c0"/></svg>';
       return '<svg viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#0067c0"/></svg>';
     },
     _svg: function (kind) {
@@ -180,6 +182,7 @@
 
       bar.addEventListener('mousedown', function (e) {
         if (e.target.closest('.win-btn')) return;
+        if (win.dataset.maxed === '1') return;
         self.focus(id);
         dragging = true;
         startX = e.clientX; startY = e.clientY;
@@ -194,6 +197,34 @@
         win.style.top = Math.max(0, Math.min(maxY, origTop + e.clientY - startY)) + 'px';
       });
       document.addEventListener('mouseup', function () { dragging = false; });
+
+      // v3.0：双击标题栏最大化 / 还原
+      bar.addEventListener('dblclick', function (e) {
+        if (e.target.closest('.win-btn')) return;
+        self.toggleMax(id);
+      });
+
+      // v3.0：右下角拖拽缩放
+      var grip = win.querySelector('.win-resize');
+      if (grip) {
+        var rzStartX, rzStartY, rzW, rzH, resizing = false;
+        grip.addEventListener('mousedown', function (e) {
+          e.stopPropagation(); e.preventDefault();
+          self.focus(id);
+          resizing = true;
+          rzStartX = e.clientX; rzStartY = e.clientY;
+          rzW = win.offsetWidth; rzH = win.offsetHeight;
+        });
+        document.addEventListener('mousemove', function (e) {
+          if (!resizing) return;
+          var w = Math.max(420, rzW + e.clientX - rzStartX);
+          var h = Math.max(280, rzH + e.clientY - rzStartY);
+          win.style.width = w + 'px';
+          win.style.height = h + 'px';
+          win.dataset.maxed = '0';
+        });
+        document.addEventListener('mouseup', function () { resizing = false; });
+      }
 
       win.addEventListener('mousedown', function () { self.focus(id); });
 
@@ -266,6 +297,7 @@
     },
 
     _onWindowChange: function () {
+      var self = this;
       var types = {};
       Object.values(state.openWindows).forEach(function (w) {
         var t = w.dataset.type;
@@ -274,12 +306,42 @@
       });
       // 任务栏 running icon 高亮
       $$('.tb-btn.running').forEach(function (btn) {
-        var tt = btn.getAttribute('title') || '';
-        var t2type = { '文件资源管理器': 'explorer', 'Microsoft Edge': 'edge' };
-        var winType = t2type[tt];
+        var winType = btn.dataset.winType;
         if (!winType) return;
         btn.classList.toggle('active', !!types[winType]);
       });
+      // v3.0：任务栏显示已打开窗口
+      var host = $('#tbWins');
+      if (!host) return;
+      host.innerHTML = '';
+      Object.keys(state.openWindows).forEach(function (id) {
+        var w = state.openWindows[id];
+        var type = w.dataset.type;
+        var title = (w.querySelector('.win-title') || {}).textContent || self._defaultTitle(type);
+        var b = document.createElement('button');
+        b.className = 'tb-win' +
+          (w.classList.contains('minimized') ? ' min' : '') +
+          (self._focusedId === id && !w.classList.contains('minimized') ? ' active' : '');
+        b.dataset.id = id;
+        b.title = title;
+        b.innerHTML = self._defaultIcon(type) + '<span>' + title + '</span>';
+        host.appendChild(b);
+      });
+    },
+
+    // v3.0：语言切换后刷新已打开窗口的标题与按钮提示
+    retitleAll: function () {
+      var self = this;
+      Object.keys(state.openWindows).forEach(function (id) {
+        var w = state.openWindows[id];
+        var t = w.querySelector('.win-title');
+        if (t) t.textContent = self._defaultTitle(w.dataset.type);
+        var mn = w.querySelector('.win-btn.min'), mx = w.querySelector('.win-btn.max'), cl = w.querySelector('.win-btn.close');
+        if (mn) mn.title = _t('win_min');
+        if (mx) mx.title = _t('win_max');
+        if (cl) cl.title = _t('win_close');
+      });
+      this._onWindowChange();
     },
 
     /* ========== 窗口内容渲染 ========== */
@@ -290,6 +352,7 @@
       else if (type === 'edge') this._renderEdge(body);
       else if (type === 'recycle') this._renderRecycle(body);
       else if (type === 'settings') this._renderSettings(body);
+      else if (type === 'setup') this._renderSetupUpgrade(body, win);
     },
 
     _renderExplorer: function (body, opts) {
@@ -549,31 +612,136 @@
         '<div class="rc-sub">当你删除文件后，它们会临时存放在这里。</div>';
     },
 
-    _renderSettings: function (body) {
+    _renderSettings: function (body, page) {
+      var self = this;
+      page = page || 'system';
       body.className = 'settings';
-      body.innerHTML =
-        '<div class="settings__nav">' +
-          '<div class="s-item active"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="3" fill="#0067c0"/><path d="M8 2v2M8 12v2M2 8h2M12 8h2M4.2 4.2l1.4 1.4M10.4 10.4l1.4 1.4M4.2 11.8l1.4-1.4M10.4 5.6l1.4-1.4" stroke="#0067c0" stroke-width="1.3"/></svg>系统</div>' +
-          '<div class="s-item"><svg viewBox="0 0 16 16"><path d="M3 5h10v6H3zM6 2.5l1 1.5H9l1-1.5" stroke="currentColor" stroke-width="1.3" fill="none"/><path d="M7 11.5h2v2H7z" fill="currentColor"/></svg>蓝牙和设备</div>' +
-          '<div class="s-item"><svg viewBox="0 0 16 16"><path d="M2 6.5C3.7 5 5.7 4.2 8 4.2s4.3.8 6 2.3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M4 9c1.1-.9 2.5-1.4 4-1.4S10.9 8.1 12 9" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><circle cx="8" cy="11.7" r="1" fill="currentColor"/></svg>网络和 Internet</div>' +
-          '<div class="s-item"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.4"/><path d="M5.5 5.5l5 5M10.5 5.5l-5 5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>个性化</div>' +
-          '<div class="s-item"><svg viewBox="0 0 16 16"><rect x="2.5" y="3" width="11" height="10" rx="1.2" stroke="currentColor" stroke-width="1.4"/><rect x="4.5" y="5.5" width="4" height="2.5" rx=".4" fill="currentColor"/><rect x="4.5" y="9" width="7" height="1.5" rx=".3" fill="currentColor"/><rect x="4.5" y="11" width="5" height="1" rx=".2" fill="currentColor"/></svg>应用</div>' +
-          '<div class="s-item"><svg viewBox="0 0 16 16"><circle cx="8" cy="6" r="3.5" stroke="currentColor" stroke-width="1.4"/><path d="M2.5 14c1-2.5 3.5-4 5.5-4s4.5 1.5 5.5 4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>账户</div>' +
-          '<div class="s-item"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.4"/><path d="M8 4v4l3 2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>时间和语言</div>' +
-          '<div class="s-item"><svg viewBox="0 0 16 16"><path d="M8 2l5 2v4c0 3-2.5 5-5 6-2.5-1-5-3-5-6V4l5-2Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>隐私和安全性</div>' +
-        '</div>' +
-        '<div class="settings__main">' +
+      var nav = [
+        ['system', '系统', '<svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="3" fill="#0067c0"/><path d="M8 2v2M8 12v2M2 8h2M12 8h2M4.2 4.2l1.4 1.4M10.4 10.4l1.4 1.4M4.2 11.8l1.4-1.4M10.4 5.6l1.4-1.4" stroke="#0067c0" stroke-width="1.3"/></svg>'],
+        ['bt', '蓝牙和设备', '<svg viewBox="0 0 16 16"><path d="M3 5h10v6H3zM6 2.5l1 1.5H9l1-1.5" stroke="currentColor" stroke-width="1.3" fill="none"/><path d="M7 11.5h2v2H7z" fill="currentColor"/></svg>'],
+        ['net', '网络和 Internet', '<svg viewBox="0 0 16 16"><path d="M2 6.5C3.7 5 5.7 4.2 8 4.2s4.3.8 6 2.3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M4 9c1.1-.9 2.5-1.4 4-1.4S10.9 8.1 12 9" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><circle cx="8" cy="11.7" r="1" fill="currentColor"/></svg>'],
+        ['personal', '个性化', '<svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.4"/><path d="M5.5 5.5l5 5M10.5 5.5l-5 5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>'],
+        ['apps', '应用', '<svg viewBox="0 0 16 16"><rect x="2.5" y="3" width="11" height="10" rx="1.2" stroke="currentColor" stroke-width="1.4"/><rect x="4.5" y="5.5" width="4" height="2.5" rx=".4" fill="currentColor"/><rect x="4.5" y="9" width="7" height="1.5" rx=".3" fill="currentColor"/><rect x="4.5" y="11" width="5" height="1" rx=".2" fill="currentColor"/></svg>'],
+        ['account', '账户', '<svg viewBox="0 0 16 16"><circle cx="8" cy="6" r="3.5" stroke="currentColor" stroke-width="1.4"/><path d="M2.5 14c1-2.5 3.5-4 5.5-4s4.5 1.5 5.5 4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>'],
+        ['time', '时间和语言', '<svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.4"/><path d="M8 4v4l3 2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>'],
+        ['privacy', '隐私和安全性', '<svg viewBox="0 0 16 16"><path d="M8 2l5 2v4c0 3-2.5 5-5 6-2.5-1-5-3-5-6V4l5-2Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>']
+      ];
+
+      var main;
+      if (page === 'about') {
+        var langBtn = document.querySelector('.lang-switch button.on');
+        var lang = langBtn ? langBtn.textContent : '简体中文';
+        main =
+          '<h2>' + _t('about_title') + '</h2>' +
+          '<div class="about-hero">' +
+            '<div class="about-logo"><svg viewBox="0 0 64 64"><g fill="#fff"><rect x="2" y="2" width="27" height="27"/><rect x="35" y="2" width="27" height="27"/><rect x="2" y="35" width="27" height="27"/><rect x="35" y="35" width="27" height="27"/></g></svg></div>' +
+            '<div><div class="about-name">Windows 11</div><div class="about-ver">' + _t('about_version') + ' 3.0.0 · ' + _t('about_edition') + ': ' + (state.edition || 'Pro') + '</div></div>' +
+          '</div>' +
+          '<div class="about-rows">' +
+            '<div class="about-row"><b>' + _t('about_device') + '</b><span>' + state.deviceName + '</span></div>' +
+            '<div class="about-row"><b>' + _t('about_user') + '</b><span>' + (state.userName || 'Administrator') + '</span></div>' +
+            '<div class="about-row"><b>' + _t('about_language') + '</b><span>' + lang + '</span></div>' +
+            '<div class="about-row"><b>' + _t('about_build') + '</b><span>22631.3.0 · ' + _t('about_sim') + '</span></div>' +
+          '</div>' +
+          '<div class="about-actions"><button class="btn" data-page="system">' + _t('about_back') + '</button>' +
+            '<button class="btn primary" id="aboutRestart">' + _t('about_restart') + '</button></div>' +
+          '<div class="about-note">' + _t('about_note') + '</div>';
+      } else {
+        main =
           '<h2>系统</h2><p class="s-sub">你可以查看设备信息和系统设置</p>' +
           '<div class="settings__row"><div class="sr-left"><div><div class="sr-title">显示器</div><div class="sr-desc">两个显示器已连接</div></div></div></div>' +
           '<div class="settings__row"><div class="sr-left"><div><div class="sr-title">声音</div><div class="sr-desc">输出设备：扬声器</div></div></div></div>' +
           '<div class="settings__row"><div class="sr-left"><div><div class="sr-title">通知</div><div class="sr-desc">来自应用和系统的通知</div></div></div></div>' +
           '<div class="settings__row"><div class="sr-left"><div><div class="sr-title">专注助手</div><div class="sr-desc">减少干扰</div></div></div></div>' +
-          '<div class="settings__row"><div class="sr-left"><div><div class="sr-title">关于</div><div class="sr-desc">设备规格、Windows 规格</div></div></div></div>' +
-        '</div>';
+          '<div class="settings__row" data-page="about"><div class="sr-left"><div><div class="sr-title">' + _t('about_title') + '</div><div class="sr-desc">' + _t('about_desc') + '</div></div></div><span>›</span></div>';
+      }
+
+      body.innerHTML =
+        '<div class="settings__nav">' +
+          nav.map(function (it, i) {
+            return '<div class="s-item' + (page === it[0] || (page === 'about' && it[0] === 'system') ? ' active' : '') + '" data-nav="' + it[0] + '">' + it[2] + it[1] + '</div>';
+          }).join('') +
+        '</div>' +
+        '<div class="settings__main">' + main + '</div>';
+
+      body.onclick = function (e) {
+        var pg = e.target.closest('[data-page]');
+        if (pg) { self._renderSettings(body, pg.dataset.page); return; }
+        var navEl = e.target.closest('.s-item');
+        if (navEl && navEl.dataset.nav !== 'system') { toast('演示模式：该设置页面暂不可用'); return; }
+        if (navEl && navEl.dataset.nav === 'system') self._renderSettings(body, 'system');
+        if (e.target.closest('#aboutRestart')) {
+          self.closeAll();
+          resetExperience();
+        }
+      };
+    },
+
+    _renderSetupUpgrade: function (body, win) {
+      var self = this;
+      body.className = 'upg';
+      body.innerHTML =
+        '<h3>' + _t('upg_title') + '</h3>' +
+        '<p>' + _t('upg_sub') + '</p>' +
+        '<div class="upg-opts">' +
+          '<div class="upg-opt" data-upg="keep">' +
+            '<div class="uo-ico"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2v8M5 7.5L8 11l3-3.5M2.5 13.5h11" stroke="#0067c0" stroke-width="1.5" stroke-linecap="round"/></svg></div>' +
+            '<div><div class="uo-t">' + _t('upg_keep') + '</div><div class="uo-d">' + _t('upg_keep_d') + '</div></div>' +
+          '</div>' +
+          '<div class="upg-opt" data-upg="custom">' +
+            '<div class="uo-ico"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="#0067c0" stroke-width="1.5"/><path d="M8 5v6M5 8h6" stroke="#0067c0" stroke-width="1.5" stroke-linecap="round"/></svg></div>' +
+            '<div><div class="uo-t">' + _t('upg_custom') + '</div><div class="uo-d">' + _t('upg_custom_d') + '</div></div>' +
+          '</div>' +
+        '</div>' +
+        '<p class="upg-note">' + _t('upg_note') + '</p>';
+
+      body.onclick = function (e) {
+        var opt = e.target.closest('.upg-opt'); if (!opt) return;
+        if (opt.dataset.upg === 'custom') {
+          self.close(win.dataset.id);
+          resetExperience();
+          return;
+        }
+        runUpgrade(body);
+      };
     },
   };
 
   window.__appWindows = AppWindows;
+
+  /* v3.0：桌面上的"升级安装"流程（保留文件、设置和应用） */
+  function runUpgrade(body) {
+    var stages = [['upg_stage_1', 0], ['upg_stage_2', 30], ['upg_stage_3', 68]];
+    body.className = 'upg-progress';
+    body.innerHTML =
+      '<div class="ring"></div>' +
+      '<div class="upg-pct"><span id="upgPct">0</span><em>%</em></div>' +
+      '<div class="upg-stage" id="upgStage">' + _t(stages[0][0]) + '</div>' +
+      '<div class="upg-bar"><i id="upgBar"></i></div>' +
+      '<div class="upg-note">' + _t('upg_note') + '</div>';
+
+    var pct = 0;
+    var timer = setInterval(function () {
+      if (!document.body.contains(body)) { clearInterval(timer); return; }
+      pct = Math.min(100, pct + 1.5 + Math.random() * 2.5);
+      var p = document.getElementById('upgPct');
+      var bar = document.getElementById('upgBar');
+      var st = document.getElementById('upgStage');
+      if (!p || !bar) { clearInterval(timer); return; }
+      p.textContent = String(Math.round(pct));
+      bar.style.width = pct + '%';
+      var idx = 0;
+      for (var i = stages.length - 1; i >= 0; i--) { if (pct >= stages[i][1]) { idx = i; break; } }
+      var txt = _t(stages[idx][0]);
+      if (st && st.textContent !== txt) st.textContent = txt;
+      if (pct >= 100) {
+        clearInterval(timer);
+        toast(_t('upg_done'));
+        var w = body.closest('.app-window');
+        later(function () { if (w) AppWindows.close(w.dataset.id); }, 1400);
+      }
+    }, 160);
+  }
 
   /* ============================================================
    * 磁盘
@@ -778,7 +946,14 @@
     else if (id === 'final') $('#finalName').textContent = state.userName || 'Administrator';
     else if (id === 'desktop') {
       var n = state.userName || 'Administrator'; $('#smUser').textContent = n; $('#smAvatar').textContent = n.charAt(0).toUpperCase();
-      AppWindows.closeAll();
+      AppWindows.retitleAll();
+      Object.keys(state.openWindows).forEach(function (wid) {
+        var w = state.openWindows[wid];
+        if (w.dataset.type === 'settings') {
+          var b = w.querySelector('.win-body');
+          if (b) AppWindows._renderSettings(b, 'system');
+        }
+      });
     }
   });
 
@@ -960,14 +1135,22 @@
   $('#icoRecycle').addEventListener('dblclick', function () {
     AppWindows.open('recycle', { title: _t('icon_recycle') });
   });
-  $('#icoSetup').addEventListener('dblclick', function () { resetExperience(); });
+  $('#icoSetup').addEventListener('dblclick', function () { AppWindows.open('setup'); });
+
+  /* 任务栏已打开窗口按钮（v3.0） */
+  document.addEventListener('click', function (e) {
+    var tw = e.target.closest('.tb-win');
+    if (!tw) return;
+    var id = tw.dataset.id, w = state.openWindows[id];
+    if (!w) return;
+    if (w.classList.contains('minimized') || !w.classList.contains('focused')) AppWindows.focus(id);
+    else AppWindows.minimize(id);
+  });
 
   /* 任务栏按钮（运行中的） */
   $$('.tb-btn.running').forEach(function (btn) {
     btn.addEventListener('click', function () {
-      var tt = btn.getAttribute('title') || '';
-      var map = { '文件资源管理器': 'explorer', 'Microsoft Edge': 'edge' };
-      var t = map[tt]; if (!t) return;
+      var t = btn.dataset.winType; if (!t) return;
       // 查找已有实例
       var existing = null;
       Object.values(state.openWindows).forEach(function (w) { if (w.dataset.type === t) existing = w; });
@@ -985,11 +1168,17 @@
   $$('.tb-btn:not(.running)').forEach(function (btn) {
     btn.addEventListener('click', function () { toast('演示模式：' + (btn.getAttribute('title') || '') + ' 暂不可用'); });
   });
-  // 开始菜单里的 app tiles
-  document.addEventListener('click', function (e) {
+  // 开始菜单里的 app tiles（挂在 #startMenu 上：该容器会 stopPropagation，document 级监听收不到）
+  $('#startMenu').addEventListener('click', function (e) {
     var app = e.target.closest('.sm-app'); if (!app) return;
     var name = app.textContent.trim();
-    if (name.indexOf('文件资源管理器') >= 0 || name.indexOf('File Explorer') >= 0)
+    // 用 data-i18n 的 key 判断，避免切换语言后按中文名匹配失败
+    var keyEl = app.querySelector('[data-i18n]');
+    var key = keyEl ? keyEl.dataset.i18n : '';
+    var byKey = { app_explorer: 'explorer', app_edge: 'edge', app_settings: 'settings', app_terminal: 'cmd' };
+    var type = byKey[key];
+    if (type) AppWindows.open(type);
+    else if (name.indexOf('文件资源管理器') >= 0 || name.indexOf('File Explorer') >= 0)
       AppWindows.open('explorer');
     else if (name.indexOf('Edge') >= 0)
       AppWindows.open('edge');

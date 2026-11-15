@@ -482,13 +482,77 @@
 .notif-center .nc-notif .nn-title{font-weight:500;font-size:12px;margin-bottom:2px;}
 .notif-center .nc-notif .nn-body{font-size:11px;color:#8b98aa;line-height:1.5;}
 
-/* ---- 版本号 ---- */
-.version-badge{
-  position:fixed; right:12px; top:12px; z-index:60; font-size:10.5px; color:rgba(255,255,255,.75);
-  padding:3px 10px; border-radius:12px; background:rgba(0,0,0,.20); backdrop-filter:blur(12px);
-  -webkit-backdrop-filter:blur(12px); letter-spacing:.5px; user-select:none; pointer-events:none;
+/* ---- 窗口缩放 + 任务栏窗口按钮（v3.0） ---- */
+.win-resize{
+  position:absolute; right:0; bottom:0; width:16px; height:16px; z-index:6;
+  cursor:nwse-resize;
 }
-.version-badge.setup{color:rgba(28,32,38,.55); background:rgba(0,0,0,.08);}
+.win-resize::after{
+  content:""; position:absolute; right:4px; bottom:4px; width:6px; height:6px;
+  border-right:1.5px solid rgba(0,0,0,.28); border-bottom:1.5px solid rgba(0,0,0,.28);
+}
+.tb-wins{display:flex; align-items:center; gap:2px; margin-left:4px; max-width:46vw; overflow:hidden;}
+.tb-win{
+  height:34px; max-width:158px; min-width:34px; display:flex; align-items:center; gap:6px;
+  padding:0 8px; border:0; border-radius:4px; background:transparent; cursor:pointer;
+  font-size:11px; color:#26303b; transition:background .12s;
+}
+.tb-win:hover{background:rgba(255,255,255,.55);}
+.tb-win.active{background:rgba(0,103,192,.12); box-shadow:inset 0 -2px 0 #0067c0;}
+.tb-win.min{opacity:.55;}
+.tb-win span{overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.tb-win svg{width:16px; height:16px; flex-shrink:0;}
+
+/* ---- 设置：关于页（v3.0） ---- */
+.settings__row[data-page]{cursor:pointer;}
+.settings__row[data-page]:hover{background:rgba(0,103,192,.06);}
+.about-hero{display:flex; align-items:center; gap:14px; margin:4px 0 18px;}
+.about-logo{
+  width:54px; height:54px; border-radius:12px; background:#0067c0; display:grid; place-items:center;
+  box-shadow:0 4px 12px rgba(0,103,192,.28);
+}
+.about-logo svg{width:30px; height:30px;}
+.about-name{font-size:16px; font-weight:600; color:#1b2430;}
+.about-ver{font-size:11.5px; color:#6b7888; margin-top:2px;}
+.about-rows{border:1px solid rgba(0,0,0,.07); border-radius:6px; overflow:hidden; background:#fff;}
+.about-row{display:flex; justify-content:space-between; gap:16px; padding:10px 14px; font-size:12px; border-bottom:1px solid rgba(0,0,0,.05);}
+.about-row:last-child{border-bottom:0;}
+.about-row b{font-weight:500; color:#1b2430;}
+.about-row span{color:#5d6b7a;}
+.about-actions{margin-top:16px; display:flex; gap:8px;}
+.about-note{font-size:11px; color:#8b98aa; margin-top:10px; line-height:1.6;}
+
+/* ---- 升级安装窗口（v3.0） ---- */
+.upg{padding:22px 24px; display:flex; flex-direction:column; gap:14px;}
+.upg h3{margin:0; font-size:16px; font-weight:600; color:#1b2430;}
+.upg p{margin:0; font-size:12px; color:#5d6b7a; line-height:1.7;}
+.upg-opts{display:flex; flex-direction:column; gap:8px;}
+.upg-opt{
+  display:flex; gap:12px; align-items:flex-start; padding:12px 14px; cursor:pointer;
+  border:1px solid rgba(0,0,0,.10); border-radius:6px; background:#fff; transition:border-color .12s, background .12s;
+}
+.upg-opt:hover{border-color:#0067c0; background:rgba(0,103,192,.04);}
+.upg-opt .uo-ico{width:28px; height:28px; border-radius:6px; background:#e8f1fb; display:grid; place-items:center; flex-shrink:0;}
+.upg-opt .uo-t{font-size:12.5px; font-weight:500; color:#1b2430;}
+.upg-opt .uo-d{font-size:11px; color:#7a8796; margin-top:3px; line-height:1.55;}
+.upg-progress{padding:52px 24px; text-align:center;}
+.upg-progress .ring{margin:0 auto 18px;}
+.upg-pct{font-size:34px; font-weight:300; color:#1b2430;}
+.upg-stage{font-size:12px; color:#5d6b7a; margin-top:10px;}
+.upg-bar{height:4px; border-radius:2px; background:rgba(0,0,0,.08); overflow:hidden; margin:18px auto 0; max-width:340px;}
+.upg-bar i{display:block; height:100%; width:0; background:#0067c0; transition:width .3s;}
+.upg-note{font-size:11px; color:#8b98aa; margin-top:16px;}
+
+/* ---- 版本号（body 顶层，所有界面常显） ---- */
+.version-badge{
+  position:fixed; right:12px; top:12px; z-index:80; font-size:10.5px; color:rgba(255,255,255,.92);
+  padding:3px 10px; border-radius:12px;
+  background:rgba(20,32,48,.42);
+  -webkit-backdrop-filter:blur(14px) saturate(150%);
+  backdrop-filter:blur(14px) saturate(150%);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.14);
+  letter-spacing:.5px; user-select:none; pointer-events:none;
+}
 
 /* ---- 任务栏窗口高亮 ---- */
 .tb-btn.running.active{background:rgba(0,103,192,.12);}
