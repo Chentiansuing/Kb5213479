@@ -1,4 +1,4 @@
-"""把工程拆成"带外部依赖"的多文件 Web 工程（v2.1，单文件版已放弃）。
+"""把工程拆成"带外部依赖"的多文件 Web 工程（v3.1，单文件版已放弃）。
 
 产出 outputs/web/：
   index.html                 仅结构 + <link>/<script src> 引用
@@ -21,7 +21,7 @@ import json, pathlib, re, sys
 ROOT = pathlib.Path(r"c:\Users\Administrator\Documents\Kb5213479\2026-11-15\windows-installer-sim")
 PARTS = ROOT / "work" / "parts"
 OUT = ROOT / "outputs" / "web"
-VERSION = "3.0.0"
+VERSION = "3.1.0"
 
 sys.path.insert(0, str(ROOT / "work"))
 from locales_data import LANG_JSON, LANG_CSS, LANG_LABELS, LANG_ORDER  # noqa: E402

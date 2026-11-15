@@ -1,4 +1,4 @@
-"""v3.0 新增文案：窗口缩放/任务栏按钮、桌面升级安装、设置-关于页。
+"""v3.x 新增文案：桌面窗口、升级安装、设置与应用搜索。
 
 五种语言键完全一致，由 build_multi.py 合并进 LANG_JSON。
 """
@@ -6,6 +6,9 @@
 EXTRA_V3 = {
     "zh-CN": {
         "win_min": "最小化", "win_max": "最大化", "win_close": "关闭",
+        "start_no_results": "没有找到匹配的应用",
+        "toast_demo_unavailable": "演示模式：{name} 暂不可用",
+        "notif_v31_body": "新增应用搜索，修复安装界面终端、磁盘语言切换与键盘交互",
         "upg_title": "安装 Windows 11",
         "upg_sub": "检测到这台电脑已安装 Windows 11。你可以选择升级（保留文件、设置和应用），或全新安装。",
         "upg_keep": "升级：保留文件、设置和应用",
@@ -32,6 +35,9 @@ EXTRA_V3 = {
     },
     "zh-TW": {
         "win_min": "最小化", "win_max": "最大化", "win_close": "關閉",
+        "start_no_results": "找不到符合的應用程式",
+        "toast_demo_unavailable": "示範模式：{name} 暫無法使用",
+        "notif_v31_body": "新增應用程式搜尋，修復安裝介面終端機、磁碟語言切換與鍵盤互動",
         "upg_title": "安裝 Windows 11",
         "upg_sub": "偵測到這台電腦已安裝 Windows 11。您可以選擇升級（保留檔案、設定與應用程式），或全新安裝。",
         "upg_keep": "升級：保留檔案、設定與應用程式",
@@ -58,6 +64,9 @@ EXTRA_V3 = {
     },
     "en-US": {
         "win_min": "Minimize", "win_max": "Maximize", "win_close": "Close",
+        "start_no_results": "No matching apps found",
+        "toast_demo_unavailable": "Demo mode: {name} is not available",
+        "notif_v31_body": "Added app search and fixed setup terminal, disk localization, and keyboard interactions",
         "upg_title": "Install Windows 11",
         "upg_sub": "Windows 11 is already installed on this PC. You can upgrade and keep files, settings, and apps, or perform a clean install.",
         "upg_keep": "Upgrade: keep files, settings, and apps",
@@ -84,6 +93,9 @@ EXTRA_V3 = {
     },
     "ja-JP": {
         "win_min": "最小化", "win_max": "最大化", "win_close": "閉じる",
+        "start_no_results": "一致するアプリが見つかりません",
+        "toast_demo_unavailable": "デモ モード: {name} は利用できません",
+        "notif_v31_body": "アプリ検索を追加し、セットアップのターミナル、ディスクの言語切り替え、キーボード操作を修正しました",
         "upg_title": "Windows 11 のインストール",
         "upg_sub": "この PC には既に Windows 11 がインストールされています。ファイル、設定、アプリを保持したままアップグレードするか、新規インストールを選べます。",
         "upg_keep": "アップグレード: ファイル、設定、アプリを保持",
@@ -110,6 +122,9 @@ EXTRA_V3 = {
     },
     "ko-KR": {
         "win_min": "최소화", "win_max": "최대화", "win_close": "닫기",
+        "start_no_results": "일치하는 앱을 찾을 수 없습니다",
+        "toast_demo_unavailable": "데모 모드: {name}을(를) 사용할 수 없습니다",
+        "notif_v31_body": "앱 검색을 추가하고 설치 터미널, 디스크 언어 전환 및 키보드 상호 작용을 수정했습니다",
         "upg_title": "Windows 11 설치",
         "upg_sub": "이 PC에는 이미 Windows 11이 설치되어 있습니다. 파일, 설정, 앱을 유지하면서 업그레이드하거나 새로 설치할 수 있습니다.",
         "upg_keep": "업그레이드: 파일, 설정, 앱 유지",

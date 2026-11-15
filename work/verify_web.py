@@ -1,4 +1,4 @@
-"""v2.1 多文件工程验证：资源可达、5 语言渲染、版本号与语言按钮。"""
+"""v3.1 多文件工程验证：资源可达、5 语言渲染、版本号与语言按钮。"""
 import pathlib, shutil, subprocess, sys, urllib.request
 
 ROOT = pathlib.Path(r"c:\Users\Administrator\Documents\Kb5213479\2026-11-15\windows-installer-sim")
@@ -39,13 +39,13 @@ for rel in RESOURCES:
         fail.append(rel)
 
 print("\n== 2. 语言渲染（Edge headless --dump-dom） ==")
-profile = ROOT / "work" / "tmp" / "edge_web_v21"
+profile = ROOT / "work" / "tmp" / "edge_web_v31"
 if profile.exists():
     shutil.rmtree(profile, ignore_errors=True)
 
 for code, (sig1, sig2) in CASES.items():
     url = f"{BASE}?lang={code}"
-    shot = SHOTS / f"v21-{code}.png"
+    shot = SHOTS / f"v31-{code}.png"
     args = [EDGE, "--headless=new", "--disable-gpu", "--no-first-run",
             f"--user-data-dir={profile}", "--window-size=1280,860",
             "--virtual-time-budget=6000", f"--screenshot={shot}", "--dump-dom", url]
@@ -55,7 +55,7 @@ for code, (sig1, sig2) in CASES.items():
         "lang 属性": f'lang="{code}"' in dom,
         f"文案 {sig1}": sig1 in dom,
         f"文案 {sig2}": sig2 in dom,
-        "版本号 v3.0": "v3.0" in dom,
+        "版本号 v3.1": "v3.1" in dom,
         "5 个语言按钮": all(f'data-lang="{c}"' in dom for c in CASES),
     }
     ok = all(checks.values()) and shot.exists() and shot.stat().st_size > 80000
@@ -68,4 +68,4 @@ print()
 if fail:
     print("=== 失败：", fail, "===")
     sys.exit(1)
-print("=== v3.0 验证：全部通过 ===")
+print("=== v3.1 验证：全部通过 ===")

@@ -49,6 +49,13 @@
     if (!document.getElementById('s-' + id)) return;
     clearTimers();
     screens.forEach(function (s) { s.classList.toggle('active', s.id === 's-' + id); });
+    // 安装界面的 Shift+F10 使用独立窗口层；回到桌面后移回桌面层，保持开始菜单在最上方。
+    var targetLayer = id === 'desktop' ? $('#winLayer') : $('#setupWinLayer');
+    if (targetLayer) {
+      Object.values(state.openWindows).forEach(function (w) {
+        if (w.parentElement !== targetLayer) targetLayer.appendChild(w);
+      });
+    }
     try { history.replaceState(null, '', '#' + id); } catch (e) { }
     closeStart(); closeNotif();
     updateVersionBadge(id);
@@ -76,7 +83,7 @@
   function updateVersionBadge() {
     var badge = $('#versionBadge');
     if (!badge) return;
-    badge.textContent = 'v3.0';
+    badge.textContent = 'v3.1';
   }
 
   /* ============================================================
@@ -84,16 +91,27 @@
    * ============================================================ */
   var AppWindows = {
     _focusedId: null,
+    _layer: function () {
+      var active = $('.screen.active');
+      return active && active.id === 's-desktop' ? $('#winLayer') : $('#setupWinLayer');
+    },
     open: function (type, opts) {
       opts = opts || {};
-      var id = opts.id || type + '-' + Date.now() + '-' + Math.floor(Math.random() * 999);
-      // 同类型单例（explorer / edge / recycle / settings）
-      if (!opts.multi && state.openWindows[id]) {
-        this.focus(id);
-        return state.openWindows[id];
+      // 默认同类型单例；只有显式 multi:true 时才重复打开。
+      var existingId = opts.id && state.openWindows[opts.id] ? opts.id : null;
+      if (!existingId && !opts.multi) {
+        Object.keys(state.openWindows).some(function (id) {
+          if (state.openWindows[id].dataset.type === type) { existingId = id; return true; }
+          return false;
+        });
       }
+      if (existingId) {
+        this.focus(existingId);
+        return state.openWindows[existingId];
+      }
+      var id = opts.id || type + '-' + Date.now() + '-' + Math.floor(Math.random() * 999);
 
-      var layer = $('#winLayer');
+      var layer = this._layer();
       if (!layer) return null;
 
       var win = document.createElement('div');
@@ -101,7 +119,10 @@
       win.dataset.id = id;
       win.dataset.type = type;
 
-      var size = { w: opts.width || 820, h: opts.height || 540 };
+      var size = {
+        w: Math.min(opts.width || 820, Math.max(360, layer.clientWidth - 24)),
+        h: Math.min(opts.height || 540, Math.max(220, layer.clientHeight - 24))
+      };
       var all = Object.values(state.openWindows);
       var offsetX = (all.length % 8) * 26;
       var offsetY = (all.length % 8) * 22;
@@ -191,7 +212,7 @@
       });
       document.addEventListener('mousemove', function (e) {
         if (!dragging) return;
-        var layer = $('#winLayer');
+        var layer = win.parentElement;
         var maxX = layer.clientWidth - 40, maxY = layer.clientHeight - 40;
         win.style.left = Math.max(0, Math.min(maxX, origLeft + e.clientX - startX)) + 'px';
         win.style.top = Math.max(0, Math.min(maxY, origTop + e.clientY - startY)) + 'px';
@@ -280,7 +301,7 @@
       } else {
         win.dataset._w = win.style.width; win.dataset._h = win.style.height;
         win.dataset._l = win.style.left; win.dataset._t = win.style.top;
-        var layer = $('#winLayer');
+        var layer = win.parentElement;
         win.style.width = (layer.clientWidth - 20) + 'px';
         win.style.height = (layer.clientHeight - 20) + 'px';
         win.style.left = '10px'; win.style.top = '10px';
@@ -616,6 +637,7 @@
       var self = this;
       page = page || 'system';
       body.className = 'settings';
+      body.dataset.page = page;
       var nav = [
         ['system', '系统', '<svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="3" fill="#0067c0"/><path d="M8 2v2M8 12v2M2 8h2M12 8h2M4.2 4.2l1.4 1.4M10.4 10.4l1.4 1.4M4.2 11.8l1.4-1.4M10.4 5.6l1.4-1.4" stroke="#0067c0" stroke-width="1.3"/></svg>'],
         ['bt', '蓝牙和设备', '<svg viewBox="0 0 16 16"><path d="M3 5h10v6H3zM6 2.5l1 1.5H9l1-1.5" stroke="currentColor" stroke-width="1.3" fill="none"/><path d="M7 11.5h2v2H7z" fill="currentColor"/></svg>'],
@@ -635,13 +657,13 @@
           '<h2>' + _t('about_title') + '</h2>' +
           '<div class="about-hero">' +
             '<div class="about-logo"><svg viewBox="0 0 64 64"><g fill="#fff"><rect x="2" y="2" width="27" height="27"/><rect x="35" y="2" width="27" height="27"/><rect x="2" y="35" width="27" height="27"/><rect x="35" y="35" width="27" height="27"/></g></svg></div>' +
-            '<div><div class="about-name">Windows 11</div><div class="about-ver">' + _t('about_version') + ' 3.0.0 · ' + _t('about_edition') + ': ' + (state.edition || 'Pro') + '</div></div>' +
+            '<div><div class="about-name">Windows 11</div><div class="about-ver">' + _t('about_version') + ' 3.1.0 · ' + _t('about_edition') + ': ' + (state.edition || 'Pro') + '</div></div>' +
           '</div>' +
           '<div class="about-rows">' +
             '<div class="about-row"><b>' + _t('about_device') + '</b><span>' + state.deviceName + '</span></div>' +
             '<div class="about-row"><b>' + _t('about_user') + '</b><span>' + (state.userName || 'Administrator') + '</span></div>' +
             '<div class="about-row"><b>' + _t('about_language') + '</b><span>' + lang + '</span></div>' +
-            '<div class="about-row"><b>' + _t('about_build') + '</b><span>22631.3.0 · ' + _t('about_sim') + '</span></div>' +
+            '<div class="about-row"><b>' + _t('about_build') + '</b><span>22631.3.1 · ' + _t('about_sim') + '</span></div>' +
           '</div>' +
           '<div class="about-actions"><button class="btn" data-page="system">' + _t('about_back') + '</button>' +
             '<button class="btn primary" id="aboutRestart">' + _t('about_restart') + '</button></div>' +
@@ -748,35 +770,37 @@
    * ============================================================ */
   function initDisk() {
     state.disk = [
-      { id: 'p1', name: _t('disk_name_recover'), total: 0.5, free: 0, type: _t('disk_type_recover') },
-      { id: 'p2', name: _t('disk_name_efi'), total: 0.1, free: 0, type: _t('disk_type_system') },
-      { id: 'p3', name: _t('disk_name_msr'), total: 0.016, free: 0, type: _t('disk_type_reserved') },
-      { id: 'p4', name: _t('disk_name_primary'), total: 29.0, free: 12.4, type: _t('disk_type_primary') },
-      { id: 'u1', name: _t('disk_name_unalloc'), total: 34.4, free: 34.4, type: '', unallocated: true }
+      { id: 'p1', nameKey: 'disk_name_recover', total: 0.5, free: 0, kind: 'recover' },
+      { id: 'p2', nameKey: 'disk_name_efi', total: 0.1, free: 0, kind: 'system' },
+      { id: 'p3', nameKey: 'disk_name_msr', total: 0.016, free: 0, kind: 'reserved' },
+      { id: 'p4', nameKey: 'disk_name_primary', total: 29.0, free: 12.4, kind: 'primary' },
+      { id: 'u1', nameKey: 'disk_name_unalloc', total: 34.4, free: 34.4, kind: 'unallocated', unallocated: true }
     ];
     state.selected = null;
   }
+  function diskName(p) { return p.nameKey ? _t(p.nameKey) : (p.name || ''); }
+  function diskType(p) { return p.kind && p.kind !== 'unallocated' ? _t('disk_type_' + p.kind) : ''; }
   function fmtSize(gb) { if (!gb || gb < 0.05) return '0 B'; return gb.toFixed(1) + ' GB'; }
   function renderDisk() {
     var rows = $('#diskRows'); if (!rows) return;
     rows.innerHTML = state.disk.map(function (p, i) {
       var cls = 'disk-row' + (state.selected === p.id ? ' sel' : '');
       var main = p.unallocated ? _t('disk_drive_unalloc') : _t('disk_drive_part', { n: i + 1 });
-      var sub = p.unallocated ? '' : '<em>' + p.name + '</em>';
+      var sub = p.unallocated ? '' : '<em>' + diskName(p) + '</em>';
       return '<div class="' + cls + '" data-id="' + p.id + '">' +
         '<div class="disk-name"><span>' + main + '</span>' + sub + '</div>' +
         '<div>' + fmtSize(p.total) + '</div>' +
         '<div>' + fmtSize(p.free) + '</div>' +
-        '<div>' + (p.type || '') + '</div></div>';
+        '<div>' + diskType(p) + '</div></div>';
     }).join('');
     var next = $('#diskNext'), info = $('#diskInfo');
     var p = state.disk.filter(function (x) { return x.id === state.selected; })[0];
-    var ok = !!p && p.type === _t('disk_type_primary');
+    var ok = !!p && p.kind === 'primary';
     if (next) next.disabled = !ok;
     if (info) {
       if (!p) info.textContent = _t('disk_info_none');
       else if (p.unallocated) info.textContent = _t('disk_info_unalloc');
-      else info.textContent = _t('disk_info_selected', { name: p.name, size: fmtSize(p.total), type: p.type });
+      else info.textContent = _t('disk_info_selected', { name: diskName(p), size: fmtSize(p.total), type: diskType(p) });
     }
   }
   function selectPartition(id) { state.selected = id; renderDisk(); }
@@ -784,7 +808,7 @@
     if (gb <= 0.05) return;
     var exist = state.disk.filter(function (x) { return x.unallocated; })[0];
     if (exist) { exist.total += gb; exist.free += gb; }
-    else state.disk.push({ id: 'u' + Date.now(), name: _t('disk_name_unalloc'), total: gb, free: gb, type: '', unallocated: true });
+    else state.disk.push({ id: 'u' + Date.now(), nameKey: 'disk_name_unalloc', total: gb, free: gb, kind: 'unallocated', unallocated: true });
   }
   function removePartition(id) {
     var idx = -1;
@@ -798,17 +822,17 @@
   }
   function doNewPartition(sizeMB) {
     var un = state.disk.filter(function (x) { return x.unallocated; })[0]; if (!un) return;
-    var hasSys = state.disk.some(function (x) { return x.type === _t('disk_type_system'); });
+    var hasSys = state.disk.some(function (x) { return x.kind === 'system'; });
     var sizeGB = Math.min(sizeMB / 1024, un.total);
     var base = 'n' + Date.now(); var added = []; var overhead = 0;
     if (!hasSys) {
-      added.push({ id: base + 'a', name: _t('disk_name_recover'), total: 0.5, free: 0, type: _t('disk_type_recover') });
-      added.push({ id: base + 'b', name: _t('disk_name_efi'), total: 0.1, free: 0, type: _t('disk_type_system') });
-      added.push({ id: base + 'c', name: _t('disk_name_msr'), total: 0.016, free: 0, type: _t('disk_type_reserved') });
+      added.push({ id: base + 'a', nameKey: 'disk_name_recover', total: 0.5, free: 0, kind: 'recover' });
+      added.push({ id: base + 'b', nameKey: 'disk_name_efi', total: 0.1, free: 0, kind: 'system' });
+      added.push({ id: base + 'c', nameKey: 'disk_name_msr', total: 0.016, free: 0, kind: 'reserved' });
       overhead = 0.616;
     }
     var mainSize = Math.max(1, sizeGB - overhead);
-    var main = { id: base + 'd', name: _t('disk_name_primary'), total: mainSize, free: mainSize, type: _t('disk_type_primary') };
+    var main = { id: base + 'd', nameKey: 'disk_name_primary', total: mainSize, free: mainSize, kind: 'primary' };
     added.push(main);
     var idx = state.disk.indexOf(un);
     state.disk.splice(idx, 1);
@@ -828,7 +852,7 @@
   function startInstall() {
     var p = null;
     for (var i = 0; i < state.disk.length; i++) if (state.disk[i].id === state.selected) p = state.disk[i];
-    var instTargetName = p ? (p.name + '（' + fmtSize(p.total) + '）') : _t('inst_target_primary');
+    var instTargetName = p ? (diskName(p) + '（' + fmtSize(p.total) + '）') : _t('inst_target_primary');
     $('#instTarget').textContent = instTargetName;
     _apply();
     $('#instTarget').textContent = instTargetName;
@@ -894,12 +918,15 @@
   function resetExperience() {
     AppWindows.closeAll();
     initDisk(); renderDisk();
-    state.edition = ''; state.selected = null; state.userName = 'Administrator'; state.deviceName = 'DESKTOP-7F3K9Q';
+    state.edition = ''; state.selected = null; state.userName = 'Administrator'; state.deviceName = 'DESKTOP-7F3K9Q'; state.account = 'personal';
     $('#keyInput').value = ''; $('#keyNext').disabled = true;
     $('#editionNext').disabled = true; $('#licenseCheck').checked = false; $('#licenseNext').disabled = true;
     $('#typeNext').disabled = true;
     $$('#typeList .opt').forEach(function (o) { o.classList.remove('sel'); });
     $$('#editionList .opt').forEach(function (o) { o.classList.remove('sel'); });
+    $$('#accList .opt').forEach(function (o) { o.classList.remove('sel'); });
+    $('#accNext').disabled = true;
+    $('#startSearch').value = ''; filterStartApps();
     $('#deviceInput').value = state.deviceName;
     $('#localUser').value = ''; $('#localPass').value = ''; $('#localPass2').value = '';
     $('#localErr').style.display = 'none'; $('#msEmail').value = '';
@@ -920,13 +947,13 @@
     region: function () { _apply(); },
     keyboard: function () { _apply(); },
     keyboard2: function () { _apply(); },
-    net: function () { _apply(); },
+    network: function () { _apply(); },
     limited: function () { _apply(); },
     device: function () { _apply(); $('#deviceInput').value = state.deviceName; },
     acc: function () { _apply(); },
     acctype: function () { _apply(); },
     msaccount: function () { _apply(); },
-    localaccount: function () { _apply(); },
+    local: function () { _apply(); },
     privacy: function () { _apply(); },
     custom: function () { _apply(); },
     final: function () {
@@ -938,23 +965,30 @@
   };
 
   document.addEventListener('langchange', function () {
-    initDisk();
     var active = $('.screen.active');
     var id = active ? active.id.replace(/^s-/, '') : '';
     if (id === 'disk') renderDisk();
-    else if (id === 'install') { var stage = $('#instStage'); if (stage) stage.textContent = _t('inst_stage_1'); }
+    else if (id === 'install') {
+      var pct = parseInt(($('#instPct') || {}).textContent || '0', 10);
+      var idx = 0;
+      for (var i = INST_STAGES_PCT.length - 1; i >= 0; i--) { if (pct >= INST_STAGES_PCT[i]) { idx = i; break; } }
+      $('#instStage').textContent = _t(INST_STAGES_KEYS[idx]);
+      var selected = state.disk.filter(function (x) { return x.id === state.selected; })[0];
+      if (selected) $('#instTarget').textContent = diskName(selected) + '（' + fmtSize(selected.total) + '）';
+    }
     else if (id === 'final') $('#finalName').textContent = state.userName || 'Administrator';
     else if (id === 'desktop') {
       var n = state.userName || 'Administrator'; $('#smUser').textContent = n; $('#smAvatar').textContent = n.charAt(0).toUpperCase();
-      AppWindows.retitleAll();
-      Object.keys(state.openWindows).forEach(function (wid) {
-        var w = state.openWindows[wid];
-        if (w.dataset.type === 'settings') {
-          var b = w.querySelector('.win-body');
-          if (b) AppWindows._renderSettings(b, 'system');
-        }
-      });
+      filterStartApps();
     }
+    AppWindows.retitleAll();
+    Object.keys(state.openWindows).forEach(function (wid) {
+      var w = state.openWindows[wid];
+      if (w.dataset.type === 'settings') {
+        var b = w.querySelector('.win-body');
+        if (b) AppWindows._renderSettings(b, b.dataset.page || 'system');
+      }
+    });
   });
 
   /* ============================================================
@@ -1041,7 +1075,7 @@
     if (!p) { toast(_t('toast_select_part_first')); return; }
     if (p.unallocated) { toast(_t('toast_unalloc_no_delete')); return; }
     $('#mTitle').textContent = _t('modal_delete_title');
-    $('#mBody').innerHTML = '<p>' + _t('modal_delete_body', { name: p.name }) + '</p>';
+    $('#mBody').innerHTML = '<p>' + _t('modal_delete_body', { name: diskName(p) }) + '</p>';
     $('#mOk').textContent = _t('modal_delete_ok'); $('#mCancel').style.display = ''; $('#mCancel').textContent = _t('modal_default_cancel');
     okHandler = function () { removePartition(p.id); toast(_t('toast_deleted')); };
     modalOpen = true; $('#modal').classList.add('open');
@@ -1050,9 +1084,9 @@
     var p = state.disk.filter(function (x) { return x.id === state.selected; })[0];
     if (!p) { toast(_t('toast_select_part_first')); return; }
     if (p.unallocated) { toast(_t('toast_unalloc_no_format')); return; }
-    if (p.type !== _t('disk_type_primary')) { toast(_t('toast_system_part_no_format')); return; }
+    if (p.kind !== 'primary') { toast(_t('toast_system_part_no_format')); return; }
     $('#mTitle').textContent = _t('modal_format_title');
-    $('#mBody').innerHTML = '<p>' + _t('modal_format_body', { name: p.name }) + '</p>';
+    $('#mBody').innerHTML = '<p>' + _t('modal_format_body', { name: diskName(p) }) + '</p>';
     $('#mOk').textContent = _t('modal_format_ok'); $('#mCancel').style.display = ''; $('#mCancel').textContent = _t('modal_default_cancel');
     okHandler = function () { p.free = p.total; renderDisk(); toast(_t('toast_formatted', { size: fmtSize(p.total) })); };
     modalOpen = true; $('#modal').classList.add('open');
@@ -1137,6 +1171,26 @@
   });
   $('#icoSetup').addEventListener('dblclick', function () { AppWindows.open('setup'); });
 
+  /* v3.1：开始菜单应用搜索（支持任务栏搜索按钮与 Enter 启动首个结果） */
+  function filterStartApps() {
+    var input = $('#startSearch'), empty = $('#startNoResults');
+    if (!input || !empty) return;
+    var q = input.value.trim().toLowerCase(), visible = 0;
+    $$('#startMenu .sm-app').forEach(function (app) {
+      var match = !q || app.textContent.toLowerCase().indexOf(q) >= 0;
+      app.hidden = !match;
+      if (match) visible++;
+    });
+    empty.hidden = visible !== 0;
+  }
+  function openStartSearch() {
+    closeNotif();
+    $('#startMenu').classList.add('open');
+    var input = $('#startSearch');
+    input.value = ''; filterStartApps();
+    later(function () { try { input.focus(); } catch (e) {} }, 60);
+  }
+
   /* 任务栏已打开窗口按钮（v3.0） */
   document.addEventListener('click', function (e) {
     var tw = e.target.closest('.tb-win');
@@ -1165,8 +1219,8 @@
       }
     });
   });
-  $$('.tb-btn:not(.running)').forEach(function (btn) {
-    btn.addEventListener('click', function () { toast('演示模式：' + (btn.getAttribute('title') || '') + ' 暂不可用'); });
+  $$('.tb-btn:not(.running):not(#startBtn):not(#searchBtn)').forEach(function (btn) {
+    btn.addEventListener('click', function () { toast(_t('toast_demo_unavailable', { name: btn.getAttribute('title') || '' })); });
   });
   // 开始菜单里的 app tiles（挂在 #startMenu 上：该容器会 stopPropagation，document 级监听收不到）
   $('#startMenu').addEventListener('click', function (e) {
@@ -1186,12 +1240,23 @@
       AppWindows.open('settings');
     else if (name.indexOf('终端') >= 0 || name.indexOf('Terminal') >= 0)
       AppWindows.open('cmd');
-    else toast('演示模式：' + name + ' 暂不可用');
+    else toast(_t('toast_demo_unavailable', { name: name }));
     closeStart();
   });
 
-  /* 开始菜单 */
-  $('#startBtn').addEventListener('click', function (e) { e.stopPropagation(); $('#startMenu').classList.toggle('open'); });
+  /* 开始菜单与搜索 */
+  $('#startBtn').addEventListener('click', function (e) {
+    e.stopPropagation();
+    if ($('#startMenu').classList.contains('open')) closeStart();
+    else openStartSearch();
+  });
+  $('#searchBtn').addEventListener('click', function (e) { e.stopPropagation(); openStartSearch(); });
+  $('#startSearch').addEventListener('input', filterStartApps);
+  $('#startSearch').addEventListener('keydown', function (e) {
+    if (e.key !== 'Enter') return;
+    var first = $$('#startMenu .sm-app').filter(function (app) { return !app.hidden; })[0];
+    if (first) { e.preventDefault(); e.stopPropagation(); first.click(); }
+  });
   $('#startMenu').addEventListener('click', function (e) { e.stopPropagation(); });
   $('#s-desktop').addEventListener('click', function (e) {
     if (!e.target.closest('.taskbar') && !e.target.closest('.dicon') && !e.target.closest('.app-window') && !e.target.closest('.start-menu')) {
@@ -1243,27 +1308,33 @@
       AppWindows.open('cmd');
       return;
     }
+    if (e.altKey && e.key === 'F4' && AppWindows._focusedId) {
+      e.preventDefault(); AppWindows.close(AppWindows._focusedId); return;
+    }
     if (e.key === 'Escape') {
       if (modalOpen) { closeModal(); return; }
-      // 关闭最前面的窗口
-      if (state._focusedId && state.openWindows[state._focusedId]) {
-        AppWindows.close(state._focusedId); return;
+      if ($('#startMenu').classList.contains('open') || $('#notifCenter').classList.contains('open') || demoPanel.classList.contains('open')) {
+        closeStart(); closeNotif(); demoPanel.classList.remove('open'); return;
       }
-      closeStart(); closeNotif(); demoPanel.classList.remove('open');
+      if (AppWindows._focusedId && state.openWindows[AppWindows._focusedId]) {
+        AppWindows.close(AppWindows._focusedId); return;
+      }
       return;
     }
     if (modalOpen) { if (e.key === 'Enter') { e.preventDefault(); $('#mOk').click(); } return; }
 
     var tag = (e.target.tagName || '').toLowerCase();
     var inInput = tag === 'input' || tag === 'select' || tag === 'textarea';
+    var nativeEnter = tag === 'select' || tag === 'textarea' || tag === 'button';
 
-    if (e.key === 'Enter' && !inInput) {
+    // 文本框里也可按 Enter 进入下一步；按钮、下拉框保留原生键盘行为。
+    if (e.key === 'Enter' && !nativeEnter) {
       var a = $('.screen.active');
       var btn = a ? a.querySelector('[data-enter]') : null;
       if (btn && !btn.disabled) { e.preventDefault(); btn.click(); }
       return;
     }
-    if (e.key === 'd' || e.key === 'D') { toggleDemo(); }
+    if (!inInput && !e.ctrlKey && !e.altKey && !e.metaKey && (e.key === 'd' || e.key === 'D')) { toggleDemo(); }
   });
 
   /* ============================================================

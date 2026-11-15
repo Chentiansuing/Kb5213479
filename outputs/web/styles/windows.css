@@ -1,6 +1,7 @@
-/* Windows 11 Setup Simulator 3.0.0 — 窗口管理与语言切换（外部依赖） */
+/* Windows 11 Setup Simulator 3.1.0 — 窗口管理与语言切换（外部依赖） */
 /* ============ 窗口管理 ============ */
 .win-layer{position:absolute; inset:0; pointer-events:none; z-index:5;}
+.setup-win-layer{position:fixed;z-index:40;}
 .app-window{
   position:absolute; pointer-events:auto; min-width:360px; min-height:200px;
   background:rgba(252,253,255,.97); border-radius:8px; overflow:hidden;

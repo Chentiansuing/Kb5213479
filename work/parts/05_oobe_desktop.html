@@ -158,10 +158,10 @@
   </div>
 
   <div class="start-menu" id="startMenu">
-    <div class="sm-search">
+    <label class="sm-search" for="startSearch">
       <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="4.6" stroke="#666" stroke-width="1.4"/><path d="M10.6 10.6L14 14" stroke="#666" stroke-width="1.4" stroke-linecap="round"/></svg>
-      搜索应用、设置和文档
-    </div>
+      <input id="startSearch" type="text" data-i18n-ph="start_search_ph" placeholder="搜索应用、设置和文档" autocomplete="off" spellcheck="false">
+    </label>
     <div class="sm-row"><b>已固定</b><span>所有应用 &gt;</span></div>
     <div class="sm-grid">
       <div class="sm-app"><span class="tile" style="background:#0f6cbd;font:600 15px 'Segoe UI',sans-serif;">e</span>Microsoft Edge</div>
@@ -177,6 +177,7 @@
       <div class="sm-app"><span class="tile" style="background:#8a5600;"><svg width="17" height="17" viewBox="0 0 16 16" fill="none"><rect x="1.9" y="3.6" width="12.2" height="8.8" rx="1.2" stroke="#fff" stroke-width="1.2"/><path d="M2.6 4.5L8 8.7l5.4-4.2" stroke="#fff" stroke-width="1.2" stroke-linejoin="round"/></svg></span>邮件</div>
       <div class="sm-app"><span class="tile" style="background:#3a6ea5;"><svg width="17" height="17" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="2.7" stroke="#fff" stroke-width="1.2"/><path d="M8 1.9v1.5M8 12.6v1.5M1.9 8h1.5M12.6 8h1.5M3.7 3.7l1.1 1.1M11.2 11.2l1.1 1.1M12.3 3.7l-1.1 1.1M4.8 11.2l-1.1 1.1" stroke="#fff" stroke-width="1.1" stroke-linecap="round"/></svg></span>天气</div>
     </div>
+    <div class="sm-empty" id="startNoResults" data-i18n="start_no_results" hidden>没有找到匹配的应用</div>
     <div class="sm-row"><b>推荐</b><span>更多 &gt;</span></div>
     <div style="font-size:11.5px;color:#7a7a7a;padding:6px 2px;">安装完成后，你最近使用的应用和文件会显示在这里。</div>
     <div class="sm-foot">
@@ -198,7 +199,7 @@
       <button class="tb-btn" id="startBtn" title="开始">
         <svg width="22" height="22" viewBox="0 0 32 32"><g fill="#0b6cc4"><rect x="2" y="2" width="13" height="13" rx="1.2"/><rect x="17" y="2" width="13" height="13" rx="1.2"/><rect x="2" y="17" width="13" height="13" rx="1.2"/><rect x="17" y="17" width="13" height="13" rx="1.2"/></g></svg>
       </button>
-      <button class="tb-btn" title="搜索">
+      <button class="tb-btn" id="searchBtn" title="搜索">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="10.5" cy="10.5" r="6.2" stroke="#26303b" stroke-width="1.6"/><path d="M15.2 15.2L20 20" stroke="#26303b" stroke-width="1.6" stroke-linecap="round"/></svg>
       </button>
       <button class="tb-btn" title="小组件">
@@ -234,12 +235,14 @@
       <div class="nc-tile" data-qc="all"><svg viewBox="0 0 16 16" fill="none"><rect x="3" y="3" width="4.5" height="4.5" rx=".8" fill="currentColor"/><rect x="8.5" y="3" width="4.5" height="4.5" rx=".8" fill="currentColor"/><rect x="3" y="8.5" width="4.5" height="4.5" rx=".8" fill="currentColor"/><rect x="8.5" y="8.5" width="4.5" height="4.5" rx=".8" fill="currentColor"/></svg></div>
     </div>
     <div class="nc-body">
-      <div class="nc-notif"><div class="nn-icon">i</div><div><div class="nn-title">Windows 11 安装模拟器 3.0</div><div class="nn-body">新增窗口缩放、任务栏窗口按钮、升级安装与「关于」页</div></div></div>
+      <div class="nc-notif"><div class="nn-icon">i</div><div><div class="nn-title">Windows 11 安装模拟器 3.1</div><div class="nn-body" data-i18n="notif_v31_body">新增应用搜索，修复安装界面终端、磁盘语言切换与键盘交互</div></div></div>
     </div>
   </div>
 </section>
 
-<div class="version-badge" id="versionBadge">v3.0</div>
+<!-- 非桌面界面的 Shift+F10 窗口层；进入桌面时窗口会移回 #winLayer -->
+<div class="win-layer setup-win-layer" id="setupWinLayer"></div>
+<div class="version-badge" id="versionBadge">v3.1</div>
 
 <div id="toast"></div>
 
