@@ -1,4 +1,4 @@
-/* 语言包加载器 v2.1 —— 依赖外部 locales/index.json + locales/<code>.json
+/* 语言包加载器 v4.0 —— 依赖外部 locales/index.json + locales/<code>.json
  * 必须通过 http/https 访问（file:// 下 fetch 会被浏览器拦截）。
  */
 (function () {

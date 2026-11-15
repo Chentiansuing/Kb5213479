@@ -26,7 +26,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
 with socketserver.TCPServer(("127.0.0.1", PORT), Handler) as httpd:
     url = f"http://127.0.0.1:{PORT}/index.html"
-    print(f"Windows 11 Setup Simulator 3.1.0 已启动：{url}")
+    print(f"Windows 11 Setup Simulator 4.0.0 已启动：{url}")
     print("按 Ctrl+C 停止服务")
     try:
         webbrowser.open(url)

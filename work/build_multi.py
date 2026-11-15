@@ -1,4 +1,4 @@
-"""把工程拆成"带外部依赖"的多文件 Web 工程（v3.1，单文件版已放弃）。
+"""把工程拆成"带外部依赖"的多文件 Web 工程（v4.0，单文件版已放弃）。
 
 产出 outputs/web/：
   index.html                 仅结构 + <link>/<script src> 引用
@@ -21,14 +21,16 @@ import json, pathlib, re, sys
 ROOT = pathlib.Path(r"c:\Users\Administrator\Documents\Kb5213479\2026-11-15\windows-installer-sim")
 PARTS = ROOT / "work" / "parts"
 OUT = ROOT / "outputs" / "web"
-VERSION = "3.1.0"
+VERSION = "4.0.0"
 
 sys.path.insert(0, str(ROOT / "work"))
 from locales_data import LANG_JSON, LANG_CSS, LANG_LABELS, LANG_ORDER  # noqa: E402
 from extra_v3 import EXTRA_V3  # noqa: E402
+from extra_v4 import EXTRA_V4  # noqa: E402
 
 for _code in LANG_ORDER:
     LANG_JSON[_code].update(EXTRA_V3[_code])
+    LANG_JSON[_code].update(EXTRA_V4[_code])
 assert all(len(v) == len(LANG_JSON[LANG_ORDER[0]]) for v in LANG_JSON.values()), "语言包键数不一致"
 
 # ---------- 1. 切 CSS ----------
@@ -158,21 +160,33 @@ assert script.startswith("<script>") and script.endswith("</script>"), "06_scrip
 app_js = script[len("<script>"):-len("</script>")].strip()
 
 # ---------- 4. 启动段改为等待语言包 ----------
-old_boot = """  initDisk(); renderDisk(); $('#deviceInput').value = state.deviceName; _apply();
-  updateVersionBadge('boot');
+old_boot = """  loadPrefs();
+  initDisk(); renderDisk(); $('#deviceInput').value = state.deviceName;
+  applyTheme(); _apply();
+  updateVersionBadge();
 
   var startId = (location.hash || '').replace('#', '');
   if (startId && document.getElementById('s-' + startId)) { go(startId); }
   else { go('boot'); }
 
-  window.__installer = { go: go, state: state, openWindow: AppWindows.open };"""
-new_boot = """  window.__installer = { go: go, state: state, openWindow: AppWindows.open };
+  window.__installer = {
+    go: go, state: state,
+    openWindow: function (type, opts) { return AppWindows.open(type, opts); },
+    openApp: openAppType, applyTheme: applyTheme, renderCalendar: renderCalendar
+  };"""
+new_boot = """  window.__installer = {
+    go: go, state: state,
+    openWindow: function (type, opts) { return AppWindows.open(type, opts); },
+    openApp: openAppType, applyTheme: applyTheme, renderCalendar: renderCalendar
+  };
 
   // 依赖：语言包必须先从 locales/*.json 加载完成（需要 http 环境，file:// 下 fetch 会被拦截）
   function bootApp() {
+    loadPrefs();
     initDisk();
     renderDisk();
     $('#deviceInput').value = state.deviceName;
+    applyTheme();
     _apply();
     updateVersionBadge();
     var startId = (location.hash || '').replace('#', '');
@@ -209,7 +223,7 @@ for code in LANG_ORDER:
     (OUT / "locales" / f"{code}.json").write_text(
         json.dumps(LANG_JSON[code], ensure_ascii=False, indent=2), encoding="utf-8")
 
-I18N_JS = r"""/* 语言包加载器 v2.1 —— 依赖外部 locales/index.json + locales/<code>.json
+I18N_JS = r"""/* 语言包加载器 v4.0 —— 依赖外部 locales/index.json + locales/<code>.json
  * 必须通过 http/https 访问（file:// 下 fetch 会被浏览器拦截）。
  */
 (function () {

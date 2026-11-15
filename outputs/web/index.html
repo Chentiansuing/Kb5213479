@@ -6,8 +6,8 @@
 <title>Windows 11 安装程序</title>
 
 <!-- 外部依赖：样式（带版本号，避免更新后仍命中旧缓存） -->
-<link rel="stylesheet" href="styles/app.css?v=3.1.0">
-<link rel="stylesheet" href="styles/windows.css?v=3.1.0">
+<link rel="stylesheet" href="styles/app.css?v=4.0.0">
+<link rel="stylesheet" href="styles/windows.css?v=4.0.0">
 </head>
 <body>
 <body>
@@ -282,7 +282,7 @@
     <div class="fld">
       <label class="fld__label" for="regionSel" data-i18n="oobe_country">国家或地区</label>
       <select class="inp" id="regionSel">
-        <option>中国</option><option>中国香港特别行政区</option><option>中国台湾</option>
+        <option data-i18n="set_region_value">中国</option><option>中国香港特别行政区</option><option>中国台湾</option>
         <option>新加坡</option><option>日本</option><option>美国</option><option>英国</option>
       </select>
     </div>
@@ -503,9 +503,9 @@
 
 <!-- ===== 桌面 ===== -->
 <section class="screen desktop" id="s-desktop">
-  <div class="wall"><div class="petal"></div></div>
+  <div class="wall" id="wall"><div class="petal"></div></div>
   <div class="win-layer" id="winLayer"></div>
-  <div class="desk-icons">
+  <div class="desk-icons" id="deskIcons">
     <div class="dicon" id="icoRecycle">
       <svg width="38" height="38" viewBox="0 0 48 48" fill="none">
         <path d="M11 14h26l-2.4 26.5a3 3 0 0 1-3 2.5H16.4a3 3 0 0 1-3-2.5L11 14Z" fill="rgba(190,215,240,.55)" stroke="#eaf3ff" stroke-width="1.6"/>
@@ -537,29 +537,37 @@
       <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="4.6" stroke="#666" stroke-width="1.4"/><path d="M10.6 10.6L14 14" stroke="#666" stroke-width="1.4" stroke-linecap="round"/></svg>
       <input id="startSearch" type="text" data-i18n-ph="start_search_ph" placeholder="搜索应用、设置和文档" autocomplete="off" spellcheck="false">
     </label>
-    <div class="sm-row"><b>已固定</b><span>所有应用 &gt;</span></div>
+    <div class="sm-row"><b data-i18n="start_pinned">已固定</b><button class="sm-link" id="allAppsBtn" data-i18n="start_all_apps">所有应用</button></div>
     <div class="sm-grid">
-      <div class="sm-app"><span class="tile" style="background:#0f6cbd;font:600 15px 'Segoe UI',sans-serif;">e</span><span data-i18n="app_edge">Microsoft Edge</span></div>
-      <div class="sm-app"><span class="tile" style="background:#f2c811;"><svg width="17" height="17" viewBox="0 0 16 16" fill="none"><path d="M2 5.2h4l1.3 1.5H14v6.1H2V5.2Z" stroke="#4a3a00" stroke-width="1.2" stroke-linejoin="round"/><path d="M2 6.7h12" stroke="#4a3a00" stroke-width="1.2"/></svg></span><span data-i18n="app_explorer">文件资源管理器</span></div>
-      <div class="sm-app"><span class="tile" style="background:#0078d4;"><svg width="17" height="17" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="2.3" stroke="#fff" stroke-width="1.3"/><path d="M8 1.5v1.7M8 12.8v1.7M1.5 8h1.7M12.8 8h1.7M3.5 3.5l1.2 1.2M11.3 11.3l1.2 1.2M12.5 3.5l-1.2 1.2M4.7 11.3l-1.2 1.2" stroke="#fff" stroke-width="1.15" stroke-linecap="round"/></svg></span><span data-i18n="app_settings">设置</span></div>
-      <div class="sm-app"><span class="tile" style="background:#2b88d8;"><svg width="17" height="17" viewBox="0 0 16 16" fill="none"><rect x="2" y="2.8" width="12" height="10.4" rx="1.2" stroke="#fff" stroke-width="1.25"/><circle cx="5.9" cy="6.3" r="1.05" fill="#fff"/><path d="M2.6 12.1l3.3-3.2 2.2 2.1 2.2-2.6 3 3.1" stroke="#fff" stroke-width="1.25" stroke-linejoin="round"/></svg></span><span data-i18n="app_photos">照片</span></div>
-      <div class="sm-app"><span class="tile" style="background:#4c9a2a;"><svg width="17" height="17" viewBox="0 0 16 16" fill="none"><rect x="3.2" y="1.9" width="9.6" height="12.2" rx="1.2" stroke="#fff" stroke-width="1.2"/><rect x="5" y="3.9" width="6" height="2.3" rx=".4" fill="#fff"/><circle cx="5.8" cy="8.8" r=".75" fill="#fff"/><circle cx="8" cy="8.8" r=".75" fill="#fff"/><circle cx="10.2" cy="8.8" r=".75" fill="#fff"/><circle cx="5.8" cy="11.2" r=".75" fill="#fff"/><circle cx="8" cy="11.2" r=".75" fill="#fff"/><circle cx="10.2" cy="11.2" r=".75" fill="#fff"/></svg></span><span data-i18n="app_calc">计算器</span></div>
-      <div class="sm-app"><span class="tile" style="background:#5c2d91;"><svg width="17" height="17" viewBox="0 0 16 16" fill="none"><path d="M4 2h5l3 3v9H4V2Z" stroke="#fff" stroke-width="1.2" stroke-linejoin="round"/><path d="M9 2v3h3" stroke="#fff" stroke-width="1.2" stroke-linejoin="round"/><path d="M6.2 8.2h3.6M6.2 10.6h3.6" stroke="#fff" stroke-width="1.1" stroke-linecap="round"/></svg></span><span data-i18n="app_notepad">记事本</span></div>
-      <div class="sm-app"><span class="tile" style="background:#0067b8;"><svg width="17" height="17" viewBox="0 0 16 16" fill="none"><path d="M3.6 5h8.8l-.8 8.2H4.4L3.6 5Z" stroke="#fff" stroke-width="1.2" stroke-linejoin="round"/><path d="M6 5V3.9a2 2 0 0 1 4 0V5" stroke="#fff" stroke-width="1.2"/></svg></span><span data-i18n="app_store">Microsoft Store</span></div>
-      <div class="sm-app"><span class="tile" style="background:#0b1a2a;font:600 10px Consolas,monospace;">&gt;_</span><span data-i18n="app_terminal">终端</span></div>
-      <div class="sm-app"><span class="tile" style="background:#c42b1c;"><svg width="17" height="17" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="#fff" stroke-width="1.2"/><path d="M6.7 5.3l4 2.7-4 2.7V5.3Z" fill="#fff"/></svg></span><span data-i18n="app_player">媒体播放器</span></div>
-      <div class="sm-app"><span class="tile" style="background:#107c10;"><svg width="17" height="17" viewBox="0 0 16 16" fill="none"><rect x="1.9" y="4.7" width="12.2" height="7.9" rx="1.3" stroke="#fff" stroke-width="1.2"/><path d="M5.6 4.7l.9-1.6h3l.9 1.6" stroke="#fff" stroke-width="1.2" stroke-linejoin="round"/><circle cx="8" cy="8.6" r="2.1" stroke="#fff" stroke-width="1.2"/></svg></span><span data-i18n="app_camera">相机</span></div>
-      <div class="sm-app"><span class="tile" style="background:#8a5600;"><svg width="17" height="17" viewBox="0 0 16 16" fill="none"><rect x="1.9" y="3.6" width="12.2" height="8.8" rx="1.2" stroke="#fff" stroke-width="1.2"/><path d="M2.6 4.5L8 8.7l5.4-4.2" stroke="#fff" stroke-width="1.2" stroke-linejoin="round"/></svg></span><span data-i18n="app_mail">邮件</span></div>
-      <div class="sm-app"><span class="tile" style="background:#3a6ea5;"><svg width="17" height="17" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="2.7" stroke="#fff" stroke-width="1.2"/><path d="M8 1.9v1.5M8 12.6v1.5M1.9 8h1.5M12.6 8h1.5M3.7 3.7l1.1 1.1M11.2 11.2l1.1 1.1M12.3 3.7l-1.1 1.1M4.8 11.2l-1.1 1.1" stroke="#fff" stroke-width="1.1" stroke-linecap="round"/></svg></span><span data-i18n="app_weather">天气</span></div>
+      <div class="sm-app" data-open="edge"><span class="tile" style="background:#0f6cbd;font:600 15px 'Segoe UI',sans-serif;">e</span><span data-i18n="app_edge">Microsoft Edge</span></div>
+      <div class="sm-app" data-open="explorer"><span class="tile" style="background:#f2c811;"><svg width="17" height="17" viewBox="0 0 16 16" fill="none"><path d="M2 5.2h4l1.3 1.5H14v6.1H2V5.2Z" stroke="#4a3a00" stroke-width="1.2" stroke-linejoin="round"/><path d="M2 6.7h12" stroke="#4a3a00" stroke-width="1.2"/></svg></span><span data-i18n="app_explorer">文件资源管理器</span></div>
+      <div class="sm-app" data-open="settings"><span class="tile" style="background:#0078d4;"><svg width="17" height="17" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="2.3" stroke="#fff" stroke-width="1.3"/><path d="M8 1.5v1.7M8 12.8v1.7M1.5 8h1.7M12.8 8h1.7M3.5 3.5l1.2 1.2M11.3 11.3l1.2 1.2M12.5 3.5l-1.2 1.2M4.7 11.3l-1.2 1.2" stroke="#fff" stroke-width="1.15" stroke-linecap="round"/></svg></span><span data-i18n="app_settings">设置</span></div>
+      <div class="sm-app" data-open="photos"><span class="tile" style="background:#2b88d8;"><svg width="17" height="17" viewBox="0 0 16 16" fill="none"><rect x="2" y="2.8" width="12" height="10.4" rx="1.2" stroke="#fff" stroke-width="1.25"/><circle cx="5.9" cy="6.3" r="1.05" fill="#fff"/><path d="M2.6 12.1l3.3-3.2 2.2 2.1 2.2-2.6 3 3.1" stroke="#fff" stroke-width="1.25" stroke-linejoin="round"/></svg></span><span data-i18n="app_photos">照片</span></div>
+      <div class="sm-app" data-open="calc"><span class="tile" style="background:#4c9a2a;"><svg width="17" height="17" viewBox="0 0 16 16" fill="none"><rect x="3.2" y="1.9" width="9.6" height="12.2" rx="1.2" stroke="#fff" stroke-width="1.2"/><rect x="5" y="3.9" width="6" height="2.3" rx=".4" fill="#fff"/><circle cx="5.8" cy="8.8" r=".75" fill="#fff"/><circle cx="8" cy="8.8" r=".75" fill="#fff"/><circle cx="10.2" cy="8.8" r=".75" fill="#fff"/><circle cx="5.8" cy="11.2" r=".75" fill="#fff"/><circle cx="8" cy="11.2" r=".75" fill="#fff"/><circle cx="10.2" cy="11.2" r=".75" fill="#fff"/></svg></span><span data-i18n="app_calc">计算器</span></div>
+      <div class="sm-app" data-open="notepad"><span class="tile" style="background:#5c2d91;"><svg width="17" height="17" viewBox="0 0 16 16" fill="none"><path d="M4 2h5l3 3v9H4V2Z" stroke="#fff" stroke-width="1.2" stroke-linejoin="round"/><path d="M9 2v3h3" stroke="#fff" stroke-width="1.2" stroke-linejoin="round"/><path d="M6.2 8.2h3.6M6.2 10.6h3.6" stroke="#fff" stroke-width="1.1" stroke-linecap="round"/></svg></span><span data-i18n="app_notepad">记事本</span></div>
+      <div class="sm-app" data-open="store"><span class="tile" style="background:#0067b8;"><svg width="17" height="17" viewBox="0 0 16 16" fill="none"><path d="M3.6 5h8.8l-.8 8.2H4.4L3.6 5Z" stroke="#fff" stroke-width="1.2" stroke-linejoin="round"/><path d="M6 5V3.9a2 2 0 0 1 4 0V5" stroke="#fff" stroke-width="1.2"/></svg></span><span data-i18n="app_store">Microsoft Store</span></div>
+      <div class="sm-app" data-open="cmd"><span class="tile" style="background:#0b1a2a;font:600 10px Consolas,monospace;">&gt;_</span><span data-i18n="app_terminal">终端</span></div>
+      <div class="sm-app" data-open="player"><span class="tile" style="background:#c42b1c;"><svg width="17" height="17" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="#fff" stroke-width="1.2"/><path d="M6.7 5.3l4 2.7-4 2.7V5.3Z" fill="#fff"/></svg></span><span data-i18n="app_player">媒体播放器</span></div>
+      <div class="sm-app" data-open="camera"><span class="tile" style="background:#107c10;"><svg width="17" height="17" viewBox="0 0 16 16" fill="none"><rect x="1.9" y="4.7" width="12.2" height="7.9" rx="1.3" stroke="#fff" stroke-width="1.2"/><path d="M5.6 4.7l.9-1.6h3l.9 1.6" stroke="#fff" stroke-width="1.2" stroke-linejoin="round"/><circle cx="8" cy="8.6" r="2.1" stroke="#fff" stroke-width="1.2"/></svg></span><span data-i18n="app_camera">相机</span></div>
+      <div class="sm-app" data-open="mail"><span class="tile" style="background:#8a5600;"><svg width="17" height="17" viewBox="0 0 16 16" fill="none"><rect x="1.9" y="3.6" width="12.2" height="8.8" rx="1.2" stroke="#fff" stroke-width="1.2"/><path d="M2.6 4.5L8 8.7l5.4-4.2" stroke="#fff" stroke-width="1.2" stroke-linejoin="round"/></svg></span><span data-i18n="app_mail">邮件</span></div>
+      <div class="sm-app" data-open="weather"><span class="tile" style="background:#3a6ea5;"><svg width="17" height="17" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="2.7" stroke="#fff" stroke-width="1.2"/><path d="M8 1.9v1.5M8 12.6v1.5M1.9 8h1.5M12.6 8h1.5M3.7 3.7l1.1 1.1M11.2 11.2l1.1 1.1M12.3 3.7l-1.1 1.1M4.8 11.2l-1.1 1.1" stroke="#fff" stroke-width="1.1" stroke-linecap="round"/></svg></span><span data-i18n="app_weather">天气</span></div>
     </div>
+    <div class="sm-allapps" id="allAppsList" hidden></div>
     <div class="sm-empty" id="startNoResults" data-i18n="start_no_results" hidden>没有找到匹配的应用</div>
     <div class="sm-row"><b>推荐</b><span>更多 &gt;</span></div>
     <div style="font-size:11.5px;color:#7a7a7a;padding:6px 2px;" data-i18n="start_recent_hint">安装完成后，你最近使用的应用和文件会显示在这里。</div>
     <div class="sm-foot">
       <div class="sm-user"><span class="sm-avatar" id="smAvatar">A</span><span id="smUser">Administrator</span></div>
-      <button class="sm-power" id="smPower" title="重新启动（重新体验安装）">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2v6" stroke="#333" stroke-width="1.5" stroke-linecap="round"/><path d="M4.2 4.4a5.2 5.2 0 1 0 7.6 0" stroke="#333" stroke-width="1.5" stroke-linecap="round"/></svg>
-      </button>
+      <div class="sm-power-wrap">
+        <button class="sm-power" id="smPower" data-i18n-title="start_power" title="电源">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2v6" stroke="#333" stroke-width="1.5" stroke-linecap="round"/><path d="M4.2 4.4a5.2 5.2 0 1 0 7.6 0" stroke="#333" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </button>
+        <div class="power-menu" id="powerMenu">
+          <button data-power="sleep" data-i18n="pw_sleep">睡眠</button>
+          <button data-power="restart" data-i18n="pw_restart">重启</button>
+          <button data-power="off" data-i18n="pw_off">关机</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -592,7 +600,7 @@
       <div class="tb-wins" id="tbWins"></div>
     </div>
     <div class="tb-right">
-      <div class="tray" title="网络、声音、电池">
+      <div class="tray" id="qsBtn" title="网络、声音、电池" data-i18n-title="tray_net_vol">
         <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M2 6.5C3.7 5 5.7 4.2 8 4.2s4.3.8 6 2.3" stroke="#2b3440" stroke-width="1.4" stroke-linecap="round"/><path d="M4 9c1.1-.9 2.5-1.4 4-1.4S10.9 8.1 12 9" stroke="#2b3440" stroke-width="1.4" stroke-linecap="round"/><circle cx="8" cy="11.7" r="1" fill="#2b3440"/></svg>
         <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M3 6.5 7 3v10L3 9.5H1.5v-3H3Z" fill="#2b3440"/><path d="M9.5 5.5a3.5 3.5 0 0 1 0 5" stroke="#2b3440" stroke-width="1.3" stroke-linecap="round"/></svg>
       </div>
@@ -601,23 +609,78 @@
   </div>
 
   <div class="notif-center" id="notifCenter">
-    <div class="nc-quick">
-      <div class="nc-tile" data-qc="wifi"><svg viewBox="0 0 16 16" fill="none"><path d="M2 6.5C3.7 5 5.7 4.2 8 4.2s4.3.8 6 2.3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M4 9c1.1-.9 2.5-1.4 4-1.4S10.9 8.1 12 9" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><circle cx="8" cy="11.7" r="1" fill="currentColor"/></svg></div>
-      <div class="nc-tile" data-qc="bt"><svg viewBox="0 0 16 16" fill="none"><rect x="4" y="2" width="8" height="11" rx="1.5" stroke="currentColor" stroke-width="1.4"/><rect x="6" y="3" width="4" height="2" rx=".5" fill="currentColor"/></svg></div>
-      <div class="nc-tile" data-qc="airplane"><svg viewBox="0 0 16 16" fill="none"><path d="M8 2l1 3 3 1-3 1 1 3-2-1-2 1 1-3-3-1 3-1Z" fill="currentColor"/></svg></div>
-      <div class="nc-tile" data-qc="night"><svg viewBox="0 0 16 16" fill="none"><path d="M11.5 9a4.5 4.5 0 0 1-4-4.5A5 5 0 1 0 11.5 9Z" fill="currentColor"/></svg></div>
-      <div class="nc-tile" data-qc="focus"><svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.4"/><circle cx="8" cy="8" r="2" fill="currentColor"/></svg></div>
-      <div class="nc-tile" data-qc="all"><svg viewBox="0 0 16 16" fill="none"><rect x="3" y="3" width="4.5" height="4.5" rx=".8" fill="currentColor"/><rect x="8.5" y="3" width="4.5" height="4.5" rx=".8" fill="currentColor"/><rect x="3" y="8.5" width="4.5" height="4.5" rx=".8" fill="currentColor"/><rect x="8.5" y="8.5" width="4.5" height="4.5" rx=".8" fill="currentColor"/></svg></div>
+    <div class="cal" id="calPanel">
+      <div class="cal__hd">
+        <b id="calMonth">--</b>
+        <div class="cal__nav">
+          <button id="calPrev" title="上一月">‹</button>
+          <button id="calToday" data-i18n="cal_today">今天</button>
+          <button id="calNext" title="下一月">›</button>
+        </div>
+      </div>
+      <div class="cal__week" id="calWeek"></div>
+      <div class="cal__grid" id="calGrid"></div>
     </div>
     <div class="nc-body">
-      <div class="nc-notif"><div class="nn-icon">i</div><div><div class="nn-title">Windows 11 安装模拟器 3.1</div><div class="nn-body" data-i18n="notif_v31_body">新增应用搜索，修复安装界面终端、磁盘语言切换与键盘交互</div></div></div>
+      <div class="nn-empty" data-i18n="cal_notif_empty">没有新通知</div>
+      <div class="nc-notif"><div class="nn-icon">i</div><div><div class="nn-title">Windows 11 安装模拟器 4.0</div><div class="nn-body" data-i18n="notif_v40_body">新增计算器、记事本、照片、个性化主题与快速设置</div></div></div>
     </div>
+  </div>
+
+  <div class="flyout quick-panel" id="quickPanel">
+    <div class="qp-hd"><b data-i18n="qs_title">快速设置</b><button class="qp-settings" id="qsAll" data-i18n="qs_all">所有设置</button></div>
+    <div class="qp-grid">
+      <button class="qp-tile" data-qc="wifi">
+        <svg viewBox="0 0 16 16" fill="none"><path d="M2 6.5C3.7 5 5.7 4.2 8 4.2s4.3.8 6 2.3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M4 9c1.1-.9 2.5-1.4 4-1.4S10.9 8.1 12 9" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><circle cx="8" cy="11.7" r="1" fill="currentColor"/></svg>
+        <span data-i18n="qs_wifi">Wi‑Fi</span>
+      </button>
+      <button class="qp-tile" data-qc="bt">
+        <svg viewBox="0 0 16 16" fill="none"><rect x="4" y="2" width="8" height="11" rx="1.5" stroke="currentColor" stroke-width="1.4"/><rect x="6" y="3" width="4" height="2" rx=".5" fill="currentColor"/></svg>
+        <span data-i18n="qs_bt">蓝牙</span>
+      </button>
+      <button class="qp-tile" data-qc="airplane">
+        <svg viewBox="0 0 16 16" fill="none"><path d="M8 2l1 3 3 1-3 1 1 3-2-1-2 1 1-3-3-1 3-1Z" fill="currentColor"/></svg>
+        <span data-i18n="qs_airplane">飞行模式</span>
+      </button>
+      <button class="qp-tile" data-qc="night">
+        <svg viewBox="0 0 16 16" fill="none"><path d="M11.5 9a4.5 4.5 0 0 1-4-4.5A5 5 0 1 0 11.5 9Z" fill="currentColor"/></svg>
+        <span data-i18n="qs_night">夜间模式</span>
+      </button>
+    </div>
+    <div class="qp-slider">
+      <svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="3.2" stroke="currentColor" stroke-width="1.3"/><path d="M8 1.4v1.6M8 13v1.6M1.4 8h1.6M13 8h1.6M3.3 3.3l1.1 1.1M11.6 11.6l1.1 1.1M12.7 3.3l-1.1 1.1M4.4 11.6l-1.1 1.1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+      <input type="range" id="qsBright" min="20" max="100" value="80" aria-label="亮度">
+      <b id="qsBrightVal">80</b>
+    </div>
+    <div class="qp-slider">
+      <svg viewBox="0 0 16 16" fill="none"><path d="M3 6.5 7 3v10L3 9.5H1.5v-3H3Z" fill="currentColor"/><path d="M9.5 5.5a3.5 3.5 0 0 1 0 5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+      <input type="range" id="qsVol" min="0" max="100" value="62" aria-label="音量">
+      <b id="qsVolVal">62</b>
+    </div>
+    <div class="qp-foot" id="qsStatus" data-i18n="qs_connected">已连接到 Wi‑Fi</div>
+  </div>
+
+  <div class="ctx-menu" id="ctxMenu">
+    <button data-ctx="refresh" data-i18n="ctx_refresh">刷新</button>
+    <button data-ctx="folder" data-i18n="ctx_new_folder">新建文件夹</button>
+    <div class="ctx-sep"></div>
+    <button data-ctx="personalize" data-i18n="ctx_personalize">个性化</button>
+    <button data-ctx="display" data-i18n="ctx_display">显示设置</button>
+    <button data-ctx="terminal" data-i18n="ctx_terminal">在终端中打开</button>
   </div>
 </section>
 
+<div class="power-screen" id="powerScreen">
+  <div class="ps-body">
+    <div class="ps-ring"></div>
+    <div class="ps-text" id="psText"></div>
+  </div>
+  <div class="ps-hint" id="psHint"></div>
+</div>
+
 <!-- 非桌面界面的 Shift+F10 窗口层；进入桌面时窗口会移回 #winLayer -->
 <div class="win-layer setup-win-layer" id="setupWinLayer"></div>
-<div class="version-badge" id="versionBadge">v3.1</div>
+<div class="version-badge" id="versionBadge">v4.0</div>
 
 <div id="toast"></div>
 
@@ -649,7 +712,7 @@
       <button data-jump="keyboard2">第二键盘</button><button data-jump="network">网络</button>
       <button data-jump="limited" data-i18n="limited_title">受限设置</button><button data-jump="device">设备命名</button>
       <button data-jump="acctype">账户类型</button><button data-jump="msaccount">微软账户</button>
-      <button data-jump="local">本地账户</button><button data-jump="privacy">隐私选项</button>
+      <button data-jump="local" data-i18n="set_account_type">本地账户</button><button data-jump="privacy">隐私选项</button>
       <button data-jump="custom">自定义体验</button><button data-jump="final">准备桌面</button>
     </div></div>
     <div class="demo__group"><b data-i18n="demo_g_desk">桌面</b><div class="demo__btns"><button data-jump="desktop">Windows 11 桌面</button></div></div>
@@ -663,7 +726,7 @@
 <div class="lang-switch" id="langSwitch"></div>
 
 <!-- 外部依赖：语言包加载器 + 主逻辑（语言包为 locales/*.json，需通过本地服务器访问） -->
-<script src="scripts/i18n.js?v=3.1.0"></script>
-<script src="scripts/app.js?v=3.1.0"></script>
+<script src="scripts/i18n.js?v=4.0.0"></script>
+<script src="scripts/app.js?v=4.0.0"></script>
 </body>
 </html>

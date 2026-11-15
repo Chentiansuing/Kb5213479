@@ -22,6 +22,9 @@
     disk: [], selected: null, edition: '', account: 'personal',
     userName: 'Administrator', deviceName: 'DESKTOP-7F3K9Q', installStart: 0,
     quickTiles: { wifi: true, bt: true, airplane: false, night: false, focus: false },
+    theme: { mode: 'light', accent: '#0067c0', wall: 1 },
+    volume: 62, brightness: 80,
+    notes: '', folderSeq: 0, photoIndex: 1, storeInstalled: {},
     openWindows: {}, // id -> win element
     winZCounter: 1000
   };
@@ -83,7 +86,72 @@
   function updateVersionBadge() {
     var badge = $('#versionBadge');
     if (!badge) return;
-    badge.textContent = 'v3.1';
+    badge.textContent = 'v4.0';
+  }
+
+  /* ============================================================
+   * v4.0：主题、偏好与桌面个性化
+   * ============================================================ */
+  var PREFS_KEY = 'windows11_sim_prefs';
+
+  function loadPrefs() {
+    try {
+      var raw = localStorage.getItem(PREFS_KEY);
+      if (!raw) return;
+      var p = JSON.parse(raw);
+      if (p.theme && p.theme.mode) state.theme.mode = p.theme.mode === 'dark' ? 'dark' : 'light';
+      if (p.theme && p.theme.accent) state.theme.accent = p.theme.accent;
+      if (p.theme && p.theme.wall) state.theme.wall = p.theme.wall;
+      if (typeof p.volume === 'number') state.volume = p.volume;
+      if (typeof p.brightness === 'number') state.brightness = p.brightness;
+      if (p.quick) {
+        state.quickTiles.wifi = !!p.quick.wifi;
+        state.quickTiles.bt = !!p.quick.bt;
+        state.quickTiles.airplane = !!p.quick.airplane;
+        state.quickTiles.night = !!p.quick.night;
+      }
+      if (typeof p.notes === 'string') state.notes = p.notes;
+    } catch (e) { /* 忽略损坏的本地偏好 */ }
+  }
+  function savePrefs() {
+    try {
+      localStorage.setItem(PREFS_KEY, JSON.stringify({
+        theme: state.theme, volume: state.volume, brightness: state.brightness,
+        quick: { wifi: state.quickTiles.wifi, bt: state.quickTiles.bt,
+                 airplane: state.quickTiles.airplane, night: state.quickTiles.night },
+        notes: state.notes
+      }));
+    } catch (e) { /* 隐私模式忽略 */ }
+  }
+  function mixHex(hex, target, ratio) {
+    var h = String(hex || '#0067c0').replace('#', '');
+    if (h.length === 3) h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2];
+    var r = parseInt(h.slice(0, 2), 16), g = parseInt(h.slice(2, 4), 16), b = parseInt(h.slice(4, 6), 16);
+    var tr = parseInt(target.slice(0, 2), 16), tg = parseInt(target.slice(2, 4), 16), tb = parseInt(target.slice(4, 6), 16);
+    var m = function (a, c) { return Math.round(a + (c - a) * ratio).toString(16).padStart(2, '0'); };
+    return '#' + m(r, tr) + m(g, tg) + m(b, tb);
+  }
+  function applyTheme() {
+    var t = state.theme;
+    document.body.dataset.theme = t.mode === 'dark' ? 'dark' : 'light';
+    document.body.dataset.night = state.quickTiles.night ? '1' : '0';
+    var root = document.documentElement.style;
+    root.setProperty('--accent', t.accent);
+    root.setProperty('--accent-hover', mixHex(t.accent, 'ffffff', 0.16));
+    root.setProperty('--accent-press', mixHex(t.accent, '000000', 0.12));
+    var wall = $('#wall');
+    if (wall) wall.dataset.wall = String(t.wall || 1);
+    syncQuickPanel();
+  }
+  function syncQuickPanel() {
+    $$('#quickPanel .qp-tile').forEach(function (b) {
+      b.classList.toggle('on', !!state.quickTiles[b.dataset.qc]);
+    });
+    var st = $('#qsStatus');
+    if (st) st.textContent = state.quickTiles.wifi ? _t('qs_connected') : _t('qs_disconnected');
+    var br = $('#qsBright'), vol = $('#qsVol');
+    if (br) { br.value = state.brightness; $('#qsBrightVal').textContent = String(state.brightness); }
+    if (vol) { vol.value = state.volume; $('#qsVolVal').textContent = String(state.volume); }
   }
 
   /* ============================================================
@@ -166,7 +234,9 @@
       var map = {
         explorer: _t('icon_pc'), cmd: '管理员: C:\\Windows\\System32\\cmd.exe',
         edge: 'Microsoft Edge', recycle: _t('icon_recycle'), settings: _t('app_settings'),
-        terminal: 'Windows Terminal', setup: _t('setup_title')
+        terminal: 'Windows Terminal', setup: _t('setup_title'),
+        calc: _t('app_calc'), notepad: _t('app_notepad'), photos: _t('app_photos'),
+        store: _t('app_store')
       };
       return map[type] || type;
     },
@@ -184,6 +254,14 @@
         return '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" fill="#0067c0"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2" stroke="#0067c0" stroke-width="1.5" stroke-linecap="round"/></svg>';
       if (type === 'setup')
         return '<svg viewBox="0 0 24 24"><rect x="2" y="2" width="9" height="9" fill="#0067c0"/><rect x="13" y="2" width="9" height="9" fill="#0067c0"/><rect x="2" y="13" width="9" height="9" fill="#0067c0"/><rect x="13" y="13" width="9" height="9" fill="#0067c0"/></svg>';
+      if (type === 'calc')
+        return '<svg viewBox="0 0 16 16"><rect x="2.5" y="1.5" width="11" height="13" rx="1.6" fill="#4c9a2a"/><rect x="4.4" y="3.4" width="7.2" height="2.4" rx=".5" fill="#fff" opacity=".9"/><g fill="#fff"><circle cx="5.2" cy="8.4" r=".85"/><circle cx="8" cy="8.4" r=".85"/><circle cx="10.8" cy="8.4" r=".85"/><circle cx="5.2" cy="11.2" r=".85"/><circle cx="8" cy="11.2" r=".85"/><circle cx="10.8" cy="11.2" r=".85"/></g></svg>';
+      if (type === 'notepad')
+        return '<svg viewBox="0 0 16 16"><path d="M4 1.6h5l3 3v9.8H4V1.6Z" fill="#5c2d91"/><path d="M9 1.6v3h3" fill="#3f1d66"/><path d="M6 7h4M6 9h4M6 11h2.5" stroke="#fff" stroke-width="1" stroke-linecap="round"/></svg>';
+      if (type === 'photos')
+        return '<svg viewBox="0 0 16 16"><rect x="2" y="3" width="12" height="10" rx="1.4" fill="#2b88d8"/><circle cx="5.6" cy="6.3" r="1.05" fill="#fff"/><path d="M2.6 12.1l3.3-3.2 2.2 2.1 2.2-2.6 3 3.1" stroke="#fff" stroke-width="1.2" stroke-linejoin="round" fill="none"/></svg>';
+      if (type === 'store')
+        return '<svg viewBox="0 0 16 16"><path d="M3.6 5h8.8l-.8 8.2H4.4L3.6 5Z" fill="#0067b8"/><path d="M6 5V3.9a2 2 0 0 1 4 0V5" stroke="#fff" stroke-width="1.2" fill="none"/></svg>';
       return '<svg viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#0067c0"/></svg>';
     },
     _svg: function (kind) {
@@ -374,91 +452,195 @@
       else if (type === 'recycle') this._renderRecycle(body);
       else if (type === 'settings') this._renderSettings(body);
       else if (type === 'setup') this._renderSetupUpgrade(body, win);
+      else if (type === 'calc') this._renderCalc(body);
+      else if (type === 'notepad') this._renderNotepad(body);
+      else if (type === 'photos') this._renderPhotos(body);
+      else if (type === 'store') this._renderStore(body);
     },
 
     _renderExplorer: function (body, opts) {
       var self = this;
-      var currentPath = opts.path || '此电脑';
       var navItems = [
-        { id: 'quick', label: '快速访问', icon: '<svg viewBox="0 0 16 16"><path d="M8 2l2 4 4.5.6-3.4 3.2.9 4.6L8 12.5 4 14.4l.9-4.6L1.5 6.6 6 6Z" fill="#f5c04a"/></svg>' },
-        { id: 'pc', label: '此电脑', icon: '<svg viewBox="0 0 16 16"><rect x="2" y="3" width="12" height="9" rx="1" stroke="#0067c0" stroke-width="1.2"/><path d="M6 13h4M8 12v1.5" stroke="#0067c0" stroke-width="1.2"/></svg>' },
-        { id: 'desktop', label: '桌面', icon: '<svg viewBox="0 0 16 16"><rect x="3" y="2" width="10" height="7" rx="1" stroke="#4a5a6b" stroke-width="1.2"/><path d="M6 13h4M8 9v4" stroke="#4a5a6b" stroke-width="1.2"/></svg>' },
-        { id: 'docs', label: '文档', icon: '<svg viewBox="0 0 16 16"><path d="M4 2h5l3 3v9H4V2Z" stroke="#4a5a6b" stroke-width="1.2"/></svg>' },
-        { id: 'dl', label: '下载', icon: '<svg viewBox="0 0 16 16"><path d="M8 2v7M5.5 6.5L8 9l2.5-2.5M3 13h10" stroke="#4a5a6b" stroke-width="1.3" stroke-linecap="round"/></svg>' },
-        { id: 'pics', label: '图片', icon: '<svg viewBox="0 0 16 16"><rect x="2" y="3" width="12" height="10" rx="1" stroke="#4a5a6b" stroke-width="1.2"/><circle cx="5.5" cy="6.5" r="1" fill="#4a5a6b"/><path d="M2.5 12l3.5-3 3 2.5 2.5-2 2 2.5" stroke="#4a5a6b" stroke-width="1.2"/></svg>' },
-        { id: 'music', label: '音乐', icon: '<svg viewBox="0 0 16 16"><path d="M5 11V5l8-1v6" stroke="#4a5a6b" stroke-width="1.3" stroke-linecap="round"/><circle cx="5" cy="11" r="1.6" fill="#4a5a6b"/><circle cx="13" cy="10" r="1.6" fill="#4a5a6b"/></svg>' },
+        { id: 'quick', label: _t('exp_quick'), icon: '<svg viewBox="0 0 16 16"><path d="M8 2l2 4 4.5.6-3.4 3.2.9 4.6L8 12.5 4 14.4l.9-4.6L1.5 6.6 6 6Z" fill="#f5c04a"/></svg>' },
+        { id: 'pc', label: _t('icon_pc'), icon: '<svg viewBox="0 0 16 16"><rect x="2" y="3" width="12" height="9" rx="1" stroke="#0067c0" stroke-width="1.2" fill="none"/><path d="M6 13h4M8 12v1.5" stroke="#0067c0" stroke-width="1.2"/></svg>' },
+        { id: 'desktop', label: _t('exp_desktop'), icon: '<svg viewBox="0 0 16 16"><rect x="3" y="2" width="10" height="7" rx="1" stroke="#4a5a6b" stroke-width="1.2" fill="none"/><path d="M6 13h4M8 9v4" stroke="#4a5a6b" stroke-width="1.2"/></svg>' },
+        { id: 'docs', label: _t('exp_docs'), icon: '<svg viewBox="0 0 16 16"><path d="M4 2h5l3 3v9H4V2Z" stroke="#4a5a6b" stroke-width="1.2" fill="none"/></svg>' },
+        { id: 'dl', label: _t('exp_dl'), icon: '<svg viewBox="0 0 16 16" fill="none"><path d="M8 2v7M5.5 6.5L8 9l2.5-2.5M3 13h10" stroke="#4a5a6b" stroke-width="1.3" stroke-linecap="round"/></svg>' },
+        { id: 'pics', label: _t('exp_pics'), icon: '<svg viewBox="0 0 16 16"><rect x="2" y="3" width="12" height="10" rx="1" stroke="#4a5a6b" stroke-width="1.2" fill="none"/><circle cx="5.5" cy="6.5" r="1" fill="#4a5a6b"/><path d="M2.5 12l3.5-3 3 2.5 2.5-2 2 2.5" stroke="#4a5a6b" stroke-width="1.2" fill="none"/></svg>' },
+        { id: 'music', label: _t('exp_music'), icon: '<svg viewBox="0 0 16 16" fill="none"><path d="M5 11V5l8-1v6" stroke="#4a5a6b" stroke-width="1.3" stroke-linecap="round"/><circle cx="5" cy="11" r="1.6" fill="#4a5a6b"/><circle cx="13" cy="10" r="1.6" fill="#4a5a6b"/></svg>' },
       ];
 
+      var driveIcon = '<svg viewBox="0 0 32 32"><rect x="4" y="4" width="24" height="24" rx="4" fill="#0067c0"/><text x="16" y="21" text-anchor="middle" fill="#fff" font-size="12" font-weight="600">C:</text></svg>';
+      var driveIconD = '<svg viewBox="0 0 32 32"><rect x="4" y="4" width="24" height="24" rx="4" fill="#4c9a2a"/><text x="16" y="21" text-anchor="middle" fill="#fff" font-size="12" font-weight="600">D:</text></svg>';
+      var folderIcon = '<svg viewBox="0 0 32 32"><path d="M3 9a2 2 0 0 1 2-2h7l2 3h13a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9Z" fill="#f5c04a" stroke="#c99a2e" stroke-width="1"/></svg>';
+      var pcIcon = AppWindows._defaultIcon('explorer');
+      var rcIcon = '<svg viewBox="0 0 24 24" fill="none"><path d="M5 8h14l-1.2 11.4a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 8Z" stroke="#4a5a6b" stroke-width="1.5"/></svg>';
+      var setupIcon = '<svg viewBox="0 0 32 32"><rect x="4" y="4" width="24" height="24" rx="6" fill="#0067c0"/><g fill="#fff"><rect x="11" y="11" width="4.5" height="4.5"/><rect x="16.5" y="11" width="4.5" height="4.5"/><rect x="11" y="16.5" width="4.5" height="4.5"/><rect x="16.5" y="16.5" width="4.5" height="4.5"/></g></svg>';
+      var docIcon = '<svg viewBox="0 0 32 32"><path d="M7 4h13l5 5v19H7V4Z" fill="#2b579a"/><path d="M7 4h13v5h5" stroke="#1e3f6b" stroke-width="1" fill="none"/></svg>';
+      var xlsIcon = '<svg viewBox="0 0 32 32"><rect x="5" y="4" width="22" height="24" rx="1" fill="#217346"/><text x="16" y="23" text-anchor="middle" fill="#fff" font-size="14" font-weight="700">X</text></svg>';
+      var exeIcon = '<svg viewBox="0 0 32 32"><rect x="5" y="4" width="22" height="24" rx="4" fill="#0067c0"/><text x="16" y="22" text-anchor="middle" fill="#fff" font-size="9" font-weight="600">EXE</text></svg>';
+      var jpgIcon = '<svg viewBox="0 0 32 32"><rect x="3" y="4" width="26" height="24" rx="2" fill="#f0a04a"/><rect x="6" y="7" width="20" height="14" fill="#5ab4d9"/><circle cx="10" cy="11" r="2" fill="#ffd75e"/><path d="M6 21l6-5 4 3 3-2 6 4" stroke="#fff" stroke-width="1.2" fill="none"/></svg>';
+      var mp3Icon = '<svg viewBox="0 0 32 32"><rect x="5" y="4" width="22" height="24" rx="4" fill="#c42b1c"/><circle cx="16" cy="20" r="4" fill="#fff"/></svg>';
+      var isoIcon = '<svg viewBox="0 0 32 32"><rect x="4" y="4" width="24" height="24" rx="3" fill="#5c2d91"/><text x="16" y="21" text-anchor="middle" fill="#fff" font-size="8" font-weight="600">ISO</text></svg>';
+
       var contentMap = {
-        'pc': [
-          { name: '本地磁盘 (C:)', type: 'drive', icon: '<svg viewBox="0 0 32 32"><rect x="4" y="4" width="24" height="24" rx="4" fill="#0067c0"/><text x="16" y="21" text-anchor="middle" fill="#fff" font-size="12" font-weight="600">C:</text></svg>' },
-          { name: '数据 (D:)', type: 'drive', icon: '<svg viewBox="0 0 32 32"><rect x="4" y="4" width="24" height="24" rx="4" fill="#4c9a2a"/><text x="16" y="21" text-anchor="middle" fill="#fff" font-size="12" font-weight="600">D:</text></svg>' },
+        pc: [
+          { name: _t('exp_local_disk') + ' (C:)', type: 'drive', target: 'c', icon: driveIcon },
+          { name: _t('exp_data_disk') + ' (D:)', type: 'drive', target: 'd', icon: driveIconD }
         ],
-        'desktop': [
-          { name: '此电脑', type: 'shortcut', icon: AppWindows._defaultIcon('explorer') },
-          { name: '回收站', type: 'shortcut', icon: '<svg viewBox="0 0 24 24" fill="none"><path d="M5 8h14l-1.2 11.4a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 8Z" stroke="#4a5a6b" stroke-width="1.5"/></svg>' },
-          { name: '重新安装 Windows', type: 'shortcut', icon: '<svg viewBox="0 0 32 32"><rect x="4" y="4" width="24" height="24" rx="6" fill="#0067c0"/><rect x="11" y="11" width="4.5" height="4.5" fill="#fff"/><rect x="16.5" y="11" width="4.5" height="4.5" fill="#fff"/><rect x="11" y="16.5" width="4.5" height="4.5" fill="#fff"/><rect x="16.5" y="16.5" width="4.5" height="4.5" fill="#fff"/></svg>' },
+        c: [
+          { name: 'Windows', type: 'folder', target: 'c-win', icon: folderIcon },
+          { name: 'Users', type: 'folder', target: 'c-users', icon: folderIcon },
+          { name: 'Program Files', type: 'folder', target: 'c-pf', icon: folderIcon }
         ],
-        'docs': [
-          { name: '演示文档.docx', type: 'file', icon: '<svg viewBox="0 0 32 32"><path d="M7 4h13l5 5v19H7V4Z" fill="#2b579a"/><path d="M7 4h13v5h5" stroke="#1e3f6b" stroke-width="1" fill="none"/></svg>' },
-          { name: '工作计划.xlsx', type: 'file', icon: '<svg viewBox="0 0 32 32"><rect x="5" y="4" width="22" height="24" rx="1" fill="#217346"/><text x="16" y="23" text-anchor="middle" fill="#fff" font-size="14" font-weight="700">X</text></svg>' },
+        'c-win': [
+          { name: 'System32', type: 'folder', target: 'c-sys', icon: folderIcon },
+          { name: 'explorer.exe', type: 'file', icon: exeIcon },
+          { name: 'notepad.exe', type: 'file', icon: exeIcon }
         ],
-        'dl': [
-          { name: 'setup.exe', type: 'file', icon: '<svg viewBox="0 0 32 32"><rect x="5" y="4" width="22" height="24" rx="4" fill="#0067c0"/><text x="16" y="22" text-anchor="middle" fill="#fff" font-size="9" font-weight="600">EXE</text></svg>' },
+        'c-sys': [
+          { name: 'cmd.exe', type: 'file', icon: exeIcon },
+          { name: 'kernel32.dll', type: 'file', icon: exeIcon }
         ],
-        'pics': [
-          { name: '风景.jpg', type: 'file', icon: '<svg viewBox="0 0 32 32"><rect x="3" y="4" width="26" height="24" rx="2" fill="#f0a04a"/><rect x="6" y="7" width="20" height="14" fill="#5ab4d9"/><circle cx="10" cy="11" r="2" fill="#ffd75e"/><path d="M6 21l6-5 4 3 3-2 6 4" stroke="#fff" stroke-width="1.2" fill="none"/></svg>' },
+        'c-users': [
+          { name: state.userName || 'Administrator', type: 'folder', target: 'c-user', icon: folderIcon }
         ],
-        'music': [
-          { name: '歌曲.mp3', type: 'file', icon: '<svg viewBox="0 0 32 32"><rect x="5" y="4" width="22" height="24" rx="4" fill="#c42b1c"/><circle cx="16" cy="20" r="4" fill="#fff"/></svg>' },
+        'c-user': [
+          { name: _t('exp_desktop'), type: 'folder', target: 'desktop', icon: folderIcon },
+          { name: _t('exp_docs'), type: 'folder', target: 'docs', icon: folderIcon },
+          { name: _t('exp_dl'), type: 'folder', target: 'dl', icon: folderIcon },
+          { name: _t('exp_pics'), type: 'folder', target: 'pics', icon: folderIcon }
         ],
-        'quick': [],
+        'c-pf': [],
+        d: [
+          { name: _t('folder_new'), type: 'folder', target: 'd-new', icon: folderIcon },
+          { name: 'backup', type: 'folder', target: 'd-backup', icon: folderIcon }
+        ],
+        'd-new': [],
+        'd-backup': [
+          { name: 'Windows11.iso', type: 'file', icon: isoIcon }
+        ],
+        desktop: [
+          { name: _t('icon_pc'), type: 'shortcut', target: 'pc', icon: pcIcon },
+          { name: _t('icon_recycle'), type: 'shortcut', app: 'recycle', icon: rcIcon },
+          { name: _t('icon_reinstall'), type: 'shortcut', app: 'setup', icon: setupIcon }
+        ],
+        docs: [
+          { name: '演示文档.docx', type: 'file', icon: docIcon },
+          { name: '工作计划.xlsx', type: 'file', icon: xlsIcon },
+          { name: '说明.txt', type: 'file', app: 'notepad', icon: docIcon }
+        ],
+        dl: [
+          { name: 'setup.exe', type: 'file', icon: exeIcon }
+        ],
+        pics: [
+          { name: _t('ph_caption_1') + '.jpg', type: 'file', app: 'photos', icon: jpgIcon },
+          { name: _t('ph_caption_2') + '.jpg', type: 'file', app: 'photos', icon: jpgIcon }
+        ],
+        music: [
+          { name: '歌曲.mp3', type: 'file', icon: mp3Icon }
+        ],
+        quick: []
+      };
+      var titles = {
+        quick: _t('exp_quick'), pc: _t('icon_pc'), desktop: _t('exp_desktop'),
+        docs: _t('exp_docs'), dl: _t('exp_dl'), pics: _t('exp_pics'), music: _t('exp_music'),
+        c: _t('exp_local_disk') + ' (C:)', d: _t('exp_data_disk') + ' (D:)',
+        'c-win': 'Windows', 'c-users': 'Users', 'c-pf': 'Program Files',
+        'c-sys': 'System32', 'c-user': state.userName || 'Administrator',
+        'd-new': _t('folder_new'), 'd-backup': 'backup'
+      };
+      var parents = {
+        c: 'pc', d: 'pc', 'c-win': 'c', 'c-users': 'c', 'c-pf': 'c', 'c-sys': 'c-win',
+        'c-user': 'c-users', 'd-new': 'd', 'd-backup': 'd'
       };
 
-      function renderContent(listId) {
-        var items = contentMap[listId] || [];
+      var current = contentMap[opts.path] ? opts.path : 'pc';
+      var stack = [current];
+
+      function pathOf(id) {
+        var segs = [];
+        var cur = id;
+        while (cur) { segs.unshift({ id: cur, label: titles[cur] || cur }); cur = parents[cur]; }
+        return segs;
+      }
+
+      function renderList() {
+        var items = contentMap[current] || [];
         var container = body.querySelector('.explorer__files');
         container.innerHTML = items.map(function (it) {
-          return '<div class="explorer__file" data-name="' + it.name + '">' +
+          return '<div class="explorer__file" data-name="' + it.name + '"' +
+            ' data-target="' + (it.target || '') + '" data-app="' + (it.app || '') + '">' +
             '<div class="fi-icon">' + it.icon + '</div>' +
             '<div class="fi-name">' + it.name + '</div></div>';
         }).join('');
-        var pathSegs = ['此电脑'];
-        if (listId !== 'pc') pathSegs.push({ quick: '快速访问', desktop: '桌面', docs: '文档', dl: '下载', pics: '图片', music: '音乐' }[listId] || listId);
         var pathEl = body.querySelector('.explorer__path');
-        pathEl.innerHTML = pathSegs.map(function (s) { return '<span class="seg">' + s + '</span>'; }).join('');
+        pathEl.innerHTML = pathOf(current).map(function (s) {
+          return '<span class="seg" data-path="' + s.id + '">' + s.label + '</span>';
+        }).join('<span class="sep">›</span>');
         var empty = body.querySelector('.explorer__empty');
         container.style.display = items.length ? '' : 'none';
         empty.style.display = items.length ? 'none' : '';
+        var back = body.querySelector('#expBack');
+        if (back) back.disabled = stack.length < 2;
+        body.querySelectorAll('.nav-item').forEach(function (x) {
+          x.classList.toggle('active', x.dataset.id === current);
+        });
+      }
+
+      function navigate(id) {
+        if (!id || !contentMap[id]) return;
+        current = id;
+        if (stack[stack.length - 1] !== id) stack.push(id);
+        renderList();
       }
 
       body.className = 'explorer';
       body.innerHTML =
         '<div class="explorer__nav">' +
-          '<div class="nav-hd">快速访问</div>' +
+          '<div class="nav-hd">' + _t('exp_quick') + '</div>' +
           navItems.map(function (n) {
-            return '<div class="nav-item' + (currentPath === n.label ? ' active' : '') + '" data-id="' + n.id + '">' +
-              n.icon + '<span>' + n.label + '</span></div>';
+            return '<div class="nav-item" data-id="' + n.id + '">' + n.icon + '<span>' + n.label + '</span></div>';
           }).join('') +
         '</div>' +
         '<div class="explorer__main">' +
-          '<div class="explorer__ribbon"><button>文件</button><button>主页</button><button>共享</button><button>查看</button></div>' +
+          '<div class="explorer__ribbon">' +
+            '<button id="expBack" title="' + _t('exp_back') + '">‹ ' + _t('exp_back') + '</button>' +
+            '<button>' + _t('exp_file') + '</button><button>' + _t('exp_home') + '</button>' +
+            '<button>' + _t('exp_share') + '</button><button>' + _t('exp_view') + '</button>' +
+          '</div>' +
           '<div class="explorer__path"></div>' +
           '<div class="explorer__content">' +
             '<div class="explorer__files"></div>' +
-            '<div class="explorer__empty">此文件夹为空</div>' +
+            '<div class="explorer__empty">' + _t('exp_empty') + '</div>' +
           '</div>' +
         '</div>';
 
       body.querySelectorAll('.nav-item').forEach(function (ni) {
-        ni.addEventListener('click', function () {
-          body.querySelectorAll('.nav-item').forEach(function (x) { x.classList.remove('active'); });
-          ni.classList.add('active');
-          renderContent(ni.dataset.id);
-        });
+        ni.addEventListener('click', function () { stack = [ni.dataset.id]; navigate(ni.dataset.id); stack = [ni.dataset.id]; });
+      });
+      var backBtn = body.querySelector('#expBack');
+      if (backBtn) backBtn.addEventListener('click', function () {
+        if (stack.length < 2) return;
+        stack.pop();
+        current = stack[stack.length - 1];
+        renderList();
+      });
+      body.querySelector('.explorer__path').addEventListener('click', function (e) {
+        var seg = e.target.closest('.seg'); if (!seg) return;
+        var idx = -1;
+        for (var i = 0; i < stack.length; i++) if (stack[i] === seg.dataset.path) idx = i;
+        if (idx >= 0) { stack = stack.slice(0, idx + 1); current = stack[stack.length - 1]; renderList(); }
+        else navigate(seg.dataset.path);
+      });
+      body.querySelector('.explorer__files').addEventListener('dblclick', function (e) {
+        var f = e.target.closest('.explorer__file'); if (!f) return;
+        if (f.dataset.target) navigate(f.dataset.target);
+        else if (f.dataset.app) AppWindows.open(f.dataset.app, { multi: f.dataset.app !== 'setup' });
+        else toast(_t('toast_demo_unavailable', { name: f.dataset.name || _t('exp_file') }));
       });
 
-      renderContent(opts.path || 'pc');
+      renderList();
     },
 
     _renderCmd: function (body, win) {
@@ -637,66 +819,345 @@
       var self = this;
       page = page || 'system';
       body.className = 'settings';
-      body.dataset.page = page;
+      body.dataset.settingsPage = page;
+
       var nav = [
-        ['system', '系统', '<svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="3" fill="#0067c0"/><path d="M8 2v2M8 12v2M2 8h2M12 8h2M4.2 4.2l1.4 1.4M10.4 10.4l1.4 1.4M4.2 11.8l1.4-1.4M10.4 5.6l1.4-1.4" stroke="#0067c0" stroke-width="1.3"/></svg>'],
-        ['bt', '蓝牙和设备', '<svg viewBox="0 0 16 16"><path d="M3 5h10v6H3zM6 2.5l1 1.5H9l1-1.5" stroke="currentColor" stroke-width="1.3" fill="none"/><path d="M7 11.5h2v2H7z" fill="currentColor"/></svg>'],
-        ['net', '网络和 Internet', '<svg viewBox="0 0 16 16"><path d="M2 6.5C3.7 5 5.7 4.2 8 4.2s4.3.8 6 2.3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M4 9c1.1-.9 2.5-1.4 4-1.4S10.9 8.1 12 9" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><circle cx="8" cy="11.7" r="1" fill="currentColor"/></svg>'],
-        ['personal', '个性化', '<svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.4"/><path d="M5.5 5.5l5 5M10.5 5.5l-5 5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>'],
-        ['apps', '应用', '<svg viewBox="0 0 16 16"><rect x="2.5" y="3" width="11" height="10" rx="1.2" stroke="currentColor" stroke-width="1.4"/><rect x="4.5" y="5.5" width="4" height="2.5" rx=".4" fill="currentColor"/><rect x="4.5" y="9" width="7" height="1.5" rx=".3" fill="currentColor"/><rect x="4.5" y="11" width="5" height="1" rx=".2" fill="currentColor"/></svg>'],
-        ['account', '账户', '<svg viewBox="0 0 16 16"><circle cx="8" cy="6" r="3.5" stroke="currentColor" stroke-width="1.4"/><path d="M2.5 14c1-2.5 3.5-4 5.5-4s4.5 1.5 5.5 4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>'],
-        ['time', '时间和语言', '<svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.4"/><path d="M8 4v4l3 2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>'],
-        ['privacy', '隐私和安全性', '<svg viewBox="0 0 16 16"><path d="M8 2l5 2v4c0 3-2.5 5-5 6-2.5-1-5-3-5-6V4l5-2Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>']
+        ['system', _t('set_system'), '<svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="3" fill="currentColor"/><path d="M8 2v2M8 12v2M2 8h2M12 8h2M4.2 4.2l1.4 1.4M10.4 10.4l1.4 1.4M4.2 11.8l1.4-1.4M10.4 5.6l1.4-1.4" stroke="currentColor" stroke-width="1.3" fill="none"/></svg>'],
+        ['bt', _t('set_bt'), '<svg viewBox="0 0 16 16"><path d="M3 5h10v6H3zM6 2.5l1 1.5H9l1-1.5" stroke="currentColor" stroke-width="1.3" fill="none"/><path d="M7 11.5h2v2H7z" fill="currentColor"/></svg>'],
+        ['net', _t('set_net'), '<svg viewBox="0 0 16 16" fill="none"><path d="M2 6.5C3.7 5 5.7 4.2 8 4.2s4.3.8 6 2.3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M4 9c1.1-.9 2.5-1.4 4-1.4S10.9 8.1 12 9" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><circle cx="8" cy="11.7" r="1" fill="currentColor"/></svg>'],
+        ['personal', _t('set_personal'), '<svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.4"/><path d="M5.5 5.5l5 5M10.5 5.5l-5 5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>'],
+        ['apps', _t('set_apps'), '<svg viewBox="0 0 16 16"><rect x="2.5" y="3" width="11" height="10" rx="1.2" stroke="currentColor" stroke-width="1.4" fill="none"/><rect x="4.5" y="5.5" width="4" height="2.5" rx=".4" fill="currentColor"/><rect x="4.5" y="9" width="7" height="1.5" rx=".3" fill="currentColor"/><rect x="4.5" y="11" width="5" height="1" rx=".2" fill="currentColor"/></svg>'],
+        ['account', _t('set_account'), '<svg viewBox="0 0 16 16"><circle cx="8" cy="6" r="3.5" stroke="currentColor" stroke-width="1.4" fill="none"/><path d="M2.5 14c1-2.5 3.5-4 5.5-4s4.5 1.5 5.5 4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" fill="none"/></svg>'],
+        ['time', _t('set_time'), '<svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.4"/><path d="M8 4v4l3 2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>'],
+        ['privacy', _t('set_privacy'), '<svg viewBox="0 0 16 16"><path d="M8 2l5 2v4c0 3-2.5 5-5 6-2.5-1-5-3-5-6V4l5-2Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" fill="none"/></svg>']
       ];
 
-      var main;
-      if (page === 'about') {
+      function row(title, desc, extra, pageId) {
+        return '<div class="settings__row' + (pageId ? ' clickable" data-page="' + pageId : '') + '">' +
+          '<div class="sr-left"><div><div class="sr-title">' + title + '</div>' +
+          (desc ? '<div class="sr-desc">' + desc + '</div>' : '') + '</div></div>' +
+          (extra || (pageId ? '<span>›</span>' : '')) + '</div>';
+      }
+
+      var main = '';
+      if (page === 'personal') {
+        var accents = ['#0067c0', '#8b5cf6', '#e3008c', '#0f7b3f', '#c2410c'];
+        var walls = [[1, 'set_wallpaper_1'], [2, 'set_wallpaper_2'], [3, 'set_wallpaper_3']];
+        main =
+          '<h2>' + _t('set_personal') + '</h2><p class="s-sub">' + _t('set_theme_desc') + '</p>' +
+          '<div class="set-block"><b>' + _t('set_theme') + '</b><i>' + _t('set_theme_desc') + '</i>' +
+            '<div class="set-seg">' +
+              '<button data-theme-mode="light" class="' + (state.theme.mode === 'light' ? 'on' : '') + '">' + _t('set_theme_light') + '</button>' +
+              '<button data-theme-mode="dark" class="' + (state.theme.mode === 'dark' ? 'on' : '') + '">' + _t('set_theme_dark') + '</button>' +
+            '</div></div>' +
+          '<div class="set-block"><b>' + _t('set_accent') + '</b><i>' + _t('set_accent_desc') + '</i>' +
+            '<div class="set-swatches">' + accents.map(function (c) {
+              return '<button class="set-swatch' + (state.theme.accent === c ? ' on' : '') + '" data-accent="' + c + '" style="background:' + c + '" title="' + c + '"></button>';
+            }).join('') + '</div></div>' +
+          '<div class="set-block"><b>' + _t('set_wallpaper') + '</b><i>&nbsp;</i>' +
+            '<div class="set-walls">' + walls.map(function (w) {
+              return '<button class="set-wall' + (Number(state.theme.wall) === w[0] ? ' on' : '') + '" data-wall="' + w[0] + '" title="' + _t(w[1]) + '"></button>';
+            }).join('') + '</div></div>' +
+          '<div class="settings__row clickable" data-page="time"><div class="sr-left"><div><div class="sr-title">' + _t('set_lang') + '</div><div class="sr-desc">' + _t('set_time_desc') + '</div></div></div><span>›</span></div>';
+      } else if (page === 'time') {
+        var langBtns = $$('.lang-switch button[data-lang]');
+        main =
+          '<h2>' + _t('set_time') + '</h2><p class="s-sub">' + _t('set_time_desc') + '</p>' +
+          '<div class="set-block"><b>' + _t('set_lang') + '</b><i>' + _t('set_lang_desc') + '</i>' +
+            '<div class="set-langs">' + langBtns.map(function (b) {
+              return '<button class="set-lang' + (b.classList.contains('on') ? ' on' : '') + '" data-setlang="' + b.dataset.lang + '">' + b.textContent + '</button>';
+            }).join('') + '</div></div>' +
+          row(_t('set_region'), '', '<span class="sr-val">' + _t('set_region_value') + '</span>') +
+          row(_t('set_keyboard'), '', '<span class="sr-val">' + _t('set_keyboard_value') + '</span>');
+      } else if (page === 'privacy') {
+        var priv = [['p_loc', 'p_loc_d'], ['p_find', 'p_find_d'], ['p_diag', 'p_diag_d'], ['p_ink', 'p_ink_d'], ['p_tailor', 'p_tailor_d'], ['p_ad', 'p_ad_d'], ['p_local', 'p_local_d']];
+        main =
+          '<h2>' + _t('set_privacy') + '</h2><p class="s-sub">' + _t('set_privacy_desc') + '</p>' +
+          priv.map(function (p, i) {
+            return '<div class="switch-row"><div class="txt"><b>' + _t(p[0]) + '</b><span>' + _t(p[1]) + '</span></div>' +
+              '<div class="switch' + (i === 5 || i === 3 ? '' : ' on') + '"></div></div>';
+          }).join('');
+      } else if (page === 'apps') {
+        var appList = [['app_explorer', 'explorer'], ['app_edge', 'edge'], ['app_settings', 'settings'], ['app_calc', 'calc'], ['app_notepad', 'notepad'], ['app_photos', 'photos']];
+        main =
+          '<h2>' + _t('set_apps') + '</h2><p class="s-sub">' + _t('set_apps_count') + '</p>' +
+          appList.map(function (a) {
+            return '<div class="settings__row clickable" data-open-app="' + a[1] + '"><div class="sr-left"><div>' +
+              '<div class="sr-title">' + _t(a[0]) + '</div><div class="sr-desc">' + _t('set_apps_desc') + '</div></div></div><span>›</span></div>';
+          }).join('');
+      } else if (page === 'about') {
         var langBtn = document.querySelector('.lang-switch button.on');
         var lang = langBtn ? langBtn.textContent : '简体中文';
         main =
           '<h2>' + _t('about_title') + '</h2>' +
           '<div class="about-hero">' +
             '<div class="about-logo"><svg viewBox="0 0 64 64"><g fill="#fff"><rect x="2" y="2" width="27" height="27"/><rect x="35" y="2" width="27" height="27"/><rect x="2" y="35" width="27" height="27"/><rect x="35" y="35" width="27" height="27"/></g></svg></div>' +
-            '<div><div class="about-name">Windows 11</div><div class="about-ver">' + _t('about_version') + ' 3.1.0 · ' + _t('about_edition') + ': ' + (state.edition || 'Pro') + '</div></div>' +
+            '<div><div class="about-name">Windows 11</div><div class="about-ver">' + _t('about_version') + ' 4.0.0 · ' + _t('about_edition') + ': ' + (state.edition || 'Pro') + '</div></div>' +
           '</div>' +
           '<div class="about-rows">' +
             '<div class="about-row"><b>' + _t('about_device') + '</b><span>' + state.deviceName + '</span></div>' +
             '<div class="about-row"><b>' + _t('about_user') + '</b><span>' + (state.userName || 'Administrator') + '</span></div>' +
             '<div class="about-row"><b>' + _t('about_language') + '</b><span>' + lang + '</span></div>' +
-            '<div class="about-row"><b>' + _t('about_build') + '</b><span>22631.3.1 · ' + _t('about_sim') + '</span></div>' +
+            '<div class="about-row"><b>' + _t('about_build') + '</b><span>22631.4.0 · ' + _t('about_sim') + '</span></div>' +
           '</div>' +
           '<div class="about-actions"><button class="btn" data-page="system">' + _t('about_back') + '</button>' +
             '<button class="btn primary" id="aboutRestart">' + _t('about_restart') + '</button></div>' +
           '<div class="about-note">' + _t('about_note') + '</div>';
+      } else if (page === 'bt') {
+        main = '<h2>' + _t('set_bt') + '</h2><p class="s-sub">' + _t('set_bt_desc') + '</p>' +
+          '<div class="set-empty">' + _t('set_bt_empty') + '</div>';
+      } else if (page === 'net') {
+        main = '<h2>' + _t('set_net') + '</h2><p class="s-sub">' + _t('set_net_desc') + '</p>' +
+          row(_t('qs_wifi'), _t('set_net_status'), '<span class="sr-val">' + (state.quickTiles.wifi ? 'On' : 'Off') + '</span>');
+      } else if (page === 'account') {
+        main = '<h2>' + _t('set_account') + '</h2><p class="s-sub">' + _t('set_account_desc') + '</p>' +
+          row(_t('about_user'), state.userName || 'Administrator', '<span class="sr-val">' + _t('set_account_type') + '</span>') +
+          row(_t('about_device'), state.deviceName, '');
       } else {
         main =
-          '<h2>系统</h2><p class="s-sub">你可以查看设备信息和系统设置</p>' +
-          '<div class="settings__row"><div class="sr-left"><div><div class="sr-title">显示器</div><div class="sr-desc">两个显示器已连接</div></div></div></div>' +
-          '<div class="settings__row"><div class="sr-left"><div><div class="sr-title">声音</div><div class="sr-desc">输出设备：扬声器</div></div></div></div>' +
-          '<div class="settings__row"><div class="sr-left"><div><div class="sr-title">通知</div><div class="sr-desc">来自应用和系统的通知</div></div></div></div>' +
-          '<div class="settings__row"><div class="sr-left"><div><div class="sr-title">专注助手</div><div class="sr-desc">减少干扰</div></div></div></div>' +
-          '<div class="settings__row" data-page="about"><div class="sr-left"><div><div class="sr-title">' + _t('about_title') + '</div><div class="sr-desc">' + _t('about_desc') + '</div></div></div><span>›</span></div>';
+          '<h2>' + _t('set_system') + '</h2><p class="s-sub">' + _t('set_system_sub') + '</p>' +
+          row(_t('set_display'), _t('set_display_desc'), '<span class="sr-val">' + state.brightness + '%</span>') +
+          row(_t('set_sound'), _t('set_sound_desc'), '<span class="sr-val">' + state.volume + '%</span>') +
+          row(_t('set_notifications'), _t('set_notif_desc'), '') +
+          row(_t('set_power'), _t('set_power_desc'), '') +
+          row(_t('set_storage'), _t('set_storage_desc'), '') +
+          row(_t('about_title'), _t('about_desc'), '', 'about');
       }
 
       body.innerHTML =
         '<div class="settings__nav">' +
-          nav.map(function (it, i) {
+          nav.map(function (it) {
             return '<div class="s-item' + (page === it[0] || (page === 'about' && it[0] === 'system') ? ' active' : '') + '" data-nav="' + it[0] + '">' + it[2] + it[1] + '</div>';
           }).join('') +
         '</div>' +
         '<div class="settings__main">' + main + '</div>';
 
       body.onclick = function (e) {
+        var navEl = e.target.closest('.s-item');
+        if (navEl) { self._renderSettings(body, navEl.dataset.nav); return; }
         var pg = e.target.closest('[data-page]');
         if (pg) { self._renderSettings(body, pg.dataset.page); return; }
-        var navEl = e.target.closest('.s-item');
-        if (navEl && navEl.dataset.nav !== 'system') { toast('演示模式：该设置页面暂不可用'); return; }
-        if (navEl && navEl.dataset.nav === 'system') self._renderSettings(body, 'system');
+
+        var mode = e.target.closest('[data-theme-mode]');
+        if (mode) {
+          state.theme.mode = mode.dataset.themeMode;
+          applyTheme(); savePrefs(); toast(_t('set_saved'));
+          self._renderSettings(body, 'personal');
+          return;
+        }
+        var accent = e.target.closest('[data-accent]');
+        if (accent) {
+          state.theme.accent = accent.dataset.accent;
+          applyTheme(); savePrefs(); toast(_t('set_saved'));
+          self._renderSettings(body, 'personal');
+          return;
+        }
+        var wall = e.target.closest('[data-wall]');
+        if (wall) {
+          state.theme.wall = Number(wall.dataset.wall);
+          applyTheme(); savePrefs(); toast(_t('set_saved'));
+          self._renderSettings(body, 'personal');
+          return;
+        }
+        var lang = e.target.closest('[data-setlang]');
+        if (lang && window.__i18n) {
+          window.__i18n.switch(lang.dataset.setlang);
+          return;
+        }
+        var openApp = e.target.closest('[data-open-app]');
+        if (openApp) { AppWindows.open(openApp.dataset.openApp, { multi: true }); return; }
+
         if (e.target.closest('#aboutRestart')) {
           self.closeAll();
           resetExperience();
         }
       };
+    },
+
+    /* ---- 计算器（v4.0） ---- */
+    _renderCalc: function (body) {
+      body.className = 'calc';
+      body.tabIndex = 0;
+      body.innerHTML =
+        '<div class="calc__disp"><div class="calc__expr" id="calcExpr"></div><div class="calc__num" id="calcNum">0</div></div>' +
+        '<div class="calc__keys">' +
+          '<button class="calc__k op" data-k="C">C</button>' +
+          '<button class="calc__k op" data-k="back">⌫</button>' +
+          '<button class="calc__k op" data-k="%">%</button>' +
+          '<button class="calc__k op" data-k="/">÷</button>' +
+          '<button class="calc__k" data-k="7">7</button><button class="calc__k" data-k="8">8</button>' +
+          '<button class="calc__k" data-k="9">9</button><button class="calc__k op" data-k="*">×</button>' +
+          '<button class="calc__k" data-k="4">4</button><button class="calc__k" data-k="5">5</button>' +
+          '<button class="calc__k" data-k="6">6</button><button class="calc__k op" data-k="-">−</button>' +
+          '<button class="calc__k" data-k="1">1</button><button class="calc__k" data-k="2">2</button>' +
+          '<button class="calc__k" data-k="3">3</button><button class="calc__k op" data-k="+">+</button>' +
+          '<button class="calc__k" data-k="sign">±</button><button class="calc__k" data-k="0">0</button>' +
+          '<button class="calc__k" data-k=".">.</button><button class="calc__k eq" data-k="=">=</button>' +
+        '</div>';
+
+      var cur = '0', acc = null, op = null, fresh = true, expr = '';
+      var numEl = body.querySelector('#calcNum');
+      var exprEl = body.querySelector('#calcExpr');
+
+      function fmt(n) {
+        if (!isFinite(n)) return 'Error';
+        var s = String(Math.round(n * 1e10) / 1e10);
+        return s.length > 14 ? String(Number(n.toPrecision(10))) : s;
+      }
+      function calculate(a, b, o) {
+        if (o === '+') return a + b;
+        if (o === '-') return a - b;
+        if (o === '*') return a * b;
+        if (o === '/') return b === 0 ? NaN : a / b;
+        return b;
+      }
+      function update() {
+        numEl.textContent = cur;
+        exprEl.textContent = expr;
+      }
+      function press(k) {
+        if (/^[0-9]$/.test(k)) {
+          if (fresh) { cur = k; fresh = false; }
+          else cur = cur === '0' ? k : (cur.length < 14 ? cur + k : cur);
+        } else if (k === '.') {
+          if (fresh) { cur = '0.'; fresh = false; }
+          else if (cur.indexOf('.') < 0) cur += '.';
+        } else if (k === 'C') {
+          cur = '0'; acc = null; op = null; fresh = true; expr = '';
+        } else if (k === 'back') {
+          if (!fresh) cur = cur.length > 1 ? cur.slice(0, -1) : '0';
+          if (cur === '-') cur = '0';
+        } else if (k === 'sign') {
+          cur = cur.charAt(0) === '-' ? cur.slice(1) : (cur === '0' ? '0' : '-' + cur);
+        } else if (k === '%') {
+          cur = fmt(parseFloat(cur) / 100); fresh = true;
+        } else if (k === '+' || k === '-' || k === '*' || k === '/') {
+          var val = parseFloat(cur);
+          if (acc !== null && op && !fresh) { acc = calculate(acc, val, op); cur = fmt(acc); }
+          else acc = val;
+          op = k; fresh = true;
+          expr = fmt(acc) + ' ' + ({ '+': '+', '-': '−', '*': '×', '/': '÷' }[k]);
+        } else if (k === '=') {
+          if (op && acc !== null) {
+            var v = calculate(acc, parseFloat(cur), op);
+            expr = fmt(acc) + ' ' + ({ '+': '+', '-': '−', '*': '×', '/': '÷' }[op]) + ' ' + cur + ' =';
+            cur = fmt(v); acc = null; op = null; fresh = true;
+          }
+        }
+        update();
+      }
+
+      body.querySelector('.calc__keys').addEventListener('click', function (e) {
+        var b = e.target.closest('[data-k]'); if (!b) return;
+        press(b.dataset.k);
+      });
+      body.addEventListener('keydown', function (e) {
+        var k = e.key;
+        if (/^[0-9.]$/.test(k) || k === '+' || k === '-' || k === '*' || k === '/') { press(k); e.preventDefault(); e.stopPropagation(); }
+        else if (k === 'Enter' || k === '=') { press('='); e.preventDefault(); e.stopPropagation(); }
+        else if (k === 'Backspace') { press('back'); e.preventDefault(); e.stopPropagation(); }
+        else if (k === 'Escape' || k === 'c' || k === 'C') { press('C'); e.preventDefault(); e.stopPropagation(); }
+      });
+      later(function () { try { body.focus(); } catch (e) {} }, 60);
+    },
+
+    /* ---- 记事本（v4.0） ---- */
+    _renderNotepad: function (body) {
+      body.className = 'np';
+      body.innerHTML =
+        '<div class="np__bar">' +
+          '<button class="np__btn" id="npNew" data-i18n="np_new">新建</button>' +
+          '<button class="np__btn" id="npSave" data-i18n="np_save">保存</button>' +
+          '<span class="np__name" data-i18n="np_file">无标题.txt</span>' +
+        '</div>' +
+        '<textarea class="np__area" id="npArea" data-i18n-ph="np_placeholder" placeholder="在此输入内容…" spellcheck="false"></textarea>' +
+        '<div class="np__status">' +
+          '<span id="npChars"></span><span id="npLines"></span>' +
+        '</div>';
+
+      var area = body.querySelector('#npArea');
+      var chars = body.querySelector('#npChars');
+      var lines = body.querySelector('#npLines');
+      area.value = state.notes || '';
+
+      function stat() {
+        var v = area.value;
+        chars.textContent = v.length + ' ' + _t('np_chars');
+        lines.textContent = (v ? v.split('\n').length : 0) + ' ' + _t('np_lines');
+      }
+      area.addEventListener('input', function () { state.notes = area.value; stat(); });
+      body.querySelector('#npSave').addEventListener('click', function () {
+        state.notes = area.value; savePrefs(); toast(_t('np_saved'));
+      });
+      body.querySelector('#npNew').addEventListener('click', function () {
+        area.value = ''; state.notes = ''; savePrefs(); stat(); toast(_t('np_cleared')); area.focus();
+      });
+      stat();
+      later(function () { try { area.focus(); } catch (e) {} }, 80);
+    },
+
+    /* ---- 照片（v4.0） ---- */
+    _renderPhotos: function (body) {
+      body.className = 'photos';
+      var total = 3;
+      if (!state.photoIndex || state.photoIndex < 1 || state.photoIndex > total) state.photoIndex = 1;
+      body.innerHTML =
+        '<div class="photos__stage">' +
+          '<div class="ph-art" id="phArt" data-art="1"></div>' +
+          '<div class="photos__cap" id="phCap"></div>' +
+        '</div>' +
+        '<div class="photos__bar">' +
+          '<button class="photos__btn" id="phPrev" data-i18n="ph_prev">上一张</button>' +
+          '<span class="photos__idx" id="phIdx"></span>' +
+          '<button class="photos__btn" id="phNext" data-i18n="ph_next">下一张</button>' +
+        '</div>';
+
+      function show() {
+        body.querySelector('#phArt').dataset.art = String(state.photoIndex);
+        body.querySelector('#phCap').textContent = _t('ph_caption_' + state.photoIndex);
+        body.querySelector('#phIdx').textContent = state.photoIndex + ' / ' + total;
+      }
+      body.querySelector('#phPrev').addEventListener('click', function () {
+        state.photoIndex = state.photoIndex > 1 ? state.photoIndex - 1 : total; show();
+      });
+      body.querySelector('#phNext').addEventListener('click', function () {
+        state.photoIndex = state.photoIndex < total ? state.photoIndex + 1 : 1; show();
+      });
+      show();
+    },
+
+    /* ---- Microsoft Store（v4.0） ---- */
+    _renderStore: function (body) {
+      var apps = [
+        ['store_app_1', '#2b88d8', 'Photos'],
+        ['store_app_2', '#4c9a2a', 'Calc'],
+        ['store_app_3', '#5c2d91', 'NP'],
+        ['store_app_4', '#c42b1c', 'MP'],
+        ['store_app_5', '#3a6ea5', 'W'],
+        ['store_app_6', '#8a5600', 'M']
+      ];
+      body.className = 'store';
+      body.innerHTML =
+        '<div class="store__hero"><b>Microsoft Store</b><span data-i18n="store_sub">精选应用、游戏和设备</span></div>' +
+        '<div class="store__hd" data-i18n="store_featured">精选应用</div>' +
+        '<div class="store__grid">' + apps.map(function (a, i) {
+          var done = !!state.storeInstalled[a[2]];
+          return '<div class="store__card"><div class="store__app">' +
+            '<span class="store__ico" style="background:' + a[1] + '">' + a[2] + '</span>' +
+            '<span class="store__name">' + _t(a[0]) + '</span></div>' +
+            '<button class="store__get' + (done ? ' done' : '') + '" data-store="' + a[2] + '">' +
+            (done ? _t('store_installed') : _t('store_get')) + '</button></div>';
+        }).join('') + '</div>';
+
+      body.querySelector('.store__grid').addEventListener('click', function (e) {
+        var b = e.target.closest('[data-store]'); if (!b || b.classList.contains('done')) return;
+        state.storeInstalled[b.dataset.store] = true;
+        b.classList.add('done');
+        b.textContent = _t('store_installed');
+        var card = b.closest('.store__card');
+        var name = card ? card.querySelector('.store__name').textContent : b.dataset.store;
+        toast(_t('store_install_done', { name: name }));
+      });
     },
 
     _renderSetupUpgrade: function (body, win) {
@@ -909,10 +1370,14 @@
     $('#smAvatar').textContent = name.charAt(0).toUpperCase();
     startClock();
     _apply();
+    applyTheme();
+    buildAllApps();
+    renderCalendar(calYear, calMonth);
+    syncQuickPanel();
     var wt = $('#welcomeToast');
     if (wt) wt.classList.add('show');
     later(function () { if (wt) wt.classList.remove('show'); }, 9000);
-    updateVersionBadge('desktop');
+    updateVersionBadge();
   }
 
   function resetExperience() {
@@ -926,7 +1391,11 @@
     $$('#editionList .opt').forEach(function (o) { o.classList.remove('sel'); });
     $$('#accList .opt').forEach(function (o) { o.classList.remove('sel'); });
     $('#accNext').disabled = true;
-    $('#startSearch').value = ''; filterStartApps();
+    $('#startSearch').value = ''; toggleAllApps(false); filterStartApps();
+    closeQuick(); closeNotif(); closeStart();
+    var cm = $('#ctxMenu'); if (cm) cm.classList.remove('open');
+    var pm = $('#powerMenu'); if (pm) pm.classList.remove('open');
+    var ps = $('#powerScreen'); if (ps) ps.classList.remove('open', 'asleep');
     $('#deviceInput').value = state.deviceName;
     $('#localUser').value = ''; $('#localPass').value = ''; $('#localPass2').value = '';
     $('#localErr').style.display = 'none'; $('#msEmail').value = '';
@@ -979,14 +1448,17 @@
     else if (id === 'final') $('#finalName').textContent = state.userName || 'Administrator';
     else if (id === 'desktop') {
       var n = state.userName || 'Administrator'; $('#smUser').textContent = n; $('#smAvatar').textContent = n.charAt(0).toUpperCase();
+      buildAllApps();
+      renderCalendar(calYear, calMonth);
+      syncQuickPanel();
       filterStartApps();
     }
     AppWindows.retitleAll();
     Object.keys(state.openWindows).forEach(function (wid) {
       var w = state.openWindows[wid];
       if (w.dataset.type === 'settings') {
-        var b = w.querySelector('.win-body');
-        if (b) AppWindows._renderSettings(b, b.dataset.page || 'system');
+        var b = w.querySelector('.settings, .win-body');
+        if (b) AppWindows._renderSettings(b, b.dataset.settingsPage || 'system');
       }
     });
   });
@@ -1161,22 +1633,29 @@
   });
 
   /* 桌面图标 */
-  var layer = $('.screen.desktop');
   $('#icoPC').addEventListener('dblclick', function () {
     AppWindows.open('explorer', { title: _t('icon_pc') });
   });
-  $('#icoPC').addEventListener('click', function (e) { if (e.detail === 2) return; });
   $('#icoRecycle').addEventListener('dblclick', function () {
     AppWindows.open('recycle', { title: _t('icon_recycle') });
   });
   $('#icoSetup').addEventListener('dblclick', function () { AppWindows.open('setup'); });
 
-  /* v3.1：开始菜单应用搜索（支持任务栏搜索按钮与 Enter 启动首个结果） */
+  /* v4.0：启动应用（未实现的仍给出演示提示） */
+  function openAppType(type) {
+    if (!type) return;
+    var demoLabels = { player: 'app_player', camera: 'app_camera', mail: 'app_mail', weather: 'app_weather' };
+    if (demoLabels[type]) { toast(_t('toast_demo_unavailable', { name: _t(demoLabels[type]) })); return; }
+    if (type === 'setup') { AppWindows.open('setup'); return; }
+    AppWindows.open(type);
+  }
+
+  /* v3.1：开始菜单应用搜索（v4.0 同时覆盖所有应用列表） */
   function filterStartApps() {
     var input = $('#startSearch'), empty = $('#startNoResults');
     if (!input || !empty) return;
     var q = input.value.trim().toLowerCase(), visible = 0;
-    $$('#startMenu .sm-app').forEach(function (app) {
+    $$('#startMenu .sm-app, #startMenu .sm-allapp').forEach(function (app) {
       var match = !q || app.textContent.toLowerCase().indexOf(q) >= 0;
       app.hidden = !match;
       if (match) visible++;
@@ -1185,10 +1664,48 @@
   }
   function openStartSearch() {
     closeNotif();
+    closeQuick();
     $('#startMenu').classList.add('open');
     var input = $('#startSearch');
     input.value = ''; filterStartApps();
     later(function () { try { input.focus(); } catch (e) {} }, 60);
+  }
+  function closeQuick() { var qp = $('#quickPanel'); if (qp) qp.classList.remove('open'); }
+
+  /* v4.0：所有应用列表（由已固定的应用生成并按首字母分组） */
+  var showAllApps = false;
+  function buildAllApps() {
+    var wrap = $('#allAppsList'); if (!wrap) return;
+    var list = $$('#startMenu .sm-app').map(function (a) {
+      var tile = a.querySelector('.tile');
+      var labelEl = a.querySelector('[data-i18n]');
+      var name = labelEl ? labelEl.textContent.trim() : a.textContent.trim();
+      return {
+        name: name, open: a.dataset.open,
+        color: tile ? tile.style.background : '',
+        short: tile ? tile.textContent.trim() : ''
+      };
+    }).filter(function (x) { return x.open && x.name; });
+    list.sort(function (a, b) { return a.name.localeCompare(b.name); });
+    var html = '', letter = '';
+    list.forEach(function (x) {
+      var l = x.name.charAt(0).toUpperCase();
+      if (l !== letter) { letter = l; html += '<div class="sm-letter">' + l + '</div>'; }
+      html += '<div class="sm-allapp" data-open="' + x.open + '">' +
+        '<span class="tile" style="background:' + x.color + '">' + x.short + '</span>' + x.name + '</div>';
+    });
+    wrap.innerHTML = html;
+  }
+  function toggleAllApps(force) {
+    showAllApps = typeof force === 'boolean' ? force : !showAllApps;
+    var list = $('#allAppsList'), grid = $('#startMenu .sm-grid'), btn = $('#allAppsBtn');
+    if (!list || !grid || !btn) return;
+    if (showAllApps) buildAllApps();
+    list.hidden = !showAllApps;
+    grid.style.display = showAllApps ? 'none' : '';
+    btn.dataset.i18n = showAllApps ? 'start_back' : 'start_all_apps';
+    btn.textContent = showAllApps ? _t('start_back') : _t('start_all_apps');
+    filterStartApps();
   }
 
   /* 任务栏已打开窗口按钮（v3.0） */
@@ -1222,26 +1739,15 @@
   $$('.tb-btn:not(.running):not(#startBtn):not(#searchBtn)').forEach(function (btn) {
     btn.addEventListener('click', function () { toast(_t('toast_demo_unavailable', { name: btn.getAttribute('title') || '' })); });
   });
-  // 开始菜单里的 app tiles（挂在 #startMenu 上：该容器会 stopPropagation，document 级监听收不到）
+  // 开始菜单里的应用磁贴与所有应用列表
   $('#startMenu').addEventListener('click', function (e) {
-    var app = e.target.closest('.sm-app'); if (!app) return;
-    var name = app.textContent.trim();
-    // 用 data-i18n 的 key 判断，避免切换语言后按中文名匹配失败
-    var keyEl = app.querySelector('[data-i18n]');
-    var key = keyEl ? keyEl.dataset.i18n : '';
-    var byKey = { app_explorer: 'explorer', app_edge: 'edge', app_settings: 'settings', app_terminal: 'cmd' };
-    var type = byKey[key];
-    if (type) AppWindows.open(type);
-    else if (name.indexOf('文件资源管理器') >= 0 || name.indexOf('File Explorer') >= 0)
-      AppWindows.open('explorer');
-    else if (name.indexOf('Edge') >= 0)
-      AppWindows.open('edge');
-    else if (name.indexOf('设置') >= 0 || name.indexOf('Settings') >= 0)
-      AppWindows.open('settings');
-    else if (name.indexOf('终端') >= 0 || name.indexOf('Terminal') >= 0)
-      AppWindows.open('cmd');
-    else toast(_t('toast_demo_unavailable', { name: name }));
+    var app = e.target.closest('.sm-app, .sm-allapp'); if (!app) return;
+    openAppType(app.dataset.open);
     closeStart();
+  });
+  var allAppsBtn = $('#allAppsBtn');
+  if (allAppsBtn) allAppsBtn.addEventListener('click', function (e) {
+    e.stopPropagation(); toggleAllApps();
   });
 
   /* 开始菜单与搜索 */
@@ -1254,22 +1760,57 @@
   $('#startSearch').addEventListener('input', filterStartApps);
   $('#startSearch').addEventListener('keydown', function (e) {
     if (e.key !== 'Enter') return;
-    var first = $$('#startMenu .sm-app').filter(function (app) { return !app.hidden; })[0];
+    var first = $$('#startMenu .sm-app, #startMenu .sm-allapp').filter(function (app) { return !app.hidden; })[0];
     if (first) { e.preventDefault(); e.stopPropagation(); first.click(); }
   });
   $('#startMenu').addEventListener('click', function (e) { e.stopPropagation(); });
   $('#s-desktop').addEventListener('click', function (e) {
     if (!e.target.closest('.taskbar') && !e.target.closest('.dicon') && !e.target.closest('.app-window') && !e.target.closest('.start-menu')) {
-      closeStart(); closeNotif();
+      closeStart(); closeNotif(); closeQuick();
     }
   });
-  $('#smPower').addEventListener('click', function () { closeStart(); resetExperience(); });
+
+  /* v4.0：电源菜单 */
+  var powerMenu = $('#powerMenu');
+  $('#smPower').addEventListener('click', function (e) {
+    e.stopPropagation();
+    if (powerMenu) powerMenu.classList.toggle('open');
+  });
+  if (powerMenu) powerMenu.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-power]'); if (!b) return;
+    powerMenu.classList.remove('open');
+    closeStart();
+    runPower(b.dataset.power);
+  });
+  function runPower(kind) {
+    var ps = $('#powerScreen'), txt = $('#psText'), hint = $('#psHint');
+    if (!ps) return;
+    ps.classList.add('open'); ps.classList.remove('asleep');
+    txt.textContent = _t(kind === 'off' ? 'pw_shutting' : kind === 'restart' ? 'pw_restarting' : 'pw_sleeping');
+    hint.textContent = _t(kind === 'off' ? 'pw_off_hint' : 'pw_wake');
+    if (kind === 'restart') {
+      later(function () { ps.classList.remove('open', 'asleep'); AppWindows.closeAll(); }, 1900);
+    } else if (kind === 'sleep') {
+      later(function () { ps.classList.add('asleep'); }, 1100);
+    } else {
+      later(function () { ps.classList.add('asleep'); AppWindows.closeAll(); }, 1700);
+    }
+  }
+  var powerScreen = $('#powerScreen');
+  if (powerScreen) powerScreen.addEventListener('click', function () {
+    if (!this.classList.contains('asleep')) return;
+    this.classList.remove('open', 'asleep');
+  });
+  document.addEventListener('click', function (e) {
+    if (powerMenu && !e.target.closest('#powerMenu') && !e.target.closest('#smPower')) powerMenu.classList.remove('open');
+  });
 
   /* 通知中心 */
   var notifBtn = $('#notifBtn');
   if (notifBtn) {
     notifBtn.addEventListener('click', function (e) {
       e.stopPropagation();
+      closeQuick();
       $('#notifCenter').classList.toggle('open');
     });
   }
@@ -1278,9 +1819,137 @@
     if (nc && nc.classList.contains('open') && !e.target.closest('#notifCenter') && !e.target.closest('#notifBtn')) {
       nc.classList.remove('open');
     }
+    var qp = $('#quickPanel');
+    if (qp && qp.classList.contains('open') && !e.target.closest('#quickPanel') && !e.target.closest('#qsBtn')) {
+      qp.classList.remove('open');
+    }
   });
-  $$('.nc-tile').forEach(function (tile) {
-    tile.addEventListener('click', function () { tile.classList.toggle('on'); });
+
+  /* v4.0：快速设置 */
+  var qsBtn = $('#qsBtn');
+  if (qsBtn) qsBtn.addEventListener('click', function (e) {
+    e.stopPropagation();
+    closeStart(); closeNotif();
+    $('#quickPanel').classList.toggle('open');
+    syncQuickPanel();
+  });
+  var quickPanel = $('#quickPanel');
+  if (quickPanel) {
+    quickPanel.addEventListener('click', function (e) { e.stopPropagation(); });
+    quickPanel.querySelector('.qp-grid').addEventListener('click', function (e) {
+      var b = e.target.closest('[data-qc]'); if (!b) return;
+      var k = b.dataset.qc;
+      state.quickTiles[k] = !state.quickTiles[k];
+      if (k === 'airplane' && state.quickTiles.airplane) {
+        state.quickTiles.wifi = false; state.quickTiles.bt = false;
+      } else if ((k === 'wifi' || k === 'bt') && state.quickTiles[k]) {
+        state.quickTiles.airplane = false;
+      }
+      applyTheme(); savePrefs(); syncQuickPanel();
+    });
+    var br = $('#qsBright'), vol = $('#qsVol');
+    if (br) br.addEventListener('input', function () {
+      state.brightness = Number(br.value); $('#qsBrightVal').textContent = br.value; savePrefs();
+    });
+    if (vol) vol.addEventListener('input', function () {
+      state.volume = Number(vol.value); $('#qsVolVal').textContent = vol.value; savePrefs();
+    });
+    var qsAll = $('#qsAll');
+    if (qsAll) qsAll.addEventListener('click', function () {
+      quickPanel.classList.remove('open');
+      AppWindows.open('settings');
+    });
+  }
+
+  /* v4.0：日历 */
+  var calYear = new Date().getFullYear(), calMonth = new Date().getMonth();
+  function renderCalendar(y, m) {
+    var grid = $('#calGrid'), week = $('#calWeek'), label = $('#calMonth');
+    if (!grid || !week || !label) return;
+    var locale = document.documentElement.lang || 'zh-CN';
+    var first = new Date(y, m, 1);
+    try {
+      label.textContent = new Intl.DateTimeFormat(locale, { year: 'numeric', month: 'long' }).format(first);
+    } catch (e) { label.textContent = y + '/' + (m + 1); }
+    var wd = [];
+    for (var i = 0; i < 7; i++) {
+      try { wd.push(new Intl.DateTimeFormat(locale, { weekday: 'narrow' }).format(new Date(2024, 0, 7 + i))); }
+      catch (e) { wd.push('SMTWTFS'.charAt(i)); }
+    }
+    week.innerHTML = wd.map(function (x) { return '<span>' + x + '</span>'; }).join('');
+    var start = first.getDay();
+    var days = new Date(y, m + 1, 0).getDate();
+    var prevDays = new Date(y, m, 0).getDate();
+    var today = new Date();
+    var cells = '';
+    for (var p = start - 1; p >= 0; p--) cells += '<div class="cal__day dim">' + (prevDays - p) + '</div>';
+    for (var d = 1; d <= days; d++) {
+      var isToday = d === today.getDate() && m === today.getMonth() && y === today.getFullYear();
+      cells += '<div class="cal__day' + (isToday ? ' today' : '') + '">' + d + '</div>';
+    }
+    var tail = 1;
+    while ((start + days) % 7 !== 0) { cells += '<div class="cal__day dim">' + (tail++) + '</div>'; start++; }
+    grid.innerHTML = cells;
+  }
+  var calPrev = $('#calPrev'), calNext = $('#calNext'), calToday = $('#calToday');
+  if (calPrev) calPrev.addEventListener('click', function (e) {
+    e.stopPropagation(); calMonth--; if (calMonth < 0) { calMonth = 11; calYear--; } renderCalendar(calYear, calMonth);
+  });
+  if (calNext) calNext.addEventListener('click', function (e) {
+    e.stopPropagation(); calMonth++; if (calMonth > 11) { calMonth = 0; calYear++; } renderCalendar(calYear, calMonth);
+  });
+  if (calToday) calToday.addEventListener('click', function (e) {
+    e.stopPropagation();
+    var n = new Date(); calYear = n.getFullYear(); calMonth = n.getMonth(); renderCalendar(calYear, calMonth);
+  });
+
+  /* v4.0：桌面右键菜单与新建文件夹 */
+  var ctxMenu = $('#ctxMenu');
+  $('#s-desktop').addEventListener('contextmenu', function (e) {
+    if (!ctxMenu) return;
+    if (e.target.closest('.app-window') || e.target.closest('.taskbar') ||
+        e.target.closest('.start-menu') || e.target.closest('input, textarea')) return;
+    e.preventDefault();
+    closeStart(); closeNotif(); closeQuick();
+    ctxMenu.classList.add('open');
+    var w = ctxMenu.offsetWidth, h = ctxMenu.offsetHeight;
+    ctxMenu.style.left = Math.max(4, Math.min(e.clientX, this.clientWidth - w - 8)) + 'px';
+    ctxMenu.style.top = Math.max(4, Math.min(e.clientY, this.clientHeight - h - 58)) + 'px';
+  });
+  if (ctxMenu) ctxMenu.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-ctx]'); if (!b) return;
+    var act = b.dataset.ctx;
+    ctxMenu.classList.remove('open');
+    if (act === 'refresh') toast(_t('toast_refreshed'));
+    else if (act === 'folder') createDesktopFolder();
+    else if (act === 'personalize') openSettingsPage('personal');
+    else if (act === 'display') openSettingsPage('system');
+    else if (act === 'terminal') AppWindows.open('cmd');
+  });
+  function openSettingsPage(page) {
+    var w = AppWindows.open('settings');
+    if (!w) return;
+    var b = w.querySelector('.win-body');
+    if (b) AppWindows._renderSettings(b, page);
+  }
+  function createDesktopFolder() {
+    state.folderSeq++;
+    var name = _t('folder_new') + (state.folderSeq > 1 ? ' (' + state.folderSeq + ')' : '');
+    var el = document.createElement('div');
+    el.className = 'dicon';
+    el.innerHTML =
+      '<svg width="38" height="38" viewBox="0 0 48 48"><path d="M5 14a3 3 0 0 1 3-3h10l3 4.5h19a3 3 0 0 1 3 3V38a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3V14Z" fill="#f5c04a" stroke="#e0b03c" stroke-width="1.2"/></svg>' +
+      '<span></span>';
+    el.querySelector('span').textContent = name;
+    el.addEventListener('dblclick', function () {
+      AppWindows.open('explorer', { title: name, path: 'desktop' });
+    });
+    var icons = $('#deskIcons');
+    if (icons) icons.appendChild(el);
+    toast(_t('toast_folder_created', { name: name }));
+  }
+  document.addEventListener('click', function (e) {
+    if (ctxMenu && !e.target.closest('#ctxMenu')) ctxMenu.classList.remove('open');
   });
 
   /* 弹窗 */
@@ -1302,6 +1971,10 @@
 
   /* 全局键盘 */
   document.addEventListener('keydown', function (e) {
+    var ps = $('#powerScreen');
+    if (ps && ps.classList.contains('asleep')) {
+      ps.classList.remove('open', 'asleep'); e.preventDefault(); return;
+    }
     // Shift+F10 命令提示符（安装中 / 桌面都能用）
     if (e.shiftKey && e.key === 'F10') {
       e.preventDefault();
@@ -1313,8 +1986,15 @@
     }
     if (e.key === 'Escape') {
       if (modalOpen) { closeModal(); return; }
-      if ($('#startMenu').classList.contains('open') || $('#notifCenter').classList.contains('open') || demoPanel.classList.contains('open')) {
-        closeStart(); closeNotif(); demoPanel.classList.remove('open'); return;
+      var qp = $('#quickPanel'), cm = $('#ctxMenu'), pm = $('#powerMenu');
+      if ($('#startMenu').classList.contains('open') || $('#notifCenter').classList.contains('open') ||
+          demoPanel.classList.contains('open') ||
+          (qp && qp.classList.contains('open')) || (cm && cm.classList.contains('open')) || (pm && pm.classList.contains('open'))) {
+        closeStart(); closeNotif(); demoPanel.classList.remove('open');
+        if (qp) qp.classList.remove('open');
+        if (cm) cm.classList.remove('open');
+        if (pm) pm.classList.remove('open');
+        return;
       }
       if (AppWindows._focusedId && state.openWindows[AppWindows._focusedId]) {
         AppWindows.close(AppWindows._focusedId); return;
@@ -1340,14 +2020,20 @@
   /* ============================================================
    * 启动
    * ============================================================ */
-  initDisk(); renderDisk(); $('#deviceInput').value = state.deviceName; _apply();
-  updateVersionBadge('boot');
+  loadPrefs();
+  initDisk(); renderDisk(); $('#deviceInput').value = state.deviceName;
+  applyTheme(); _apply();
+  updateVersionBadge();
 
   var startId = (location.hash || '').replace('#', '');
   if (startId && document.getElementById('s-' + startId)) { go(startId); }
   else { go('boot'); }
 
-  window.__installer = { go: go, state: state, openWindow: AppWindows.open };
+  window.__installer = {
+    go: go, state: state,
+    openWindow: function (type, opts) { return AppWindows.open(type, opts); },
+    openApp: openAppType, applyTheme: applyTheme, renderCalendar: renderCalendar
+  };
 })();
 </script>
 </body>
