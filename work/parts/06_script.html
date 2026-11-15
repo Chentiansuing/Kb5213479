@@ -1,0 +1,732 @@
+<script>
+(function () {
+  'use strict';
+
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+
+  /* ===== i18n 辅助 ===== */
+  function _t(k, ctx) {
+    if (window.__i18n && typeof window.__i18n.t === 'function') {
+      return window.__i18n.t(k, ctx);
+    }
+    // 兜底：无 __i18n 时 key 本身就是 zh-CN 原文，直接返回
+    return k;
+  }
+  function _apply() {
+    if (window.__i18n && typeof window.__i18n.apply === 'function') {
+      window.__i18n.apply();
+    }
+  }
+
+  var state = {
+    disk: [],
+    selected: null,
+    edition: '',
+    account: 'personal',
+    userName: 'Administrator',
+    deviceName: 'DESKTOP-7F3K9Q',
+    installStart: 0
+  };
+
+  var timers = [];
+  var raf = 0;
+  var clockTimer = 0;
+  var toastTimer = 0;
+  var modalOpen = false;
+  var okHandler = null;
+
+  var screens = $$('.screen');
+
+  /* ---------------- 基础工具 ---------------- */
+  function later(fn, ms) {
+    var id = setTimeout(fn, ms);
+    timers.push(id);
+    return id;
+  }
+
+  function clearTimers() {
+    timers.forEach(clearTimeout);
+    timers = [];
+    if (raf) { cancelAnimationFrame(raf); raf = 0; }
+  }
+
+  function toast(msg) {
+    var t = $('#toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { t.classList.remove('show'); }, 2400);
+  }
+
+  function closeStart() {
+    var sm = $('#startMenu');
+    if (sm) sm.classList.remove('open');
+  }
+
+  function go(id) {
+    if (!document.getElementById('s-' + id)) return;
+    clearTimers();
+    if (clockTimer) { clearInterval(clockTimer); clockTimer = 0; }
+    screens.forEach(function (s) { s.classList.toggle('active', s.id === 's-' + id); });
+    closeStart();
+    var wt = $('#welcomeToast');
+    if (wt) wt.classList.remove('show');
+    try { history.replaceState(null, '', '#' + id); } catch (e) { }
+    _apply();
+    var h = hooks[id];
+    if (h) h();
+  }
+
+  function openModal(opt) {
+    $('#mTitle').textContent = opt.title || '';
+    $('#mBody').innerHTML = opt.body || '';
+    var ok = $('#mOk'), cancel = $('#mCancel');
+    ok.textContent = opt.ok || _t('modal_default_ok');
+    if (opt.cancel === null) { cancel.style.display = 'none'; }
+    else { cancel.style.display = ''; cancel.textContent = opt.cancel || _t('modal_default_cancel'); }
+    okHandler = opt.onOk || null;
+    modalOpen = true;
+    $('#modal').classList.add('open');
+    if (opt.after) opt.after();
+  }
+
+  function closeModal() {
+    modalOpen = false;
+    okHandler = null;
+    $('#modal').classList.remove('open');
+  }
+
+  /* ---------------- 磁盘 ---------------- */
+  function initDisk() {
+    state.disk = [
+      { id: 'p1', name: _t('disk_name_recover'), total: 0.5, free: 0, type: _t('disk_type_recover') },
+      { id: 'p2', name: _t('disk_name_efi'), total: 0.1, free: 0, type: _t('disk_type_system') },
+      { id: 'p3', name: _t('disk_name_msr'), total: 0.016, free: 0, type: _t('disk_type_reserved') },
+      { id: 'p4', name: _t('disk_name_primary'), total: 29.0, free: 12.4, type: _t('disk_type_primary') },
+      { id: 'u1', name: _t('disk_name_unalloc'), total: 34.4, free: 34.4, type: '', unallocated: true }
+    ];
+    state.selected = null;
+  }
+
+  function fmtSize(gb) {
+    if (!gb || gb < 0.05) return '0 B';
+    return gb.toFixed(1) + ' GB';
+  }
+
+  function renderDisk() {
+    var rows = $('#diskRows');
+    if (!rows) return;
+    rows.innerHTML = state.disk.map(function (p, i) {
+      var cls = 'disk-row' + (state.selected === p.id ? ' sel' : '');
+      var main = p.unallocated ? _t('disk_drive_unalloc') : _t('disk_drive_part', { n: i + 1 });
+      var sub = p.unallocated ? '' : '<em>' + p.name + '</em>';
+      return '<div class="' + cls + '" data-id="' + p.id + '">' +
+        '<div class="disk-name"><span>' + main + '</span>' + sub + '</div>' +
+        '<div>' + fmtSize(p.total) + '</div>' +
+        '<div>' + fmtSize(p.free) + '</div>' +
+        '<div>' + (p.type || '') + '</div>' +
+        '</div>';
+    }).join('');
+
+    var next = $('#diskNext');
+    var info = $('#diskInfo');
+    var p = state.disk.filter(function (x) { return x.id === state.selected; })[0];
+    var ok = !!p && p.type === _t('disk_type_primary');
+    if (next) next.disabled = !ok;
+    if (info) {
+      if (!p) info.textContent = _t('disk_info_none');
+      else if (p.unallocated) info.textContent = _t('disk_info_unalloc');
+      else info.textContent = _t('disk_info_selected', { name: p.name, size: fmtSize(p.total), type: p.type });
+    }
+  }
+
+  function selectPartition(id) {
+    state.selected = id;
+    renderDisk();
+  }
+
+  function addUnallocated(gb) {
+    if (gb <= 0.05) return;
+    var exist = state.disk.filter(function (x) { return x.unallocated; })[0];
+    if (exist) { exist.total += gb; exist.free += gb; }
+    else state.disk.push({ id: 'u' + Date.now(), name: _t('disk_name_unalloc'), total: gb, free: gb, type: '', unallocated: true });
+  }
+
+  function removePartition(id) {
+    var idx = -1;
+    for (var i = 0; i < state.disk.length; i++) if (state.disk[i].id === id) idx = i;
+    if (idx < 0) return;
+    var p = state.disk[idx];
+    if (p.unallocated) return;
+    state.disk.splice(idx, 1);
+    addUnallocated(p.total);
+    if (state.selected === id) state.selected = null;
+    renderDisk();
+  }
+
+  function newPartition(sizeMB) {
+    var un = state.disk.filter(function (x) { return x.unallocated; })[0];
+    if (!un) { toast(_t('toast_no_unalloc')); return; }
+    var def = Math.floor(un.total * 1024);
+    var openModal = window.__installer_openModal || null;
+    // inline modal to avoid circular ref
+    var modalTitle = _t('modal_new_title');
+    var modalBody = '<p>' + _t('modal_new_body') + '</p>' +
+      '<div class="fld"><label class="fld__label" data-i18n="modal_new_label">' + _t('modal_new_label') + '</label>' +
+      '<input class="inp" id="newSize" type="number" value="' + def + '" min="1024"></div>';
+    var modalOk = _t('modal_new_ok');
+
+    // direct openModal call
+    (function(){
+      $('#mTitle').textContent = modalTitle;
+      $('#mBody').innerHTML = modalBody;
+      $('#mOk').textContent = modalOk;
+      $('#mCancel').style.display = '';
+      $('#mCancel').textContent = _t('modal_default_cancel');
+      okHandler = function () {
+        var el = document.getElementById('newSize');
+        var v = parseInt(el ? el.value : '', 10);
+        if (!v || v < 1024) { toast(_t('modal_new_err')); return false; }
+        doNewPartition(Math.min(v, def));
+        return true;
+      };
+      modalOpen = true;
+      $('#modal').classList.add('open');
+      later(function () { var el = document.getElementById('newSize'); if (el) { el.focus(); el.select(); } }, 50);
+    })();
+  }
+
+  function doNewPartition(sizeMB) {
+    var un = state.disk.filter(function (x) { return x.unallocated; })[0];
+    if (!un) return;
+    var hasSys = state.disk.some(function (x) { return x.type === _t('disk_type_system'); });
+    var sizeGB = Math.min(sizeMB / 1024, un.total);
+    var base = 'n' + Date.now();
+    var added = [];
+    var overhead = 0;
+    if (!hasSys) {
+      added.push({ id: base + 'a', name: _t('disk_name_recover'), total: 0.5, free: 0, type: _t('disk_type_recover') });
+      added.push({ id: base + 'b', name: _t('disk_name_efi'), total: 0.1, free: 0, type: _t('disk_type_system') });
+      added.push({ id: base + 'c', name: _t('disk_name_msr'), total: 0.016, free: 0, type: _t('disk_type_reserved') });
+      overhead = 0.616;
+    }
+    var mainSize = Math.max(1, sizeGB - overhead);
+    var main = { id: base + 'd', name: _t('disk_name_primary'), total: mainSize, free: mainSize, type: _t('disk_type_primary') };
+    added.push(main);
+
+    var idx = state.disk.indexOf(un);
+    state.disk.splice(idx, 1);
+    state.disk.splice.apply(state.disk, [idx, 0].concat(added));
+    addUnallocated(un.total - sizeGB);
+    state.selected = main.id;
+    renderDisk();
+    toast(_t('toast_created_primary', { size: fmtSize(mainSize) }));
+  }
+
+  /* ---------------- 安装进度 ---------------- */
+  var INST_STAGES_KEYS = ['inst_stage_1', 'inst_stage_2', 'inst_stage_3', 'inst_stage_4', 'inst_stage_5'];
+  var INST_STAGES_PCT = [0, 26, 46, 70, 92];
+
+  function currentInstallStageText() {
+    var bar = $('#instBar');
+    var v = bar ? parseInt(bar.style.width) || 0 : 0;
+    var idx = 0;
+    for (var j = INST_STAGES_PCT.length - 1; j >= 0; j--) {
+      if (v >= INST_STAGES_PCT[j]) { idx = j; break; }
+    }
+    return _t(INST_STAGES_KEYS[idx]);
+  }
+
+  function refreshInstallStage() {
+    var stage = $('#instStage');
+    if (stage) stage.textContent = currentInstallStageText();
+  }
+
+  function startInstall() {
+    var p = null;
+    for (var i = 0; i < state.disk.length; i++) if (state.disk[i].id === state.selected) p = state.disk[i];
+    var instTargetName = p ? (p.name + '（' + fmtSize(p.total) + '）') : _t('inst_target_primary');
+    $('#instTarget').textContent = instTargetName;
+    _apply(); // 因为 inst_hint 是 data-i18n-html，_apply 会重新填 HTML，但会覆盖 instTarget —— 所以之后要重新写 instTarget
+    // 重新写 instTarget（_apply 可能把它重置成静态文本）
+    $('#instTarget').textContent = instTargetName;
+
+    var dur = 44000;
+    var bar = $('#instBar'), pct = $('#instPct'), stage = $('#instStage');
+    state.installStart = performance.now();
+    bar.style.width = '0%';
+    pct.textContent = '0';
+    stage.textContent = _t('inst_stage_1');
+
+    function frame(now) {
+      var t = Math.min(1, (now - state.installStart) / dur);
+      var v = Math.round((1 - Math.pow(1 - t, 1.9)) * 100);
+      bar.style.width = v + '%';
+      pct.textContent = String(v);
+      var idx = 0;
+      for (var j = INST_STAGES_PCT.length - 1; j >= 0; j--) {
+        if (v >= INST_STAGES_PCT[j]) { idx = j; break; }
+      }
+      var stageText = _t(INST_STAGES_KEYS[idx]);
+      if (stage.textContent !== stageText) stage.textContent = stageText;
+      if (t < 1) { raf = requestAnimationFrame(frame); }
+      else { raf = 0; later(function () { go('restart'); }, 1800); }
+    }
+    raf = requestAnimationFrame(frame);
+  }
+
+  function startRestart() {
+    var n = 10;
+    var c = $('#restartCount'), num = $('#restartNum');
+    // _apply 会重置 restartCount span 的 HTML，先设好数字
+    c.textContent = String(n);
+    num.textContent = String(n);
+    _apply(); // rst_body 的 data-i18n-html 会重新填，里面有 restartCount span 和 {n} 占位 —— 但我们的 _t 已经把 {n} 替换成实际数字了
+    // 所以 _apply 之后 restartCount 被 _t 替换成了数字 10 的文本。那 span 还在吗？让我检查：
+    // rst_body 的值是 '你的电脑将在 <span id="restartCount">{n}</span> 秒后自动重启。'，_t 会把 {n} 替换成 ctx.n，然后 _apply 用 innerHTML 设置。
+    // 所以最终 HTML 是：你的电脑将在 <span id="restartCount">10</span> 秒后自动重启。
+    // 好的，_apply 之后 restartCount span 里的 10 会被正确设置。但 rst_body 的 _t 调用在 _apply 里没有传 ctx 参数...
+    // 看看 _apply 里：document.querySelectorAll('[data-i18n-html]').forEach(function(el){ var key=el.dataset.i18nHtml; if(key) el.innerHTML=_t(key); });
+    // 这样 _t('rst_body') 不带 ctx，所以 {n} 不会被替换！会留下原始的 "{n}" 文本。
+    // 我需要让 rst_body 在 _apply 时也能替换 {n}。有两个方案：
+    // 1. 在 _apply 里对 rst_body 特殊处理（不太好）
+    // 2. 在 rst_body 的 key 里不带 {n}，而是只设置 span 的 innerText
+    // 3. 给 restart 页面加一个 langchange hook 重新刷新
+    //
+    // 最简单的做法：改 rst_body 在字典里不带 {n} —— 不，那 span 占位是 HTML 结构的一部分。
+    // 等等，_apply 里的 _t 调用不带 ctx，但 rst_body 里面的 {n} 是在 <span id="restartCount">{n}</span> 里，我们其实可以在 _apply 之后再由 JS 手动把 restartCount 的 textContent 设为 10（或当前 n 值）。因为 restartCount span 还在。
+    // 好，所以这里 _apply() 之后，我要重新确保 restartCount 的数字是对的。
+    // 另外 rst_body 的 {n} 会原样留在 span 里（因为没 ctx），所以还需要把 {n} 替换掉。
+    // 更简单：直接不用 data-i18n-html 处理 rst_body，而是让 rst_body 只处理外层文本，span 由 JS 管。
+    // 算了，换个思路：rst_body 字典里不要 {n} 占位符了，_apply 只负责替换 span 外面的文本。但这需要把 rst_body 拆成两部分... 太麻烦。
+    // 最干净的做法：让 rst_body 的 _t 调用也带 ctx。我在 _apply 里特殊处理 rst_body：
+    // 不，我改 build_final.py 里注入的 lang_js，让 _apply 在遇到 rst_body key 时，_t 传 ctx {n: 当前 restartCount 的值}。
+    // 或者直接在 startRestart 里这样处理：
+    //   1. 先 _apply() 把 rst_body 的 HTML 设好（里面 {n} 占位符会原样保留）
+    //   2. 然后找到 restartCount span，把它的 textContent 替换成 {n} 的值
+    //
+    // 让我这么做：
+    c.textContent = String(n);
+    num.textContent = String(n);
+
+    function tick() {
+      n--;
+      var val = String(Math.max(n, 0));
+      c.textContent = val;
+      num.textContent = val;
+      if (n <= 0) go('prepare1');
+      else later(tick, 1000);
+    }
+    later(tick, 1000);
+  }
+
+  /* ---------------- 桌面 ---------------- */
+  function startClock() {
+    function upd() {
+      var d = new Date();
+      var pad = function (v) { return String(v).length < 2 ? '0' + v : String(v); };
+      $('#clockTime').textContent = pad(d.getHours()) + ':' + pad(d.getMinutes());
+      $('#clockDate').textContent = d.getFullYear() + '/' + pad(d.getMonth() + 1) + '/' + pad(d.getDate());
+    }
+    upd();
+    clockTimer = setInterval(upd, 1000);
+  }
+
+  function enterDesktop() {
+    var name = state.userName || 'Administrator';
+    $('#smUser').textContent = name;
+    $('#smAvatar').textContent = name.charAt(0).toUpperCase();
+    startClock();
+    _apply();
+    var wt = $('#welcomeToast');
+    if (wt) wt.classList.add('show');
+    later(function () { if (wt) wt.classList.remove('show'); }, 9000);
+  }
+
+  function resetExperience() {
+    initDisk();
+    renderDisk();
+    state.edition = '';
+    state.selected = null;
+    state.userName = 'Administrator';
+    state.deviceName = 'DESKTOP-7F3K9Q';
+    $('#keyInput').value = '';
+    $('#keyNext').disabled = true;
+    $('#editionNext').disabled = true;
+    $('#licenseCheck').checked = false;
+    $('#licenseNext').disabled = true;
+    $('#typeNext').disabled = true;
+    $$('#typeList .opt').forEach(function (o) { o.classList.remove('sel'); });
+    $$('#editionList .opt').forEach(function (o) { o.classList.remove('sel'); });
+    $('#deviceInput').value = state.deviceName;
+    $('#localUser').value = '';
+    $('#localPass').value = '';
+    $('#localPass2').value = '';
+    $('#localErr').style.display = 'none';
+    $('#msEmail').value = '';
+    $('#wifiStatus').textContent = '';
+    $('#netNext').disabled = true;
+    $$('#wifiList .wifi').forEach(function (w) { w.classList.remove('on'); });
+    go('boot');
+  }
+
+  /* ---------------- 各页面钩子 ---------------- */
+  var hooks = {
+    boot: function () { _apply(); later(function () { go('lang'); }, 2600); },
+    disk: function () { _apply(); renderDisk(); },
+    install: function () { _apply(); startInstall(); },
+    restart: function () { _apply(); startRestart(); },
+    prepare1: function () { _apply(); later(function () { go('region'); }, 4600); },
+    region: function () { _apply(); },
+    keyboard: function () { _apply(); },
+    kb2: function () { _apply(); },
+    net: function () { _apply(); },
+    limited: function () { _apply(); },
+    device: function () { _apply(); $('#deviceInput').value = state.deviceName; },
+    acc: function () { _apply(); },
+    acctype: function () { _apply(); },
+    msaccount: function () { _apply(); },
+    localaccount: function () { _apply(); },
+    privacy: function () { _apply(); },
+    custom: function () { _apply(); },
+    final: function () {
+      _apply();
+      $('#finalName').textContent = state.userName || 'Administrator';
+      later(function () { go('desktop'); }, 5600);
+    },
+    desktop: function () { _apply(); enterDesktop(); }
+  };
+
+  /* ---------------- 语言切换事件 ---------------- */
+  document.addEventListener('langchange', function () {
+    // 每次语言切换都重刷磁盘数据（initDisk 里用 _t 取当前语言的分区名）
+    initDisk();
+    var active = $('.screen.active');
+    var id = active ? active.id.replace(/^s-/, '') : '';
+    if (id === 'disk') {
+      renderDisk();
+    } else if (id === 'install') {
+      refreshInstallStage();
+    } else if (id === 'restart') {
+      // _apply 已处理 rst_body span 外的文字和 rst_sub
+      // restartCount span 在 rst_body 里初始值已经是 10
+    } else if (id === 'final') {
+      $('#finalName').textContent = state.userName || 'Administrator';
+    } else if (id === 'desktop') {
+      var name = state.userName || 'Administrator';
+      $('#smUser').textContent = name;
+      $('#smAvatar').textContent = name.charAt(0).toUpperCase();
+    }
+  });
+
+  /* ---------------- 事件绑定 ---------------- */
+  // 通用跳转
+  document.addEventListener('click', function (e) {
+    var g = e.target.closest('[data-go]');
+    if (g && !g.disabled) { go(g.dataset.go); return; }
+    var j = e.target.closest('[data-jump]');
+    if (j) { go(j.dataset.jump); return; }
+    var cs = e.target.closest('[data-close-setup]');
+    if (cs) { confirmExit(); return; }
+  });
+
+  function confirmExit() {
+    // 手动 openModal（直接用 DOM，避免被 i18n _apply 覆盖）
+    $('#mTitle').textContent = _t('toast_close_title');
+    $('#mBody').innerHTML = '<p>' + _t('toast_close_body') + '</p>';
+    $('#mOk').textContent = _t('btn_close_ok');
+    $('#mCancel').style.display = '';
+    $('#mCancel').textContent = _t('btn_close_cancel');
+    okHandler = function () { go('boot'); };
+    modalOpen = true;
+    $('#modal').classList.add('open');
+  }
+
+  var btnCloseSetup = $('#btnCloseSetup');
+  if (btnCloseSetup) btnCloseSetup.addEventListener('click', confirmExit);
+  var btnRepair = $('#btnRepair');
+  if (btnRepair) btnRepair.addEventListener('click', function () { toast(_t('toast_demo_repair')); });
+
+  // 产品密钥
+  var keyInput = $('#keyInput');
+  keyInput.addEventListener('input', function () {
+    var raw = keyInput.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 25);
+    var out = raw.replace(/(.{5})/g, '$1-').replace(/-$/, '');
+    keyInput.value = out;
+    $('#keyNext').disabled = raw.length < 25;
+  });
+  $('#keyNext').addEventListener('click', function () { go('edition'); });
+  $('#btnNoKey').addEventListener('click', function () {
+    keyInput.value = '';
+    $('#keyNext').disabled = true;
+    go('edition');
+  });
+
+  // 版本
+  $('#editionList').addEventListener('click', function (e) {
+    var opt = e.target.closest('.opt');
+    if (!opt) return;
+    $$('#editionList .opt').forEach(function (o) { o.classList.remove('sel'); });
+    opt.classList.add('sel');
+    state.edition = opt.dataset.edition;
+    $('#editionNext').disabled = false;
+  });
+  $('#editionNext').addEventListener('click', function () { go('license'); });
+
+  // 许可
+  $('#licenseCheck').addEventListener('change', function () {
+    $('#licenseNext').disabled = !this.checked;
+  });
+  $('#licenseNext').addEventListener('click', function () { go('type'); });
+
+  // 安装类型
+  $('#typeList').addEventListener('click', function (e) {
+    var opt = e.target.closest('.opt');
+    if (!opt) return;
+    if (opt.dataset.type === 'upgrade') { toast(_t('toast_upgrade_from_media')); return; }
+    $$('#typeList .opt').forEach(function (o) { o.classList.remove('sel'); });
+    opt.classList.add('sel');
+    $('#typeNext').disabled = false;
+  });
+  $('#typeNext').addEventListener('click', function () { go('disk'); });
+
+  // 磁盘
+  $('#diskRows').addEventListener('click', function (e) {
+    var row = e.target.closest('.disk-row');
+    if (!row || row.classList.contains('head')) return;
+    selectPartition(row.dataset.id);
+  });
+
+  $('#btnRefresh').addEventListener('click', function () {
+    renderDisk();
+    toast(_t('toast_refresh'));
+  });
+
+  $('#btnNew').addEventListener('click', function () {
+    newPartition();
+  });
+
+  $('#btnDelete').addEventListener('click', function () {
+    var p = state.disk.filter(function (x) { return x.id === state.selected; })[0];
+    if (!p) { toast(_t('toast_select_part_first')); return; }
+    if (p.unallocated) { toast(_t('toast_unalloc_no_delete')); return; }
+    $('#mTitle').textContent = _t('modal_delete_title');
+    $('#mBody').innerHTML = '<p>' + _t('modal_delete_body', { name: p.name }) + '</p>';
+    $('#mOk').textContent = _t('modal_delete_ok');
+    $('#mCancel').style.display = '';
+    $('#mCancel').textContent = _t('modal_default_cancel');
+    okHandler = function () { removePartition(p.id); toast(_t('toast_deleted')); };
+    modalOpen = true;
+    $('#modal').classList.add('open');
+  });
+
+  $('#btnFormat').addEventListener('click', function () {
+    var p = state.disk.filter(function (x) { return x.id === state.selected; })[0];
+    if (!p) { toast(_t('toast_select_part_first')); return; }
+    if (p.unallocated) { toast(_t('toast_unalloc_no_format')); return; }
+    if (p.type !== _t('disk_type_primary')) { toast(_t('toast_system_part_no_format')); return; }
+    $('#mTitle').textContent = _t('modal_format_title');
+    $('#mBody').innerHTML = '<p>' + _t('modal_format_body', { name: p.name }) + '</p>';
+    $('#mOk').textContent = _t('modal_format_ok');
+    $('#mCancel').style.display = '';
+    $('#mCancel').textContent = _t('modal_default_cancel');
+    okHandler = function () {
+      p.free = p.total;
+      renderDisk();
+      toast(_t('toast_formatted', { size: fmtSize(p.total) }));
+    };
+    modalOpen = true;
+    $('#modal').classList.add('open');
+  });
+
+  $('#btnDriver').addEventListener('click', function () {
+    toast(_t('toast_no_driver'));
+  });
+
+  $('#diskNext').addEventListener('click', function () { go('install'); });
+
+  // 重启
+  $('#btnRestartNow').addEventListener('click', function () { go('prepare1'); });
+
+  // 键盘布局
+  $('#kbList').addEventListener('click', function (e) {
+    var opt = e.target.closest('.opt');
+    if (!opt) return;
+    $$('#kbList .opt').forEach(function (o) { o.classList.remove('sel'); });
+    opt.classList.add('sel');
+  });
+  $('#kb2List').addEventListener('click', function (e) {
+    var opt = e.target.closest('.opt');
+    if (!opt) return;
+    $$('#kb2List .opt').forEach(function (o) { o.classList.remove('sel'); });
+    opt.classList.add('sel');
+  });
+
+  // Wi-Fi
+  $('#wifiList').addEventListener('click', function (e) {
+    var w = e.target.closest('.wifi');
+    if (!w) return;
+    $$('#wifiList .wifi').forEach(function (x) { x.classList.remove('on'); });
+    w.classList.add('on');
+    $('#wifiStatus').textContent = _t('toast_wifi_connecting', { ssid: w.dataset.ssid });
+    $('#netNext').disabled = true;
+    later(function () {
+      $('#wifiStatus').textContent = _t('toast_wifi_connected', { ssid: w.dataset.ssid });
+      $('#netNext').disabled = false;
+      toast(_t('toast_wifi_connected', { ssid: w.dataset.ssid }));
+    }, 1500);
+  });
+
+  // 设备名
+  $('#deviceInput').addEventListener('input', function () {
+    $('#deviceNext').disabled = !this.value.trim();
+  });
+  $('#deviceNext').addEventListener('click', function () {
+    var v = $('#deviceInput').value.trim();
+    if (!v) { toast(_t('toast_device_empty')); return; }
+    state.deviceName = v;
+    go('acctype');
+  });
+
+  // 账户类型
+  $('#accList').addEventListener('click', function (e) {
+    var opt = e.target.closest('.opt');
+    if (!opt) return;
+    $$('#accList .opt').forEach(function (o) { o.classList.remove('sel'); });
+    opt.classList.add('sel');
+    state.account = opt.dataset.acc;
+    $('#accNext').disabled = false;
+  });
+  $('#accNext').addEventListener('click', function () {
+    if (state.account === 'work') {
+      toast(_t('toast_work_demo'));
+      return;
+    }
+    go('msaccount');
+  });
+
+  // 微软账户
+  $('#msNext').addEventListener('click', function () {
+    var v = $('#msEmail').value.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) { toast(_t('toast_invalid_email')); return; }
+    var name = v.split('@')[0].replace(/[^A-Za-z0-9\u4e00-\u9fa5]/g, '');
+    state.userName = name ? name.charAt(0).toUpperCase() + name.slice(1) : 'Administrator';
+    go('privacy');
+  });
+
+  // 本地账户
+  $('#localNext').addEventListener('click', function () {
+    var u = $('#localUser').value.trim();
+    var p1 = $('#localPass').value;
+    var p2 = $('#localPass2').value;
+    var err = $('#localErr');
+    if (!u) { err.textContent = _t('err_local_user'); err.style.display = ''; return; }
+    if (p1 !== p2) { err.textContent = _t('err_local_mismatch'); err.style.display = ''; return; }
+    err.style.display = 'none';
+    state.userName = u;
+    go('privacy');
+  });
+
+  // 隐私 / 自定义体验 开关
+  document.addEventListener('click', function (e) {
+    var sw = e.target.closest('.switch');
+    if (!sw) return;
+    sw.classList.toggle('on');
+  });
+
+  // 桌面
+  $('#startBtn').addEventListener('click', function (e) {
+    e.stopPropagation();
+    $('#startMenu').classList.toggle('open');
+  });
+  $('#startMenu').addEventListener('click', function (e) { e.stopPropagation(); });
+  $('#s-desktop').addEventListener('click', function (e) {
+    if (!e.target.closest('.taskbar') && !e.target.closest('.dicon')) closeStart();
+  });
+  $('#smPower').addEventListener('click', function () {
+    closeStart();
+    resetExperience();
+  });
+  $('#icoSetup').addEventListener('dblclick', function () { resetExperience(); });
+  $('#icoPC').addEventListener('dblclick', function () { toast(_t('toast_demo_pc')); });
+  $('#icoRecycle').addEventListener('dblclick', function () { toast(_t('toast_recycle_empty')); });
+  $$('.dicon').forEach(function (d) {
+    d.addEventListener('click', function () {
+      $$('.dicon').forEach(function (x) { x.classList.remove('sel'); });
+      d.classList.add('sel');
+    });
+  });
+
+  // 弹窗按钮
+  $('#mOk').addEventListener('click', function () {
+    if (okHandler && okHandler() === false) return;
+    closeModal();
+  });
+  $('#mCancel').addEventListener('click', closeModal);
+  $('#modal').addEventListener('click', function (e) {
+    if (e.target === this) closeModal();
+  });
+
+  // 演示导航
+  var demoPanel = $('#demoPanel');
+  function toggleDemo() { demoPanel.classList.toggle('open'); }
+  $('#demoDot').addEventListener('click', function (e) { e.stopPropagation(); toggleDemo(); });
+  demoPanel.addEventListener('click', function (e) {
+    e.stopPropagation();
+    var j = e.target.closest('[data-jump]');
+    if (j) { go(j.dataset.jump); demoPanel.classList.remove('open'); }
+  });
+  $('#demoReset').addEventListener('click', function () { resetExperience(); });
+  document.addEventListener('click', function () {
+    if (demoPanel.classList.contains('open')) demoPanel.classList.remove('open');
+  });
+
+  // 键盘
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+      if (modalOpen) { closeModal(); return; }
+      closeStart();
+      demoPanel.classList.remove('open');
+      return;
+    }
+    if (modalOpen) {
+      if (e.key === 'Enter') { e.preventDefault(); $('#mOk').click(); }
+      return;
+    }
+    var tag = (e.target.tagName || '').toLowerCase();
+    if (tag === 'input' || tag === 'select' || tag === 'textarea') {
+      if (e.key === 'Enter') {
+        var active = document.querySelector('.screen.active');
+        var b = active ? active.querySelector('[data-enter]') : null;
+        if (b && !b.disabled) { e.preventDefault(); b.click(); }
+      }
+      return;
+    }
+    if (e.key === 'Enter') {
+      var a = document.querySelector('.screen.active');
+      var btn = a ? a.querySelector('[data-enter]') : null;
+      if (btn && !btn.disabled) { e.preventDefault(); btn.click(); }
+      return;
+    }
+    if (e.key === 'd' || e.key === 'D') { toggleDemo(); }
+  });
+
+  /* ---------------- 启动 ---------------- */
+  initDisk();
+  renderDisk();
+  $('#deviceInput').value = state.deviceName;
+  _apply();
+
+  var startId = (location.hash || '').replace('#', '');
+  if (startId && document.getElementById('s-' + startId)) {
+    go(startId);
+  } else {
+    go('boot');
+  }
+
+  window.__installer = { go: go, state: state };
+})();
+</script>
+</body>
+</html>

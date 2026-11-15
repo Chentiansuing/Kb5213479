@@ -1,0 +1,189 @@
+<body>
+<div class="bg"><div class="bg__ribbon"></div><div class="bg__ribbon bg__ribbon--2"></div></div>
+
+<!-- ===== 启动 ===== -->
+<section class="screen dark active" id="s-boot">
+  <div class="boot">
+    <svg class="boot__logo" viewBox="0 0 64 64" aria-hidden="true">
+      <g fill="#ffffff"><rect x="2" y="2" width="27" height="27" rx="1.5"/><rect x="35" y="2" width="27" height="27" rx="1.5"/><rect x="2" y="35" width="27" height="27" rx="1.5"/><rect x="35" y="35" width="27" height="27" rx="1.5"/></g>
+    </svg>
+    <div class="boot__spin"></div>
+  </div>
+</section>
+
+<!-- ===== 语言与区域 ===== -->
+<section class="screen" id="s-lang">
+  <div class="dialog">
+    <div class="dialog__bar">
+      <div class="dialog__title">
+        <svg width="14" height="14" viewBox="0 0 64 64"><g fill="#0067c0"><rect x="2" y="2" width="27" height="27" rx="1.5"/><rect x="35" y="2" width="27" height="27" rx="1.5"/><rect x="2" y="35" width="27" height="27" rx="1.5"/><rect x="35" y="35" width="27" height="27" rx="1.5"/></g></svg>
+        Windows 11 安装程序
+      </div>
+      <div class="winctl">
+        <button title="最小化"><svg width="10" height="10" viewBox="0 0 10 10"><path d="M1 5h8" stroke="currentColor" stroke-width="1"/></svg></button>
+        <button class="close" id="btnCloseSetup" title="关闭"><svg width="10" height="10" viewBox="0 0 10 10"><path d="M1 1l8 8M9 1l-8 8" stroke="currentColor" stroke-width="1.2"/></svg></button>
+      </div>
+    </div>
+    <div class="dialog__body">
+      <h1 class="dlg-h">Windows 11 安装程序</h1>
+      <p class="dlg-sub">选择要安装的语言和其他首选项。</p>
+      <div class="fld">
+        <label class="fld__label" for="selLang">要安装的语言</label>
+        <select class="inp" id="selLang">
+          <option>中文（简体，中国）</option>
+          <option>中文（繁体，中国台湾）</option>
+          <option>English (United States)</option>
+          <option>日本語 (日本)</option>
+        </select>
+      </div>
+      <div class="fld">
+        <label class="fld__label" for="selTime">时间和货币格式</label>
+        <select class="inp" id="selTime">
+          <option>中文（简体，中国）</option>
+          <option>中文（简体，新加坡）</option>
+          <option>English (United States)</option>
+        </select>
+      </div>
+      <div class="fld" style="margin-bottom:6px;">
+        <label class="fld__label" for="selKb">键盘或输入方法</label>
+        <select class="inp" id="selKb">
+          <option>微软拼音</option>
+          <option>美式键盘</option>
+          <option>微软五笔</option>
+        </select>
+      </div>
+    </div>
+    <div class="dialog__foot">
+      <button class="link" id="btnRepair">修复计算机</button>
+      <div class="spacer"></div>
+      <button class="btn primary" data-go="key" data-enter="1">下一步</button>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 产品密钥 ===== -->
+<section class="screen" id="s-key">
+  <div class="dialog">
+    <div class="dialog__bar">
+      <div class="dialog__title">Windows 11 安装程序</div>
+      <div class="winctl"><button class="close" data-close-setup title="关闭"><svg width="10" height="10" viewBox="0 0 10 10"><path d="M1 1l8 8M9 1l-8 8" stroke="currentColor" stroke-width="1.2"/></svg></button></div>
+    </div>
+    <div class="dialog__body">
+      <h1 class="dlg-h">激活 Windows</h1>
+      <p class="dlg-sub">输入产品密钥可激活 Windows。如果你没有密钥，可以选择“我没有产品密钥”继续安装，稍后再激活。</p>
+      <div class="fld">
+        <label class="fld__label" for="keyInput">产品密钥</label>
+        <input class="inp mono" id="keyInput" maxlength="29" placeholder="XXXXX-XXXXX-XXXXX-XXXXX-XXXXX" autocomplete="off" spellcheck="false">
+        <p class="dlg-note">密钥由 25 个字符组成，输入时会自动分组。</p>
+      </div>
+    </div>
+    <div class="dialog__foot">
+      <button class="link" id="btnNoKey">我没有产品密钥</button>
+      <div class="spacer"></div>
+      <button class="btn primary" id="keyNext" data-enter="1" disabled>下一步</button>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 选择版本 ===== -->
+<section class="screen" id="s-edition">
+  <div class="dialog">
+    <div class="dialog__bar">
+      <div class="dialog__title">Windows 11 安装程序</div>
+      <div class="winctl"><button class="close" data-close-setup title="关闭"><svg width="10" height="10" viewBox="0 0 10 10"><path d="M1 1l8 8M9 1l-8 8" stroke="currentColor" stroke-width="1.2"/></svg></button></div>
+    </div>
+    <div class="dialog__body">
+      <h1 class="dlg-h">选择要安装的操作系统</h1>
+      <p class="dlg-sub">你可以安装以下任一版本。安装完成后，可在“设置”中升级版本。</p>
+      <div id="editionList">
+        <div class="opt" data-edition="Windows 11 专业版">
+          <span class="radio"></span>
+          <div><div class="opt__t">Windows 11 专业版</div><div class="opt__d">面向小型企业和高级用户的完整功能，支持 BitLocker、远程桌面和 Hyper-V。</div></div>
+        </div>
+        <div class="opt" data-edition="Windows 11 家庭版">
+          <span class="radio"></span>
+          <div><div class="opt__t">Windows 11 家庭版</div><div class="opt__d">面向家庭用户的日常体验，包含全新的开始菜单、窗口布局和 Microsoft Store。</div></div>
+        </div>
+        <div class="opt" data-edition="Windows 11 企业版">
+          <span class="radio"></span>
+          <div><div class="opt__t">Windows 11 企业版</div><div class="opt__d">面向大型组织，提供高级安全性、设备管理和云端连接能力。</div></div>
+        </div>
+        <div class="opt" data-edition="Windows 11 教育版">
+          <span class="radio"></span>
+          <div><div class="opt__t">Windows 11 教育版</div><div class="opt__d">为学校、教师和学生打造，包含教育机构常用的应用与管理工具。</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="dialog__foot">
+      <div class="spacer"></div>
+      <button class="btn primary" id="editionNext" data-enter="1" disabled>下一步</button>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 许可条款 ===== -->
+<section class="screen" id="s-license">
+  <div class="dialog">
+    <div class="dialog__bar">
+      <div class="dialog__title">Windows 11 安装程序</div>
+      <div class="winctl"><button class="close" data-close-setup title="关闭"><svg width="10" height="10" viewBox="0 0 10 10"><path d="M1 1l8 8M9 1l-8 8" stroke="currentColor" stroke-width="1.2"/></svg></button></div>
+    </div>
+    <div class="dialog__body">
+      <h1 class="dlg-h" style="font-size:21px;">适用的通知与许可条款</h1>
+      <p class="dlg-sub" style="margin-bottom:14px;">请阅读以下条款。你需要接受这些条款才能继续安装。</p>
+      <div class="terms">
+        <h4>MICROSOFT 软件许可条款</h4>
+        <p>本许可条款是 Microsoft 公司与设备使用者之间达成的协议。本条款适用于本设备上预安装或随本设备提供的 Microsoft 软件，包括随附的媒体、印刷材料、联机或电子文档以及更新。</p>
+        <h4>1. 安装和使用权利</h4>
+        <p>你可以在本设备上安装和使用本软件的一个副本。设备上同时运行本软件的实例数量不得超过本许可条款允许的范围。你不得在虚拟化环境中运行本软件，除非获得 Microsoft 的另行授权。</p>
+        <h4>2. 激活与验证</h4>
+        <p>安装过程可能需要 Internet 连接以完成激活和验证。如果你未在许可条款允许的时间内完成激活，本软件的部分功能可能受到限制。激活信息将与设备的硬件配置关联。</p>
+        <h4>3. 隐私与诊断数据</h4>
+        <p>Microsoft 会收集诊断数据以帮助改进产品。你可以在首次开机设置中选择诊断数据的级别，并可随时在“设置 &gt; 隐私和安全性 &gt; 诊断和反馈”中更改该设置。</p>
+        <h4>4. 更新</h4>
+        <p>本软件会定期检查并安装更新。更新可能包含安全修补程序、新功能以及对已有功能的修改。安装本软件即表示你同意接收这些更新。</p>
+        <h4>5. 备份与恢复</h4>
+        <p>安装操作系统可能会格式化所选分区并删除其中的所有文件。在继续之前，请确认已备份重要数据。Microsoft 不对数据丢失承担责任。</p>
+        <h4>6. 支持服务</h4>
+        <p>本软件的支持服务受设备制造商或 Microsoft 当时提供的支持政策约束。本条款中的任何内容均不限制消费者依法享有的法定权利。</p>
+        <p style="margin-top:14px;color:#888;">（以上条款为演示用途的简化文本，非 Microsoft 官方条款。）</p>
+      </div>
+      <label class="check" style="margin-top:16px;">
+        <input type="checkbox" id="licenseCheck">
+        <span>我接受 Microsoft 软件许可条款和适用的通知。</span>
+      </label>
+    </div>
+    <div class="dialog__foot">
+      <div class="spacer"></div>
+      <button class="btn primary" id="licenseNext" data-enter="1" disabled>下一步</button>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 安装类型 ===== -->
+<section class="screen" id="s-type">
+  <div class="dialog">
+    <div class="dialog__bar">
+      <div class="dialog__title">Windows 11 安装程序</div>
+      <div class="winctl"><button class="close" data-close-setup title="关闭"><svg width="10" height="10" viewBox="0 0 10 10"><path d="M1 1l8 8M9 1l-8 8" stroke="currentColor" stroke-width="1.2"/></svg></button></div>
+    </div>
+    <div class="dialog__body">
+      <h1 class="dlg-h">你想执行哪种类型的安装？</h1>
+      <p class="dlg-sub">升级会保留文件、设置和应用；自定义安装会重新安装 Windows，你可以自行选择分区。</p>
+      <div id="typeList">
+        <div class="opt dim" data-type="upgrade">
+          <span class="radio"></span>
+          <div><div class="opt__t">升级：安装 Windows 并保留文件、设置和应用</div><div class="opt__d">当前是从安装介质启动，无法执行升级安装。请移除介质并从 Windows 中运行安装程序。</div></div>
+        </div>
+        <div class="opt" data-type="custom">
+          <span class="radio"></span>
+          <div><div class="opt__t">自定义：仅安装 Windows（高级）</div><div class="opt__d">使用此选项全新安装 Windows。你可以选择要安装到的分区，已安装的程序和文件不会保留。</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="dialog__foot">
+      <div class="spacer"></div>
+      <button class="btn primary" id="typeNext" data-enter="1" disabled>下一步</button>
+    </div>
+  </div>
+</section>

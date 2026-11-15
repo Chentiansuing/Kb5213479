@@ -1,0 +1,38 @@
+<script>
+(function () {
+  var errs = [];
+  window.addEventListener('error', function (e) { errs.push(e.message); });
+  var log = [];
+  function q(s) { return document.querySelector(s); }
+  function click(s) { var el = q(s); if (!el) { log.push('MISS:' + s); return false; } el.click(); log.push('OK:' + s); return true; }
+  var steps = [
+    [300, function () { click('#wifiList .wifi[data-ssid="HUAWEI-8F2C"]'); }],
+    [2400, function () { log.push('WIFI:' + q('#wifiStatus').textContent); click('#netNext'); }],
+    [400, function () { click('#deviceNext'); }],
+    [400, function () { click('#accList .opt[data-acc="personal"]'); click('#accNext'); }],
+    [400, function () { click('#s-msaccount [data-go="local"]'); }],
+    [400, function () {
+      q('#localUser').value = '测试用户';
+      q('#localPass').value = 'Passw0rd';
+      q('#localPass2').value = 'Passw0rd';
+      click('#localNext');
+    }],
+    [400, function () { click('#s-privacy [data-go="custom"]'); }],
+    [400, function () { click('#s-custom [data-go="final"]'); }],
+    [7000, function () {
+      var active = document.querySelector('.screen.active');
+      document.title = 'RESULT|' + (active ? active.id : 'none') +
+        '|USER:' + (q('#smUser') ? q('#smUser').textContent : '-') +
+        '|CLOCK:' + (q('#clockTime') ? q('#clockTime').textContent : '-') +
+        '|LOG:' + log.join(',') + '|ERR:' + (errs.join(';') || 'none');
+    }]
+  ];
+  var i = 0;
+  function run() {
+    if (i >= steps.length) return;
+    var s = steps[i++];
+    setTimeout(function () { s[1](); run(); }, s[0]);
+  }
+  setTimeout(run, 400);
+})();
+</script>

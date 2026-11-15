@@ -1,0 +1,172 @@
+<!-- ===== 磁盘分区 ===== -->
+<section class="screen" id="s-disk">
+  <div class="dialog dialog--wide">
+    <div class="dialog__bar">
+      <div class="dialog__title" data-i18n="setup_title">Windows 11 安装程序</div>
+      <div class="winctl"><button class="close" data-close-setup title="关闭"><svg width="10" height="10" viewBox="0 0 10 10"><path d="M1 1l8 8M9 1l-8 8" stroke="currentColor" stroke-width="1.2"/></svg></button></div>
+    </div>
+    <div class="dialog__body">
+      <h1 class="dlg-h" style="font-size:22px;" data-i18n="title_disk">你想将 Windows 安装在哪里？</h1>
+      <p class="dlg-sub" style="margin-bottom:16px;" data-i18n="sub_disk">你可以选择现有分区，或新建分区。安装前请确认重要数据已备份。</p>
+      <div class="disk-table">
+        <div class="disk-row head">
+          <div data-i18n="disk_col1">名称</div><div data-i18n="disk_col2">总大小</div><div data-i18n="disk_col3">可用空间</div><div data-i18n="disk_col4">类型</div>
+        </div>
+        <div id="diskRows"></div>
+      </div>
+      <div class="disk-tools">
+        <button class="link" id="btnRefresh" data-i18n="disk_link1">刷新</button>
+        <button class="link" id="btnDelete" data-i18n="disk_link2">删除</button>
+        <button class="link" id="btnFormat" data-i18n="disk_link3">格式化</button>
+        <span class="sep"></span>
+        <button class="link" id="btnNew" data-i18n="disk_link4">新建</button>
+        <button class="link" id="btnDriver" data-i18n="disk_link5">加载驱动程序</button>
+      </div>
+      <div class="disk-info" id="diskInfo">请选择一个分区。</div>
+      <div class="disk-tip" data-i18n="disk_tip">提示：选择"主分区"后点击"下一步"即可开始安装；未分配的空间需要先点击"新建"。</div>
+    </div>
+    <div class="dialog__foot">
+      <button class="link" data-go="type" data-i18n="btn_back">上一步</button>
+      <div class="spacer"></div>
+      <button class="btn primary" id="diskNext" data-enter="1" disabled data-i18n="btn_next">下一步</button>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 安装进度 ===== -->
+<section class="screen" id="s-install">
+  <div class="install">
+    <div class="install__brand">
+      <span class="logo"><i></i><i></i><i></i><i></i></span>
+      <span data-i18n="inst_brand">Windows 11</span>
+    </div>
+    <div class="pct"><span id="instPct">0</span><em>%</em></div>
+    <div class="bar"><i id="instBar"></i></div>
+    <div class="install__stage" id="instStage" data-i18n="inst_stage_1">正在复制 Windows 文件</div>
+    <div class="install__hint" data-i18n-html="inst_hint">正在安装到 <span id="instTarget">主分区</span> · 请不要关闭你的计算机。</div>
+  </div>
+</section>
+
+<!-- ===== 重启提示 ===== -->
+<section class="screen" id="s-restart">
+  <div class="restart-card">
+    <h2 data-i18n="rst_title">Windows 需要重启才能继续</h2>
+    <p data-i18n-html="rst_body">你的电脑将在 <span id="restartCount">10</span> 秒后自动重启。</p>
+    <div class="restart-num" id="restartNum">10</div>
+    <p style="color:#8b8b8b;" data-i18n="rst_sub">重启期间请不要关闭电脑或拔出电源。</p>
+    <div style="margin-top:26px; display:flex; justify-content:center;">
+      <button class="btn primary" id="btnRestartNow" data-i18n="rst_now">立即重启</button>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 重启后准备 ===== -->
+<section class="screen dark" id="s-prepare1">
+  <div class="boot">
+    <svg class="boot__logo" viewBox="0 0 64 64" aria-hidden="true">
+      <g fill="#ffffff"><rect x="2" y="2" width="27" height="27" rx="1.5"/><rect x="35" y="2" width="27" height="27" rx="1.5"/><rect x="2" y="35" width="27" height="27" rx="1.5"/><rect x="35" y="35" width="27" height="27" rx="1.5"/></g>
+    </svg>
+    <div class="boot__spin"></div>
+    <div class="boot__msg" data-i18n="boot_prepare">正在准备 Windows</div>
+    <div class="boot__hint" data-i18n="boot_hint">请不要关闭你的计算机</div>
+  </div>
+</section>
+
+<!-- ===== OOBE：区域 ===== -->
+<section class="screen oobe" id="s-region">
+  <div class="oobe-card">
+    <h1 data-i18n="oobe_region_title">让我们为你设置区域</h1>
+    <p class="sub" data-i18n="oobe_region_sub">选择你所在的国家或地区，以便 Windows 使用合适的日期、时间和内容设置。</p>
+    <div class="fld">
+      <label class="fld__label" for="regionSel" data-i18n="oobe_country">国家或地区</label>
+      <select class="inp" id="regionSel">
+        <option>中国</option><option>中国香港特别行政区</option><option>中国台湾</option>
+        <option>新加坡</option><option>日本</option><option>美国</option><option>英国</option>
+      </select>
+    </div>
+    <div class="oobe-foot">
+      <div class="right"><button class="btn primary" data-go="keyboard" data-enter="1" data-i18n="oobe_yes">是</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== OOBE：键盘 ===== -->
+<section class="screen oobe" id="s-keyboard">
+  <div class="oobe-card">
+    <h1 data-i18n="oobe_kb_title">你想使用哪种键盘布局？</h1>
+    <p class="sub" data-i18n="oobe_kb_sub">我们会根据你的区域推荐一种布局。你也可以添加其他布局。</p>
+    <div id="kbList">
+      <div class="opt sel" data-kb="微软拼音"><span class="radio"></span><div><div class="opt__t" data-i18n="kb_pinyin">微软拼音</div><div class="opt__d" data-i18n="kb_pinyin_d">中文（简体）· 推荐</div></div></div>
+      <div class="opt" data-kb="微软五笔"><span class="radio"></span><div><div class="opt__t" data-i18n="kb_wubi">微软五笔</div><div class="opt__d" data-i18n="kb_wubi_d">中文（简体）</div></div></div>
+      <div class="opt" data-kb="美式键盘"><span class="radio"></span><div><div class="opt__t" data-i18n="kb_us">美式键盘</div><div class="opt__d" data-i18n="kb_us_d">英语（美国）</div></div></div>
+    </div>
+    <div class="oobe-foot">
+      <button class="link" data-go="keyboard2" data-i18n="oobe_skip">跳过</button>
+      <div class="right"><button class="btn primary" data-go="keyboard2" data-enter="1" data-i18n="oobe_yes">是</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== OOBE：第二键盘 ===== -->
+<section class="screen oobe" id="s-keyboard2">
+  <div class="oobe-card">
+    <h1 data-i18n="kb2_title">是否要添加第二种键盘布局？</h1>
+    <p class="sub" data-i18n="kb2_sub">如果你经常使用多种语言输入，可以再添加一种键盘布局。你可以稍后在"设置"中添加。</p>
+    <div id="kb2List">
+      <div class="opt sel" data-kb2="不添加"><span class="radio"></span><div><div class="opt__t" data-i18n="oobe_skip">跳过</div><div class="opt__d" data-i18n="kb2_skip_d">暂时只使用当前键盘布局</div></div></div>
+      <div class="opt" data-kb2="美式键盘"><span class="radio"></span><div><div class="opt__t" data-i18n="kb_us">美式键盘</div><div class="opt__d" data-i18n="kb_us_d">英语（美国）</div></div></div>
+    </div>
+    <div class="oobe-foot">
+      <div class="right"><button class="btn primary" data-go="network" data-enter="1" data-i18n="btn_next">下一步</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== OOBE：网络 ===== -->
+<section class="screen oobe" id="s-network">
+  <div class="oobe-card">
+    <h1 data-i18n="oobe_net_title">让我们将你连接到网络</h1>
+    <p class="sub" data-i18n="oobe_net_sub">连接后即可使用 Microsoft 账户、应用商店和云服务。选择一个可用的无线网络。</p>
+    <div id="wifiList">
+      <div class="wifi" data-ssid="HUAWEI-8F2C">
+        <div class="wifi__l">
+          <span class="wifi__bars"><i></i><i></i><i></i><i></i></span>
+          <div><div>HUAWEI-8F2C</div><div class="wifi__meta" data-i18n="net_sec">安全 · WPA2</div></div>
+        </div>
+        <span class="wifi__meta" data-i18n="net_str">信号强</span>
+      </div>
+      <div class="wifi" data-ssid="TP-LINK_5G">
+        <div class="wifi__l">
+          <span class="wifi__bars"><i></i><i></i><i></i><i></i></span>
+          <div><div>TP-LINK_5G</div><div class="wifi__meta" data-i18n="net_sec">安全 · WPA2</div></div>
+        </div>
+        <span class="wifi__meta" data-i18n="net_good">信号良好</span>
+      </div>
+      <div class="wifi" data-ssid="ChinaNet-Guest">
+        <div class="wifi__l">
+          <span class="wifi__bars"><i></i><i></i><i></i><i></i></span>
+          <div><div>ChinaNet-Guest</div><div class="wifi__meta" data-i18n="net_open">开放网络</div></div>
+        </div>
+        <span class="wifi__meta" data-i18n="net_fair">信号一般</span>
+      </div>
+    </div>
+    <div class="wifi-status" id="wifiStatus"></div>
+    <div class="oobe-foot">
+      <button class="link" data-go="limited" data-i18n="oobe_no_net">我没有 Internet 连接</button>
+      <div class="right"><button class="btn primary" id="netNext" data-enter="1" disabled data-i18n="btn_next">下一步</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== OOBE：受限设置 ===== -->
+<section class="screen oobe" id="s-limited">
+  <div class="oobe-card">
+    <h1 data-i18n="limited_title">受限设置</h1>
+    <p class="sub" data-i18n="limited_sub">你当前未连接到 Internet。你可以继续执行受限设置，稍后再连接网络。部分功能（如 Microsoft Store 和云同步）在联网前不可用。</p>
+    <div class="oobe-warn" data-i18n="limited_warn">继续执行受限设置后，你需要使用本地账户登录此设备。</div>
+    <div class="oobe-foot">
+      <button class="link" data-go="network" data-i18n="btn_back">上一步</button>
+      <div class="right"><button class="btn primary" data-go="device" data-i18n="limited_continue">继续执行受限设置</button></div>
+    </div>
+  </div>
+</section>

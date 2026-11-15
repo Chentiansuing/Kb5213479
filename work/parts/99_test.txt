@@ -1,0 +1,42 @@
+<script>
+(function () {
+  var errs = [];
+  window.addEventListener('error', function (e) { errs.push(e.message); });
+  var log = [];
+  function q(s) { return document.querySelector(s); }
+  function click(s) {
+    var el = q(s);
+    if (!el) { log.push('MISS:' + s); return false; }
+    el.click(); log.push('OK:' + s); return true;
+  }
+  var steps = [
+    function () { click('#s-lang [data-go="key"]'); },
+    function () { click('#btnNoKey'); },
+    function () { click('#editionList .opt[data-edition="Windows 11 专业版"]'); },
+    function () { click('#editionNext'); },
+    function () { click('#licenseCheck'); },
+    function () { click('#licenseNext'); },
+    function () { click('#typeList .opt[data-type="custom"]'); },
+    function () { click('#typeNext'); },
+    function () { click('#diskRows .disk-row[data-id="p4"]'); },
+    function () { click('#btnNew'); },
+    function () { click('#mOk'); },
+    function () { click('#diskNext'); }
+  ];
+  var i = 0;
+  function run() {
+    if (i < steps.length) { steps[i++](); setTimeout(run, 220); return; }
+    setTimeout(report, 3000);
+  }
+  function report() {
+    var active = document.querySelector('.screen.active');
+    document.title = 'RESULT|' + (active ? active.id : 'none') +
+      '|PCT:' + (q('#instPct') ? q('#instPct').textContent : '-') +
+      '|STAGE:' + (q('#instStage') ? q('#instStage').textContent : '-') +
+      '|ROWS:' + document.querySelectorAll('#diskRows .disk-row').length +
+      '|LOG:' + log.join(',') +
+      '|ERR:' + (errs.join(';') || 'none');
+  }
+  setTimeout(run, 500);
+})();
+</script>

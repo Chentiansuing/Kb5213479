@@ -1,0 +1,263 @@
+<!-- ===== OOBE：设备命名 ===== -->
+<section class="screen oobe" id="s-device">
+  <div class="oobe-card">
+    <h1>为这台电脑命名</h1>
+    <p class="sub">这个名称用于在网络中识别此设备。你可以稍后在“设置 &gt; 系统 &gt; 关于”中更改。</p>
+    <div class="fld">
+      <label class="fld__label" for="deviceInput">电脑名称</label>
+      <input class="inp" id="deviceInput" value="DESKTOP-7F3K9Q" maxlength="15" autocomplete="off" spellcheck="false">
+    </div>
+    <div class="oobe-foot">
+      <div class="right"><button class="btn primary" id="deviceNext" data-enter="1">下一步</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== OOBE：账户类型 ===== -->
+<section class="screen oobe" id="s-acctype">
+  <div class="oobe-card">
+    <h1>谁将使用此设备？</h1>
+    <p class="sub">登录你的 Microsoft 账户，或创建一个本地账户。使用 Microsoft 账户可以同步设置、OneDrive 文件和 Microsoft Store 内容。</p>
+    <div id="accList">
+      <div class="opt" data-acc="personal">
+        <span class="radio"></span>
+        <div><div class="opt__t">设置供个人使用</div><div class="opt__d">使用 Microsoft 账户或本地账户登录此设备</div></div>
+      </div>
+      <div class="opt" data-acc="work">
+        <span class="radio"></span>
+        <div><div class="opt__t">设置供工作或学校使用</div><div class="opt__d">使用组织提供的账户登录，由组织管理此设备</div></div>
+      </div>
+    </div>
+    <div class="oobe-foot">
+      <div class="right"><button class="btn primary" id="accNext" data-enter="1" disabled>下一步</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== OOBE：Microsoft 账户 ===== -->
+<section class="screen oobe" id="s-msaccount">
+  <div class="oobe-card">
+    <h1>登录 Microsoft 账户</h1>
+    <p class="sub">输入你的电子邮件地址。如果还没有账户，可以创建一个，或改用本地账户继续。</p>
+    <div class="fld">
+      <label class="fld__label" for="msEmail">电子邮件地址</label>
+      <input class="inp" id="msEmail" placeholder="name@example.com" autocomplete="off" spellcheck="false">
+    </div>
+    <button class="link" data-go="local" style="margin-top:2px;">改为使用本地账户</button>
+    <div class="oobe-foot">
+      <button class="link" data-go="acctype">上一步</button>
+      <div class="right"><button class="btn primary" id="msNext" data-enter="1">下一步</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== OOBE：本地账户 ===== -->
+<section class="screen oobe" id="s-local">
+  <div class="oobe-card">
+    <h1>为这台电脑创建账户</h1>
+    <p class="sub">设置用于登录此设备的本地账户。密码可以留空，跳过设置密码。</p>
+    <div class="fld">
+      <label class="fld__label" for="localUser">用户名</label>
+      <input class="inp" id="localUser" placeholder="例如：Administrator" maxlength="20" autocomplete="off" spellcheck="false">
+    </div>
+    <div class="fld">
+      <label class="fld__label" for="localPass">密码（可选）</label>
+      <input class="inp" id="localPass" type="password" autocomplete="new-password">
+    </div>
+    <div class="fld" style="margin-bottom:4px;">
+      <label class="fld__label" for="localPass2">确认密码</label>
+      <input class="inp" id="localPass2" type="password" autocomplete="new-password">
+    </div>
+    <div class="oobe-warn" id="localErr" style="display:none;"></div>
+    <div class="oobe-foot">
+      <button class="link" data-go="msaccount">上一步</button>
+      <div class="right"><button class="btn primary" id="localNext" data-enter="1">下一步</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== OOBE：隐私 ===== -->
+<section class="screen oobe" id="s-privacy">
+  <div class="oobe-card">
+    <h1>为你的设备选择隐私设置</h1>
+    <p class="sub">你的选择会影响 Windows 如何使用你的信息。你可以随时在“设置 &gt; 隐私和安全性”中更改这些选项。</p>
+    <div id="privacyList">
+      <div class="switch-row"><div class="txt"><b>位置</b><span>允许应用使用你的精确位置</span></div><div class="switch on"></div></div>
+      <div class="switch-row"><div class="txt"><b>查找我的设备</b><span>允许 Windows 通过网络定位此设备</span></div><div class="switch on"></div></div>
+      <div class="switch-row"><div class="txt"><b>诊断数据</b><span>发送可选的诊断数据，帮助改进 Windows</span></div><div class="switch on"></div></div>
+      <div class="switch-row"><div class="txt"><b>改进墨迹书写和键入</b><span>发送书写和键入样本，用于改进语言模型</span></div><div class="switch"></div></div>
+      <div class="switch-row"><div class="txt"><b>量身定制的体验</b><span>允许 Microsoft 使用诊断数据提供个性化提示</span></div><div class="switch on"></div></div>
+      <div class="switch-row"><div class="txt"><b>广告 ID</b><span>应用可以使用你的广告 ID 提供相关广告</span></div><div class="switch"></div></div>
+      <div class="switch-row" style="border-bottom:0;"><div class="txt"><b>本地内容</b><span>在搜索和提示中显示本地文件与应用内容</span></div><div class="switch on"></div></div>
+    </div>
+    <div class="oobe-foot">
+      <button class="link" data-go="custom">跳过</button>
+      <div class="right"><button class="btn primary" data-go="custom" data-enter="1">接受</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== OOBE：自定义体验 ===== -->
+<section class="screen oobe" id="s-custom">
+  <div class="oobe-card">
+    <h1>自定义你的体验</h1>
+    <p class="sub">选择你希望 Windows 如何为你提供建议和内容。之后可以随时在设置中关闭。</p>
+    <div id="customList">
+      <div class="switch-row"><div class="txt"><b>获取有关 Windows 的提示和建议</b><span>在开始菜单和设置中显示使用技巧</span></div><div class="switch on"></div></div>
+      <div class="switch-row"><div class="txt"><b>获取 Microsoft Store 的应用推荐</b><span>根据你的使用情况推荐应用和游戏</span></div><div class="switch on"></div></div>
+      <div class="switch-row"><div class="txt"><b>允许 Microsoft 向你发送促销信息</b><span>通过电子邮件接收产品更新和优惠</span></div><div class="switch"></div></div>
+    </div>
+    <div class="oobe-foot">
+      <button class="link" data-go="final">跳过</button>
+      <div class="right"><button class="btn primary" data-go="final" data-enter="1">接受</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== OOBE：准备桌面 ===== -->
+<section class="screen oobe" id="s-final">
+  <div class="oobe-card" style="text-align:center; padding:56px 48px 46px;">
+    <div class="oobe-loading">
+      <div class="ring"></div>
+      <h1 style="font-size:24px;">这可能需要几分钟</h1>
+      <p class="sub" style="margin-bottom:0;">请勿关闭你的电脑。我们正在为 <b id="finalName">Administrator</b> 准备好一切。</p>
+      <div class="progress-dots" style="margin-top:22px;"><i></i><i></i><i></i></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 桌面 ===== -->
+<section class="screen desktop" id="s-desktop">
+  <div class="wall"><div class="petal"></div></div>
+  <div class="desk-icons">
+    <div class="dicon" id="icoRecycle">
+      <svg width="38" height="38" viewBox="0 0 48 48" fill="none">
+        <path d="M11 14h26l-2.4 26.5a3 3 0 0 1-3 2.5H16.4a3 3 0 0 1-3-2.5L11 14Z" fill="rgba(190,215,240,.55)" stroke="#eaf3ff" stroke-width="1.6"/>
+        <path d="M8 12h32" stroke="#eaf3ff" stroke-width="2" stroke-linecap="round"/>
+        <path d="M19 12V9.5a1.5 1.5 0 0 1 1.5-1.5h7a1.5 1.5 0 0 1 1.5 1.5V12" stroke="#eaf3ff" stroke-width="1.8"/>
+        <path d="M19 20v15M24 20v15M29 20v15" stroke="#dbe9f8" stroke-width="1.5" stroke-linecap="round" opacity=".8"/>
+      </svg>
+      <span>回收站</span>
+    </div>
+    <div class="dicon" id="icoPC">
+      <svg width="38" height="38" viewBox="0 0 48 48" fill="none">
+        <rect x="7" y="10" width="34" height="23" rx="2" fill="rgba(190,215,240,.5)" stroke="#eaf3ff" stroke-width="1.6"/>
+        <path d="M17 40h14M24 33v7" stroke="#eaf3ff" stroke-width="1.8" stroke-linecap="round"/>
+        <rect x="10.5" y="13.5" width="27" height="16" rx="1" fill="rgba(60,130,200,.35)"/>
+      </svg>
+      <span>此电脑</span>
+    </div>
+    <div class="dicon" id="icoSetup">
+      <svg width="38" height="38" viewBox="0 0 48 48">
+        <rect x="9" y="9" width="30" height="30" rx="6" fill="#0067c0"/>
+        <g fill="#fff"><rect x="16" y="16" width="6.5" height="6.5" rx="1"/><rect x="25.5" y="16" width="6.5" height="6.5" rx="1"/><rect x="16" y="25.5" width="6.5" height="6.5" rx="1"/><rect x="25.5" y="25.5" width="6.5" height="6.5" rx="1"/></g>
+      </svg>
+      <span>重新安装<br>Windows</span>
+    </div>
+  </div>
+
+  <div class="start-menu" id="startMenu">
+    <div class="sm-search">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="4.6" stroke="#666" stroke-width="1.4"/><path d="M10.6 10.6L14 14" stroke="#666" stroke-width="1.4" stroke-linecap="round"/></svg>
+      搜索应用、设置和文档
+    </div>
+    <div class="sm-row"><b>已固定</b><span>所有应用 &gt;</span></div>
+    <div class="sm-grid">
+      <div class="sm-app"><span class="tile" style="background:#0f6cbd;font:600 15px 'Segoe UI',sans-serif;">e</span>Microsoft Edge</div>
+      <div class="sm-app"><span class="tile" style="background:#f2c811;"><svg width="17" height="17" viewBox="0 0 16 16" fill="none"><path d="M2 5.2h4l1.3 1.5H14v6.1H2V5.2Z" stroke="#4a3a00" stroke-width="1.2" stroke-linejoin="round"/><path d="M2 6.7h12" stroke="#4a3a00" stroke-width="1.2"/></svg></span>文件资源管理器</div>
+      <div class="sm-app"><span class="tile" style="background:#0078d4;"><svg width="17" height="17" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="2.3" stroke="#fff" stroke-width="1.3"/><path d="M8 1.5v1.7M8 12.8v1.7M1.5 8h1.7M12.8 8h1.7M3.5 3.5l1.2 1.2M11.3 11.3l1.2 1.2M12.5 3.5l-1.2 1.2M4.7 11.3l-1.2 1.2" stroke="#fff" stroke-width="1.15" stroke-linecap="round"/></svg></span>设置</div>
+      <div class="sm-app"><span class="tile" style="background:#2b88d8;"><svg width="17" height="17" viewBox="0 0 16 16" fill="none"><rect x="2" y="2.8" width="12" height="10.4" rx="1.2" stroke="#fff" stroke-width="1.25"/><circle cx="5.9" cy="6.3" r="1.05" fill="#fff"/><path d="M2.6 12.1l3.3-3.2 2.2 2.1 2.2-2.6 3 3.1" stroke="#fff" stroke-width="1.25" stroke-linejoin="round"/></svg></span>照片</div>
+      <div class="sm-app"><span class="tile" style="background:#4c9a2a;"><svg width="17" height="17" viewBox="0 0 16 16" fill="none"><rect x="3.2" y="1.9" width="9.6" height="12.2" rx="1.2" stroke="#fff" stroke-width="1.2"/><rect x="5" y="3.9" width="6" height="2.3" rx=".4" fill="#fff"/><circle cx="5.8" cy="8.8" r=".75" fill="#fff"/><circle cx="8" cy="8.8" r=".75" fill="#fff"/><circle cx="10.2" cy="8.8" r=".75" fill="#fff"/><circle cx="5.8" cy="11.2" r=".75" fill="#fff"/><circle cx="8" cy="11.2" r=".75" fill="#fff"/><circle cx="10.2" cy="11.2" r=".75" fill="#fff"/></svg></span>计算器</div>
+      <div class="sm-app"><span class="tile" style="background:#5c2d91;"><svg width="17" height="17" viewBox="0 0 16 16" fill="none"><path d="M4 2h5l3 3v9H4V2Z" stroke="#fff" stroke-width="1.2" stroke-linejoin="round"/><path d="M9 2v3h3" stroke="#fff" stroke-width="1.2" stroke-linejoin="round"/><path d="M6.2 8.2h3.6M6.2 10.6h3.6" stroke="#fff" stroke-width="1.1" stroke-linecap="round"/></svg></span>记事本</div>
+      <div class="sm-app"><span class="tile" style="background:#0067b8;"><svg width="17" height="17" viewBox="0 0 16 16" fill="none"><path d="M3.6 5h8.8l-.8 8.2H4.4L3.6 5Z" stroke="#fff" stroke-width="1.2" stroke-linejoin="round"/><path d="M6 5V3.9a2 2 0 0 1 4 0V5" stroke="#fff" stroke-width="1.2"/></svg></span>Microsoft Store</div>
+      <div class="sm-app"><span class="tile" style="background:#0b1a2a;font:600 10px Consolas,monospace;">&gt;_</span>终端</div>
+      <div class="sm-app"><span class="tile" style="background:#c42b1c;"><svg width="17" height="17" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="#fff" stroke-width="1.2"/><path d="M6.7 5.3l4 2.7-4 2.7V5.3Z" fill="#fff"/></svg></span>媒体播放器</div>
+      <div class="sm-app"><span class="tile" style="background:#107c10;"><svg width="17" height="17" viewBox="0 0 16 16" fill="none"><rect x="1.9" y="4.7" width="12.2" height="7.9" rx="1.3" stroke="#fff" stroke-width="1.2"/><path d="M5.6 4.7l.9-1.6h3l.9 1.6" stroke="#fff" stroke-width="1.2" stroke-linejoin="round"/><circle cx="8" cy="8.6" r="2.1" stroke="#fff" stroke-width="1.2"/></svg></span>相机</div>
+      <div class="sm-app"><span class="tile" style="background:#8a5600;"><svg width="17" height="17" viewBox="0 0 16 16" fill="none"><rect x="1.9" y="3.6" width="12.2" height="8.8" rx="1.2" stroke="#fff" stroke-width="1.2"/><path d="M2.6 4.5L8 8.7l5.4-4.2" stroke="#fff" stroke-width="1.2" stroke-linejoin="round"/></svg></span>邮件</div>
+      <div class="sm-app"><span class="tile" style="background:#3a6ea5;"><svg width="17" height="17" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="2.7" stroke="#fff" stroke-width="1.2"/><path d="M8 1.9v1.5M8 12.6v1.5M1.9 8h1.5M12.6 8h1.5M3.7 3.7l1.1 1.1M11.2 11.2l1.1 1.1M12.3 3.7l-1.1 1.1M4.8 11.2l-1.1 1.1" stroke="#fff" stroke-width="1.1" stroke-linecap="round"/></svg></span>天气</div>
+    </div>
+    <div class="sm-row"><b>推荐</b><span>更多 &gt;</span></div>
+    <div style="font-size:11.5px;color:#7a7a7a;padding:6px 2px;">安装完成后，你最近使用的应用和文件会显示在这里。</div>
+    <div class="sm-foot">
+      <div class="sm-user"><span class="sm-avatar" id="smAvatar">A</span><span id="smUser">Administrator</span></div>
+      <button class="sm-power" id="smPower" title="重新启动（重新体验安装）">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2v6" stroke="#333" stroke-width="1.5" stroke-linecap="round"/><path d="M4.2 4.4a5.2 5.2 0 1 0 7.6 0" stroke="#333" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="toast-win" id="welcomeToast">
+    <svg width="30" height="30" viewBox="0 0 32 32"><rect x="2" y="2" width="28" height="28" rx="6" fill="#0067c0"/><g fill="#fff"><rect x="8" y="8" width="7" height="7" rx="1"/><rect x="17" y="8" width="7" height="7" rx="1"/><rect x="8" y="17" width="7" height="7" rx="1"/><rect x="17" y="17" width="7" height="7" rx="1"/></g></svg>
+    <div><div class="t">欢迎使用 Windows 11</div><div class="d">安装已完成。双击桌面上的“重新安装 Windows”图标可以再次体验整个过程。</div></div>
+  </div>
+
+  <div class="taskbar">
+    <div></div>
+    <div class="tb-center">
+      <button class="tb-btn" id="startBtn" title="开始">
+        <svg width="22" height="22" viewBox="0 0 32 32"><g fill="#0b6cc4"><rect x="2" y="2" width="13" height="13" rx="1.2"/><rect x="17" y="2" width="13" height="13" rx="1.2"/><rect x="2" y="17" width="13" height="13" rx="1.2"/><rect x="17" y="17" width="13" height="13" rx="1.2"/></g></svg>
+      </button>
+      <button class="tb-btn" title="搜索">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="10.5" cy="10.5" r="6.2" stroke="#26303b" stroke-width="1.6"/><path d="M15.2 15.2L20 20" stroke="#26303b" stroke-width="1.6" stroke-linecap="round"/></svg>
+      </button>
+      <button class="tb-btn" title="小组件">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="8" height="8" rx="1.2" stroke="#26303b" stroke-width="1.6"/><rect x="13" y="3" width="8" height="8" rx="1.2" stroke="#26303b" stroke-width="1.6"/><rect x="3" y="13" width="8" height="8" rx="1.2" stroke="#26303b" stroke-width="1.6"/><rect x="13" y="13" width="8" height="8" rx="1.2" stroke="#26303b" stroke-width="1.6"/></svg>
+      </button>
+      <button class="tb-btn running" title="文件资源管理器">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none"><path d="M3 7.5A1.5 1.5 0 0 1 4.5 6h4l1.6 2H19.5A1.5 1.5 0 0 1 21 9.5v8A1.5 1.5 0 0 1 19.5 19h-15A1.5 1.5 0 0 1 3 17.5v-10Z" fill="#f5c04a" stroke="#c99a2e" stroke-width="1.2"/></svg>
+      </button>
+      <button class="tb-btn running" title="Microsoft Edge">
+        <svg width="21" height="21" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#0f9bd7"/><path d="M5 15c1.5-4 4.5-6 8-6 4 0 6 2 6 4.5 0 3.5-3.5 5.5-7 5.5-3 0-5.5-1-7-4Z" fill="#31c3f0"/><path d="M6.5 9.5C8 6.5 10.5 5 13.5 5c3 0 5 1.5 5 3.5 0 2.5-2.5 4-6 4-3 0-5-1-6-3Z" fill="#fff" opacity=".85"/></svg>
+      </button>
+      <button class="tb-btn" title="Microsoft Store">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M5 8h14l-1.2 11.4a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 8Z" stroke="#26303b" stroke-width="1.5"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8" stroke="#26303b" stroke-width="1.5"/></svg>
+      </button>
+    </div>
+    <div class="tb-right">
+      <div class="tray" title="网络、声音、电池">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M2 6.5C3.7 5 5.7 4.2 8 4.2s4.3.8 6 2.3" stroke="#2b3440" stroke-width="1.4" stroke-linecap="round"/><path d="M4 9c1.1-.9 2.5-1.4 4-1.4S10.9 8.1 12 9" stroke="#2b3440" stroke-width="1.4" stroke-linecap="round"/><circle cx="8" cy="11.7" r="1" fill="#2b3440"/></svg>
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M3 6.5 7 3v10L3 9.5H1.5v-3H3Z" fill="#2b3440"/><path d="M9.5 5.5a3.5 3.5 0 0 1 0 5" stroke="#2b3440" stroke-width="1.3" stroke-linecap="round"/></svg>
+      </div>
+      <div class="tray"><div class="clock"><b id="clockTime">--:--</b><span id="clockDate">----/--/--</span></div></div>
+    </div>
+  </div>
+</section>
+
+<div id="toast"></div>
+
+<div class="modal" id="modal">
+  <div class="modal__card">
+    <div class="modal__title" id="mTitle"></div>
+    <div class="modal__body" id="mBody"></div>
+    <div class="modal__foot">
+      <button class="btn" id="mCancel">取消</button>
+      <button class="btn primary" id="mOk">确定</button>
+    </div>
+  </div>
+</div>
+
+<div class="demo" id="demo">
+  <div class="demo__panel" id="demoPanel">
+    <div class="demo__title">演示导航 <span>按 D 键切换 · 点击直接跳到该阶段</span></div>
+    <div class="demo__group"><b>安装程序</b><div class="demo__btns">
+      <button data-jump="lang">语言与区域</button><button data-jump="key">产品密钥</button>
+      <button data-jump="edition">选择版本</button><button data-jump="license">许可条款</button>
+      <button data-jump="type">安装类型</button><button data-jump="disk">磁盘分区</button>
+    </div></div>
+    <div class="demo__group"><b>安装过程</b><div class="demo__btns">
+      <button data-jump="install">复制文件与进度</button><button data-jump="restart">重启提示</button>
+      <button data-jump="prepare1">重启后准备</button>
+    </div></div>
+    <div class="demo__group"><b>首次开机设置（OOBE）</b><div class="demo__btns">
+      <button data-jump="region">区域</button><button data-jump="keyboard">键盘</button>
+      <button data-jump="keyboard2">第二键盘</button><button data-jump="network">网络</button>
+      <button data-jump="limited">受限设置</button><button data-jump="device">设备命名</button>
+      <button data-jump="acctype">账户类型</button><button data-jump="msaccount">微软账户</button>
+      <button data-jump="local">本地账户</button><button data-jump="privacy">隐私选项</button>
+      <button data-jump="custom">自定义体验</button><button data-jump="final">准备桌面</button>
+    </div></div>
+    <div class="demo__group"><b>桌面</b><div class="demo__btns"><button data-jump="desktop">Windows 11 桌面</button></div></div>
+    <button class="demo__reset" id="demoReset">重置并重新开始</button>
+  </div>
+  <button class="demo__dot" id="demoDot" title="演示导航（D）"></button>
+</div>
