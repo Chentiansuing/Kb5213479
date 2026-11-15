@@ -1,4 +1,4 @@
-"""把工程拆成"带外部依赖"的多文件 Web 工程（v4.0，单文件版已放弃）。
+"""把工程拆成"带外部依赖"的多文件 Web 工程（v5.0，单文件版已放弃）。
 
 产出 outputs/web/：
   index.html                 仅结构 + <link>/<script src> 引用
@@ -12,7 +12,7 @@
   locales/ko-KR.json
   scripts/i18n.js            清单 + 语言包异步加载器（依赖 fetch → 必须 http）
   scripts/app.js             主逻辑（依赖 i18n.ready）
-  serve.py                   本地静态服务器
+  serve.py                   本地服务器 + /api/save /api/list /api/load（写入系统 Temp）
   package.json               显式声明 serve 依赖
   启动（需本地服务器）.bat
 """
@@ -21,16 +21,18 @@ import json, pathlib, re, sys
 ROOT = pathlib.Path(r"c:\Users\Administrator\Documents\Kb5213479\2026-11-15\windows-installer-sim")
 PARTS = ROOT / "work" / "parts"
 OUT = ROOT / "outputs" / "web"
-VERSION = "4.0.0"
+VERSION = "5.0.0"
 
 sys.path.insert(0, str(ROOT / "work"))
 from locales_data import LANG_JSON, LANG_CSS, LANG_LABELS, LANG_ORDER  # noqa: E402
 from extra_v3 import EXTRA_V3  # noqa: E402
 from extra_v4 import EXTRA_V4  # noqa: E402
+from extra_v5 import EXTRA_V5  # noqa: E402
 
 for _code in LANG_ORDER:
     LANG_JSON[_code].update(EXTRA_V3[_code])
     LANG_JSON[_code].update(EXTRA_V4[_code])
+    LANG_JSON[_code].update(EXTRA_V5[_code])
 assert all(len(v) == len(LANG_JSON[LANG_ORDER[0]]) for v in LANG_JSON.values()), "语言包键数不一致"
 
 # ---------- 1. 切 CSS ----------
@@ -164,6 +166,7 @@ old_boot = """  loadPrefs();
   initDisk(); renderDisk(); $('#deviceInput').value = state.deviceName;
   applyTheme(); _apply();
   updateVersionBadge();
+  fsList(function () { /* v5.0：预取 Temp 目录文件列表 */ });
 
   var startId = (location.hash || '').replace('#', '');
   if (startId && document.getElementById('s-' + startId)) { go(startId); }
@@ -172,12 +175,14 @@ old_boot = """  loadPrefs();
   window.__installer = {
     go: go, state: state,
     openWindow: function (type, opts) { return AppWindows.open(type, opts); },
-    openApp: openAppType, applyTheme: applyTheme, renderCalendar: renderCalendar
+    openApp: openAppType, applyTheme: applyTheme, renderCalendar: renderCalendar,
+    toggleFullscreen: toggleFullscreen, fsList: fsList, savePrefs: savePrefs
   };"""
 new_boot = """  window.__installer = {
     go: go, state: state,
     openWindow: function (type, opts) { return AppWindows.open(type, opts); },
-    openApp: openAppType, applyTheme: applyTheme, renderCalendar: renderCalendar
+    openApp: openAppType, applyTheme: applyTheme, renderCalendar: renderCalendar,
+    toggleFullscreen: toggleFullscreen, fsList: fsList, savePrefs: savePrefs
   };
 
   // 依赖：语言包必须先从 locales/*.json 加载完成（需要 http 环境，file:// 下 fetch 会被拦截）
@@ -189,6 +194,7 @@ new_boot = """  window.__installer = {
     applyTheme();
     _apply();
     updateVersionBadge();
+    fsList(function () { /* v5.0：预取 Temp 目录文件列表 */ });
     var startId = (location.hash || '').replace('#', '');
     if (startId && document.getElementById('s-' + startId)) { go(startId); }
     else { go('boot'); }
@@ -405,23 +411,51 @@ index_html = f"""<!DOCTYPE html>
 """
 (OUT / "index.html").write_text(index_html, encoding="utf-8")
 
-(OUT / "serve.py").write_text(f'''"""本地静态服务器：语言包通过 fetch 加载，必须走 http 协议。"""
+SERVE_PY = r'''r"""Windows 11 Setup Simulator __VERSION__ — 本地服务器。
+
+除了静态文件，还提供三个只在本机运行的 Temp 文件接口：
+  POST /api/save   {"name": "notes.txt", "content": "..."}  → %TEMP%\windows11-sim\notes.txt
+  GET  /api/list                                        → 列出该目录
+  GET  /api/load?name=notes.txt                         → 读取文件内容
+语言包与脚本通过 fetch 加载，必须走 http://127.0.0.1 。
+"""
 import http.server
+import json
 import os
+import re
 import socketserver
+import tempfile
+import urllib.parse
 import webbrowser
 
 PORT = 8765
-os.chdir(os.path.dirname(os.path.abspath(__file__)))
+WEBROOT = os.path.dirname(os.path.abspath(__file__))
+os.chdir(WEBROOT)
+STORE = os.path.join(tempfile.gettempdir(), "windows11-sim")
+os.makedirs(STORE, exist_ok=True)
+
+
+def safe_name(name):
+    name = str(name or "file.txt").replace("\\", "/").split("/")[-1]
+    name = re.sub(r'[<>:"/\\|?*\x00-\x1f]', "_", name).strip(". ")
+    if not name:
+        return "file.txt"
+    ext = os.path.splitext(name)[1].lower()
+    if ext not in {".txt", ".md", ".log", ".json"}:
+        name = (os.path.splitext(name)[0] or "file") + ".txt"
+    return name
+
+
+MAX_CONTENT = 512 * 1024
 
 
 class Handler(http.server.SimpleHTTPRequestHandler):
-    extensions_map = {{
+    extensions_map = {
         **http.server.SimpleHTTPRequestHandler.extensions_map,
         ".json": "application/json; charset=utf-8",
         ".js": "application/javascript; charset=utf-8",
         ".css": "text/css; charset=utf-8",
-    }}
+    }
 
     def end_headers(self):
         self.send_header("Cache-Control", "no-store")
@@ -430,17 +464,80 @@ class Handler(http.server.SimpleHTTPRequestHandler):
     def log_message(self, fmt, *args):
         pass
 
+    def _json(self, obj, code=200):
+        raw = json.dumps(obj, ensure_ascii=False).encode("utf-8")
+        self.send_response(code)
+        self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Content-Length", str(len(raw)))
+        self.end_headers()
+        self.wfile.write(raw)
+
+    def do_GET(self):
+        url = urllib.parse.urlparse(self.path)
+        if url.path == "/api/list":
+            files = []
+            for name in sorted(os.listdir(STORE)):
+                path = os.path.join(STORE, name)
+                if os.path.isfile(path):
+                    files.append({"name": name, "size": os.path.getsize(path)})
+            self._json({"dir": STORE, "files": files})
+            return
+        if url.path == "/api/load":
+            query = urllib.parse.parse_qs(url.query)
+            name = safe_name((query.get("name") or [""])[0])
+            path = os.path.join(STORE, name)
+            if not os.path.isfile(path):
+                self._json({"ok": False, "error": "not found", "name": name}, 404)
+                return
+            with open(path, "r", encoding="utf-8", errors="replace") as fh:
+                content = fh.read()
+            self._json({"ok": True, "name": name, "content": content, "dir": STORE})
+            return
+        return super().do_GET()
+
+    def do_POST(self):
+        url = urllib.parse.urlparse(self.path)
+        if url.path != "/api/save":
+            self.send_error(404)
+            return
+        length = int(self.headers.get("Content-Length") or 0)
+        try:
+            data = json.loads(self.rfile.read(length) or b"{}")
+        except Exception:
+            self._json({"ok": False, "error": "bad json"}, 400)
+            return
+        name = safe_name(data.get("name"))
+        content = data.get("content")
+        if not isinstance(content, str):
+            content = json.dumps(content, ensure_ascii=False, indent=2)
+        if len(content.encode("utf-8")) > MAX_CONTENT:
+            self._json({"ok": False, "error": "too large"}, 413)
+            return
+        path = os.path.join(STORE, name)
+        try:
+            with open(path, "w", encoding="utf-8", newline="\n") as fh:
+                fh.write(content)
+        except OSError as exc:
+            self._json({"ok": False, "error": str(exc)}, 500)
+            return
+        size = len(content.encode("utf-8"))
+        print(f"[temp] {path}  {size} bytes")
+        self._json({"ok": True, "name": name, "path": path, "dir": STORE, "bytes": size})
+
 
 with socketserver.TCPServer(("127.0.0.1", PORT), Handler) as httpd:
-    url = f"http://127.0.0.1:{{PORT}}/index.html"
-    print(f"Windows 11 Setup Simulator {VERSION} 已启动：{{url}}")
+    url = f"http://127.0.0.1:{PORT}/index.html"
+    print(f"Windows 11 Setup Simulator __VERSION__ 已启动：{url}")
+    print(f"Temp 目录：{STORE}")
     print("按 Ctrl+C 停止服务")
-    try:
-        webbrowser.open(url)
-    except Exception:
-        pass
+    if os.environ.get("W11SIM_NO_BROWSER") != "1":
+        try:
+            webbrowser.open(url)
+        except Exception:
+            pass
     httpd.serve_forever()
-''', encoding="utf-8")
+'''
+(OUT / "serve.py").write_text(SERVE_PY.replace("__VERSION__", VERSION), encoding="utf-8")
 
 (OUT / "package.json").write_text(json.dumps({
     "name": "windows11-setup-sim",
@@ -454,7 +551,8 @@ with socketserver.TCPServer(("127.0.0.1", PORT), Handler) as httpd:
 BAT = """@echo off
 chcp 65001 >nul
 cd /d "%~dp0"
-echo 正在启动本地服务器（样式与语言包需要 http 环境）...
+set W11SIM_NO_BROWSER=1
+echo 正在启动本地服务器（样式、语言包与 Temp 文件接口需要 http 环境）...
 start "" /min python serve.py
 timeout /t 2 >nul
 start "" msedge --app=http://127.0.0.1:8765/index.html

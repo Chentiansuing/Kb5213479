@@ -1,4 +1,4 @@
-"""v4.0 多文件工程验证：资源可达、5 语言渲染、版本号、桌面新组件与语言按钮。"""
+"""v5.0 多文件工程验证：资源可达、5 语言渲染、版本号、锁屏/全屏/电源与语言按钮。"""
 import pathlib, shutil, subprocess, sys, urllib.request
 
 ROOT = pathlib.Path(r"c:\Users\Administrator\Documents\Kb5213479\2026-11-15\windows-installer-sim")
@@ -22,7 +22,7 @@ RESOURCES = [
     "index.html", "styles/app.css", "styles/windows.css",
     "scripts/i18n.js", "scripts/app.js", "locales/index.json",
     "locales/zh-CN.json", "locales/zh-TW.json", "locales/en-US.json",
-    "locales/ja-JP.json", "locales/ko-KR.json",
+    "locales/ja-JP.json", "locales/ko-KR.json", "serve.py",
 ]
 
 fail = []
@@ -39,13 +39,13 @@ for rel in RESOURCES:
         fail.append(rel)
 
 print("\n== 2. 语言渲染（Edge headless --dump-dom） ==")
-profile = ROOT / "work" / "tmp" / "edge_web_v40"
+profile = ROOT / "work" / "tmp" / "edge_web_v50"
 if profile.exists():
     shutil.rmtree(profile, ignore_errors=True)
 
 for code, (sig1, sig2) in CASES.items():
     url = f"{BASE}?lang={code}"
-    shot = SHOTS / f"v40-{code}.png"
+    shot = SHOTS / f"v50-{code}.png"
     args = [EDGE, "--headless=new", "--disable-gpu", "--no-first-run",
             f"--user-data-dir={profile}", "--window-size=1280,860",
             "--virtual-time-budget=6000", f"--screenshot={shot}", "--dump-dom", url]
@@ -55,8 +55,11 @@ for code, (sig1, sig2) in CASES.items():
         "lang 属性": f'lang="{code}"' in dom,
         f"文案 {sig1}": sig1 in dom,
         f"文案 {sig2}": sig2 in dom,
-        "版本号 v4.0": "v4.0" in dom,
+        "版本号 v5.0": "v5.0" in dom,
         "快速设置面板": 'id="quickPanel"' in dom,
+        "全屏按钮": 'id="qsFull"' in dom,
+        "锁屏层": 'id="lockScreen"' in dom,
+        "锁屏菜单项": 'data-power="lock"' in dom,
         "日历": 'id="calGrid"' in dom,
         "右键菜单": 'id="ctxMenu"' in dom,
         "可用应用入口": 'data-open="calc"' in dom,
@@ -72,4 +75,4 @@ print()
 if fail:
     print("=== 失败：", fail, "===")
     sys.exit(1)
-print("=== v4.0 验证：全部通过 ===")
+print("=== v5.0 验证：全部通过 ===")
