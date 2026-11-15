@@ -1,4 +1,4 @@
-"""把工程拆成"带外部依赖"的多文件 Web 工程（v5.0，单文件版已放弃）。
+"""把工程拆成"带外部依赖"的多文件 Web 工程（v6.0，单文件版已放弃）。
 
 产出 outputs/web/：
   index.html                 仅结构 + <link>/<script src> 引用
@@ -21,18 +21,20 @@ import json, pathlib, re, sys
 ROOT = pathlib.Path(r"c:\Users\Administrator\Documents\Kb5213479\2026-11-15\windows-installer-sim")
 PARTS = ROOT / "work" / "parts"
 OUT = ROOT / "outputs" / "web"
-VERSION = "5.0.0"
+VERSION = "6.0.0"
 
 sys.path.insert(0, str(ROOT / "work"))
 from locales_data import LANG_JSON, LANG_CSS, LANG_LABELS, LANG_ORDER  # noqa: E402
 from extra_v3 import EXTRA_V3  # noqa: E402
 from extra_v4 import EXTRA_V4  # noqa: E402
 from extra_v5 import EXTRA_V5  # noqa: E402
+from extra_v6 import EXTRA_V6  # noqa: E402
 
 for _code in LANG_ORDER:
     LANG_JSON[_code].update(EXTRA_V3[_code])
     LANG_JSON[_code].update(EXTRA_V4[_code])
     LANG_JSON[_code].update(EXTRA_V5[_code])
+    LANG_JSON[_code].update(EXTRA_V6[_code])
 assert all(len(v) == len(LANG_JSON[LANG_ORDER[0]]) for v in LANG_JSON.values()), "语言包键数不一致"
 
 # ---------- 1. 切 CSS ----------
@@ -176,13 +178,19 @@ old_boot = """  loadPrefs();
     go: go, state: state,
     openWindow: function (type, opts) { return AppWindows.open(type, opts); },
     openApp: openAppType, applyTheme: applyTheme, renderCalendar: renderCalendar,
-    toggleFullscreen: toggleFullscreen, fsList: fsList, savePrefs: savePrefs
+    toggleFullscreen: toggleFullscreen, fsList: fsList, savePrefs: savePrefs,
+    openTaskView: openTaskView, createDesktop: createDesktop, switchDesktop: switchDesktop,
+    openSearch: openSearch, toggleWidgets: toggleWidgets,
+    snap: function (id, mode) { return AppWindows.snap(id, mode); }
   };"""
 new_boot = """  window.__installer = {
     go: go, state: state,
     openWindow: function (type, opts) { return AppWindows.open(type, opts); },
     openApp: openAppType, applyTheme: applyTheme, renderCalendar: renderCalendar,
-    toggleFullscreen: toggleFullscreen, fsList: fsList, savePrefs: savePrefs
+    toggleFullscreen: toggleFullscreen, fsList: fsList, savePrefs: savePrefs,
+    openTaskView: openTaskView, createDesktop: createDesktop, switchDesktop: switchDesktop,
+    openSearch: openSearch, toggleWidgets: toggleWidgets,
+    snap: function (id, mode) { return AppWindows.snap(id, mode); }
   };
 
   // 依赖：语言包必须先从 locales/*.json 加载完成（需要 http 环境，file:// 下 fetch 会被拦截）

@@ -170,6 +170,8 @@
       <div class="sm-app" data-open="photos"><span class="tile" style="background:#2b88d8;"><svg width="17" height="17" viewBox="0 0 16 16" fill="none"><rect x="2" y="2.8" width="12" height="10.4" rx="1.2" stroke="#fff" stroke-width="1.25"/><circle cx="5.9" cy="6.3" r="1.05" fill="#fff"/><path d="M2.6 12.1l3.3-3.2 2.2 2.1 2.2-2.6 3 3.1" stroke="#fff" stroke-width="1.25" stroke-linejoin="round"/></svg></span>照片</div>
       <div class="sm-app" data-open="calc"><span class="tile" style="background:#4c9a2a;"><svg width="17" height="17" viewBox="0 0 16 16" fill="none"><rect x="3.2" y="1.9" width="9.6" height="12.2" rx="1.2" stroke="#fff" stroke-width="1.2"/><rect x="5" y="3.9" width="6" height="2.3" rx=".4" fill="#fff"/><circle cx="5.8" cy="8.8" r=".75" fill="#fff"/><circle cx="8" cy="8.8" r=".75" fill="#fff"/><circle cx="10.2" cy="8.8" r=".75" fill="#fff"/><circle cx="5.8" cy="11.2" r=".75" fill="#fff"/><circle cx="8" cy="11.2" r=".75" fill="#fff"/><circle cx="10.2" cy="11.2" r=".75" fill="#fff"/></svg></span>计算器</div>
       <div class="sm-app" data-open="notepad"><span class="tile" style="background:#5c2d91;"><svg width="17" height="17" viewBox="0 0 16 16" fill="none"><path d="M4 2h5l3 3v9H4V2Z" stroke="#fff" stroke-width="1.2" stroke-linejoin="round"/><path d="M9 2v3h3" stroke="#fff" stroke-width="1.2" stroke-linejoin="round"/><path d="M6.2 8.2h3.6M6.2 10.6h3.6" stroke="#fff" stroke-width="1.1" stroke-linecap="round"/></svg></span>记事本</div>
+      <div class="sm-app" data-open="paint"><span class="tile" style="background:#c2410c;"><svg width="17" height="17" viewBox="0 0 16 16" fill="none"><path d="M8 2a6 6 0 0 0 0 12c1 0 1.6-.7 1.6-1.5 0-.5-.3-.9-.3-1.4 0-.7.6-1.3 1.4-1.3H12A2 2 0 0 0 14 7.8C14 4.6 11.3 2 8 2Z" stroke="#fff" stroke-width="1.2"/><circle cx="5.5" cy="6" r=".9" fill="#fff"/><circle cx="8.2" cy="4.8" r=".9" fill="#fff"/><circle cx="10.8" cy="6.2" r=".9" fill="#fff"/></svg></span>画图</div>
+      <div class="sm-app" data-open="clock"><span class="tile" style="background:#0f6cbd;"><svg width="17" height="17" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="#fff" stroke-width="1.2"/><path d="M8 4.5V8l2.4 1.6" stroke="#fff" stroke-width="1.2" stroke-linecap="round"/></svg></span>时钟</div>
       <div class="sm-app" data-open="store"><span class="tile" style="background:#0067b8;"><svg width="17" height="17" viewBox="0 0 16 16" fill="none"><path d="M3.6 5h8.8l-.8 8.2H4.4L3.6 5Z" stroke="#fff" stroke-width="1.2" stroke-linejoin="round"/><path d="M6 5V3.9a2 2 0 0 1 4 0V5" stroke="#fff" stroke-width="1.2"/></svg></span>Microsoft Store</div>
       <div class="sm-app" data-open="cmd"><span class="tile" style="background:#0b1a2a;font:600 10px Consolas,monospace;">&gt;_</span>终端</div>
       <div class="sm-app" data-open="player"><span class="tile" style="background:#c42b1c;"><svg width="17" height="17" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="#fff" stroke-width="1.2"/><path d="M6.7 5.3l4 2.7-4 2.7V5.3Z" fill="#fff"/></svg></span>媒体播放器</div>
@@ -199,7 +201,7 @@
 
   <div class="toast-win" id="welcomeToast">
     <svg width="30" height="30" viewBox="0 0 32 32"><rect x="2" y="2" width="28" height="28" rx="6" fill="#0067c0"/><g fill="#fff"><rect x="8" y="8" width="7" height="7" rx="1"/><rect x="17" y="8" width="7" height="7" rx="1"/><rect x="8" y="17" width="7" height="7" rx="1"/><rect x="17" y="17" width="7" height="7" rx="1"/></g></svg>
-    <div><div class="t" data-i18n="welcome_title">欢迎使用 Windows 11</div><div class="d" data-i18n="welcome_body_v5">安装已完成。试试 Windows 更新、云重置和资源管理器标签页，或双击“重新安装 Windows”再次体验。</div></div>
+    <div><div class="t" data-i18n="welcome_title">欢迎使用 Windows 11</div><div class="d" data-i18n="welcome_body_v6">安装已完成。试试任务视图、贴靠布局、小组件、全局搜索，以及全新的画图、时钟和媒体播放器。</div></div>
   </div>
 
   <div class="taskbar">
@@ -208,11 +210,14 @@
       <button class="tb-btn" id="startBtn" title="开始">
         <svg width="22" height="22" viewBox="0 0 32 32"><g fill="#0b6cc4"><rect x="2" y="2" width="13" height="13" rx="1.2"/><rect x="17" y="2" width="13" height="13" rx="1.2"/><rect x="2" y="17" width="13" height="13" rx="1.2"/><rect x="17" y="17" width="13" height="13" rx="1.2"/></g></svg>
       </button>
-      <button class="tb-btn" id="searchBtn" title="搜索">
+      <button class="tb-btn" id="searchBtn" title="搜索" data-i18n-title="search_title">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="10.5" cy="10.5" r="6.2" stroke="#26303b" stroke-width="1.6"/><path d="M15.2 15.2L20 20" stroke="#26303b" stroke-width="1.6" stroke-linecap="round"/></svg>
       </button>
-      <button class="tb-btn" title="小组件">
+      <button class="tb-btn" id="widgetsBtn" title="小组件" data-i18n-title="wg_title">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="8" height="8" rx="1.2" stroke="#26303b" stroke-width="1.6"/><rect x="13" y="3" width="8" height="8" rx="1.2" stroke="#26303b" stroke-width="1.6"/><rect x="3" y="13" width="8" height="8" rx="1.2" stroke="#26303b" stroke-width="1.6"/><rect x="13" y="13" width="8" height="8" rx="1.2" stroke="#26303b" stroke-width="1.6"/></svg>
+      </button>
+      <button class="tb-btn" id="taskViewBtn" title="任务视图" data-i18n-title="tv_open">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="11" height="8" rx="1.4" stroke="#26303b" stroke-width="1.6"/><rect x="10" y="10" width="11" height="8" rx="1.4" fill="#fff" stroke="#26303b" stroke-width="1.6"/></svg>
       </button>
       <button class="tb-btn running" data-win-type="explorer" title="文件资源管理器">
         <svg width="21" height="21" viewBox="0 0 24 24" fill="none"><path d="M3 7.5A1.5 1.5 0 0 1 4.5 6h4l1.6 2H19.5A1.5 1.5 0 0 1 21 9.5v8A1.5 1.5 0 0 1 19.5 19h-15A1.5 1.5 0 0 1 3 17.5v-10Z" fill="#f5c04a" stroke="#c99a2e" stroke-width="1.2"/></svg>
@@ -249,7 +254,7 @@
     </div>
     <div class="nc-body">
       <div class="nn-empty" data-i18n="cal_notif_empty">没有新通知</div>
-      <div class="nc-notif"><div class="nn-icon">i</div><div><div class="nn-title" data-i18n="notif_v50_title">Windows 11 安装模拟器 5.0</div><div class="nn-body" data-i18n="notif_v50_body">新增 Windows 更新、云重置、标签页、全屏与 Temp 文件保存</div></div></div>
+      <div class="nc-notif"><div class="nn-icon">i</div><div><div class="nn-title" data-i18n="notif_v60_title">Windows 11 安装模拟器 6.0</div><div class="nn-body" data-i18n="notif_v60_body">新增多桌面、任务视图、贴靠布局、全局搜索、小组件、画图、时钟与媒体播放器</div></div></div>
     </div>
   </div>
 
@@ -298,6 +303,104 @@
     <button data-ctx="display" data-i18n="ctx_display">显示设置</button>
     <button data-ctx="terminal" data-i18n="ctx_terminal">在终端中打开</button>
   </div>
+
+  <!-- v6.0：全局搜索 -->
+  <div class="search-overlay" id="searchOverlay">
+    <div class="search-card">
+      <div class="search-hd">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><circle cx="10.5" cy="10.5" r="6.2" stroke="currentColor" stroke-width="1.6"/><path d="M15.2 15.2L20 20" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        <input id="globalSearch" data-i18n-ph="search_ph" placeholder="搜索应用、设置和文件" autocomplete="off" spellcheck="false">
+        <button class="search-close" id="searchClose">×</button>
+      </div>
+      <div class="search-tabs">
+        <button data-search-tab="all" class="on" data-i18n="search_all">全部</button>
+        <button data-search-tab="apps" data-i18n="search_apps">应用</button>
+        <button data-search-tab="settings" data-i18n="search_settings">设置</button>
+        <button data-search-tab="files" data-i18n="search_files">文件</button>
+      </div>
+      <div class="search-list" id="searchList"></div>
+      <div class="search-foot" data-i18n="search_hint">输入关键词，Enter 打开第一项</div>
+    </div>
+  </div>
+
+  <!-- v6.0：任务视图与虚拟桌面 -->
+  <div class="task-view" id="taskView">
+    <div class="tv-inner">
+      <div class="tv-hd">
+        <b data-i18n="tv_title">任务视图</b>
+        <button id="tvClose" title="关闭">×</button>
+      </div>
+      <div class="tv-desks" id="tvDesks"></div>
+      <div class="tv-wins" id="tvWins"></div>
+      <div class="tv-foot">
+        <button id="tvNewDesk" data-i18n="tv_new">新建桌面</button>
+        <span data-i18n="tv_hint">单击窗口以切换，或新建一个桌面</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- v6.0：Ctrl+Tab 窗口切换 -->
+  <div class="alt-tab" id="altTab">
+    <div class="at-inner">
+      <div class="at-hd" data-i18n="alt_title">切换窗口</div>
+      <div class="at-list" id="altList"></div>
+      <div class="at-hint" data-i18n="alt_hint">Ctrl+Tab 循环选择，松开 Ctrl 切换</div>
+    </div>
+  </div>
+
+  <!-- v6.0：贴靠布局 -->
+  <div class="snap-picker" id="snapPicker">
+    <div class="sp-title" data-i18n="snap_title">贴靠布局</div>
+    <div class="sp-grid">
+      <button data-snap="left" data-i18n-title="snap_left"><i class="sp-l"></i></button>
+      <button data-snap="right" data-i18n-title="snap_right"><i class="sp-r"></i></button>
+      <button data-snap="tl" data-i18n-title="snap_tl"><i class="sp-tl"></i></button>
+      <button data-snap="bl" data-i18n-title="snap_bl"><i class="sp-bl"></i></button>
+      <button data-snap="tr" data-i18n-title="snap_tr"><i class="sp-tr"></i></button>
+      <button data-snap="br" data-i18n-title="snap_br"><i class="sp-br"></i></button>
+      <button data-snap="full" class="sp-full" data-i18n-title="snap_full"><i></i></button>
+    </div>
+  </div>
+
+  <!-- v6.0：小组件面板 -->
+  <div class="widgets-panel" id="widgetsPanel">
+    <div class="wg-hd"><b data-i18n="wg_title">小组件</b><button id="wgClose">×</button></div>
+    <div class="wg-grid">
+      <div class="wg-card wg-weather">
+        <div class="wg-label" data-i18n="wg_weather">天气</div>
+        <div class="wg-temp">22°</div>
+        <div class="wg-city" data-i18n="wg_city">北京</div>
+        <div class="wg-sub" data-i18n="wg_air">空气质量 优</div>
+        <div class="wg-days">
+          <div><b data-i18n="wg_today">今天</b><span>22°</span></div>
+          <div><span>21°</span></div><div><span>19°</span></div><div><span>23°</span></div>
+        </div>
+        <div class="wg-label" data-i18n="wg_forecast">未来 4 天</div>
+      </div>
+      <div class="wg-card wg-cal">
+        <div class="wg-label" data-i18n="wg_today">今天</div>
+        <div class="wg-cal-big" id="wgCalBig">--</div>
+        <div class="wg-cal-date" id="wgCalDate"></div>
+        <div class="wg-cal-grid" id="wgCalGrid"></div>
+      </div>
+      <div class="wg-card wg-news">
+        <div class="wg-label" data-i18n="wg_news">资讯</div>
+        <div class="wg-news-item"><span class="wn-thumb a"></span><b data-i18n="wg_news_1">Windows 11 25H2 功能更新开始推送</b></div>
+        <div class="wg-news-item"><span class="wn-thumb b"></span><b data-i18n="wg_news_2">任务视图与贴靠布局获得增强</b></div>
+        <div class="wg-news-item"><span class="wn-thumb c"></span><b data-i18n="wg_news_3">画图、时钟与媒体播放器迎来更新</b></div>
+      </div>
+      <div class="wg-card wg-sys">
+        <div class="wg-label" data-i18n="wg_system">系统</div>
+        <div class="wg-meter"><span data-i18n="wg_storage">存储</span><b>68%</b></div>
+        <div class="wg-bar"><i style="width:68%"></i></div>
+        <div class="wg-meter"><span data-i18n="wg_memory">内存</span><b>42%</b></div>
+        <div class="wg-bar"><i style="width:42%"></i></div>
+        <div class="wg-meter"><span data-i18n="wg_battery">电池</span><b>86%</b></div>
+        <div class="wg-bar"><i style="width:86%"></i></div>
+      </div>
+    </div>
+    <button class="wg-person" id="wgPersonalize" data-i18n="wg_personalize">个性化此面板</button>
+  </div>
 </section>
 
 <div class="power-screen" id="powerScreen">
@@ -313,16 +416,25 @@
     <div class="lock-time" id="lockTime">--:--</div>
     <div class="lock-date" id="lockDate"></div>
   </div>
-  <div class="lock-bottom">
+  <div class="lock-bottom" id="lockBottom">
     <span class="lock-avatar" id="lockAvatar">A</span>
     <b id="lockUser">Administrator</b>
     <span class="lock-hint" data-i18n="lock_hint">单击以解锁</span>
+  </div>
+  <div class="lock-signin" id="lockSignin">
+    <span class="ls-avatar" id="lsAvatar">A</span>
+    <b class="ls-user" id="lsUser">Administrator</b>
+    <input class="ls-pass" id="lockPass" type="password" data-i18n-ph="lock_password_ph" placeholder="密码（可留空）" autocomplete="off">
+    <div class="ls-actions">
+      <button class="ls-go" id="lockGo" data-i18n="lock_signin_btn">登录</button>
+      <button class="ls-back" id="lockBack" data-i18n="lock_back">返回</button>
+    </div>
   </div>
 </div>
 
 <!-- 非桌面界面的 Shift+F10 窗口层；进入桌面时窗口会移回 #winLayer -->
 <div class="win-layer setup-win-layer" id="setupWinLayer"></div>
-<div class="version-badge" id="versionBadge">v5.0</div>
+<div class="version-badge" id="versionBadge">v6.0</div>
 
 <div id="toast"></div>
 

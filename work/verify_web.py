@@ -1,4 +1,4 @@
-"""v5.0 多文件工程验证：资源可达、5 语言渲染、版本号、锁屏/全屏/电源与语言按钮。"""
+"""v6.0 多文件工程验证：资源可达、5 语言渲染、任务视图/搜索/小组件/锁屏等入口。"""
 import pathlib, shutil, subprocess, sys, urllib.request
 
 ROOT = pathlib.Path(r"c:\Users\Administrator\Documents\Kb5213479\2026-11-15\windows-installer-sim")
@@ -39,13 +39,13 @@ for rel in RESOURCES:
         fail.append(rel)
 
 print("\n== 2. 语言渲染（Edge headless --dump-dom） ==")
-profile = ROOT / "work" / "tmp" / "edge_web_v50"
+profile = ROOT / "work" / "tmp" / "edge_web_v60"
 if profile.exists():
     shutil.rmtree(profile, ignore_errors=True)
 
 for code, (sig1, sig2) in CASES.items():
     url = f"{BASE}?lang={code}"
-    shot = SHOTS / f"v50-{code}.png"
+    shot = SHOTS / f"v60-{code}.png"
     args = [EDGE, "--headless=new", "--disable-gpu", "--no-first-run",
             f"--user-data-dir={profile}", "--window-size=1280,860",
             "--virtual-time-budget=6000", f"--screenshot={shot}", "--dump-dom", url]
@@ -55,14 +55,17 @@ for code, (sig1, sig2) in CASES.items():
         "lang 属性": f'lang="{code}"' in dom,
         f"文案 {sig1}": sig1 in dom,
         f"文案 {sig2}": sig2 in dom,
-        "版本号 v5.0": "v5.0" in dom,
-        "快速设置面板": 'id="quickPanel"' in dom,
-        "全屏按钮": 'id="qsFull"' in dom,
-        "锁屏层": 'id="lockScreen"' in dom,
-        "锁屏菜单项": 'data-power="lock"' in dom,
-        "日历": 'id="calGrid"' in dom,
-        "右键菜单": 'id="ctxMenu"' in dom,
-        "可用应用入口": 'data-open="calc"' in dom,
+        "版本号 v6.0": "v6.0" in dom,
+        "任务视图入口": 'id="taskViewBtn"' in dom,
+        "任务视图层": 'id="taskView"' in dom,
+        "小组件入口": 'id="widgetsBtn"' in dom,
+        "小组件面板": 'id="widgetsPanel"' in dom,
+        "全局搜索": 'id="searchOverlay"' in dom,
+        "贴靠选择器": 'id="snapPicker"' in dom,
+        "窗口切换层": 'id="altTab"' in dom,
+        "锁屏登录": 'id="lockSignin"' in dom,
+        "画图入口": 'data-open="paint"' in dom,
+        "时钟入口": 'data-open="clock"' in dom,
         "5 个语言按钮": all(f'data-lang="{c}"' in dom for c in CASES),
     }
     ok = all(checks.values()) and shot.exists() and shot.stat().st_size > 80000
@@ -75,4 +78,4 @@ print()
 if fail:
     print("=== 失败：", fail, "===")
     sys.exit(1)
-print("=== v5.0 验证：全部通过 ===")
+print("=== v6.0 验证：全部通过 ===")

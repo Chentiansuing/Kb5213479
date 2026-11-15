@@ -30,7 +30,18 @@
     recovery: { phase: 'idle', pct: 0, mode: '' },
     verTab: 'editions',
     openWindows: {}, // id -> win element
-    winZCounter: 1000
+    winZCounter: 1000,
+    // v6.0：虚拟桌面、资源管理器增强、新应用与 Edge 数据
+    desktops: [{ id: 1, name: '' }], currentDesk: 1, deskSeq: 1,
+    expFolders: {}, expView: 'icons', expSort: 'name', tempDeleted: {},
+    paint: { color: '#1b2430', size: 6, tool: 'brush' },
+    player: { index: 0, playing: false, pct: 0 },
+    bookmarks: [
+      { title: 'Microsoft', url: 'https://www.microsoft.com/windows/windows-11' },
+      { title: 'Bing', url: 'https://www.bing.com' },
+      { title: 'GitHub', url: 'https://github.com' }
+    ],
+    downloads: [{ name: 'Windows11.iso', done: true }]
   };
 
   var timers = [];
@@ -90,7 +101,7 @@
   function updateVersionBadge() {
     var badge = $('#versionBadge');
     if (!badge) return;
-    badge.textContent = 'v5.0';
+    badge.textContent = 'v6.0';
   }
 
   /* ============================================================
@@ -196,7 +207,7 @@
         if (j && j.dir) state.tempDir = j.dir;
         (j && j.files ? j.files : []).forEach(function (f) {
           var n = typeof f === 'string' ? f : (f && f.name);
-          if (n && n !== 'settings.json' && !(n in state.tempFiles)) state.tempFiles[n] = '';
+          if (n && n !== 'settings.json' && !state.tempDeleted[n] && !(n in state.tempFiles)) state.tempFiles[n] = '';
         });
         if (cb) cb();
       })
@@ -283,6 +294,7 @@
       win.className = 'app-window focused';
       win.dataset.id = id;
       win.dataset.type = type;
+      win.dataset.desk = String(state.currentDesk);
 
       var size = {
         w: Math.min(opts.width || 820, Math.max(360, layer.clientWidth - 24)),
@@ -333,7 +345,8 @@
         edge: 'Microsoft Edge', recycle: _t('icon_recycle'), settings: _t('app_settings'),
         terminal: 'Windows Terminal', setup: _t('setup_title'),
         calc: _t('app_calc'), notepad: _t('app_notepad'), photos: _t('app_photos'),
-        store: _t('app_store')
+        store: _t('app_store'), paint: _t('app_paint'), clock: _t('app_clock'),
+        player: _t('app_player')
       };
       return map[type] || type;
     },
@@ -359,6 +372,12 @@
         return '<svg viewBox="0 0 16 16"><rect x="2" y="3" width="12" height="10" rx="1.4" fill="#2b88d8"/><circle cx="5.6" cy="6.3" r="1.05" fill="#fff"/><path d="M2.6 12.1l3.3-3.2 2.2 2.1 2.2-2.6 3 3.1" stroke="#fff" stroke-width="1.2" stroke-linejoin="round" fill="none"/></svg>';
       if (type === 'store')
         return '<svg viewBox="0 0 16 16"><path d="M3.6 5h8.8l-.8 8.2H4.4L3.6 5Z" fill="#0067b8"/><path d="M6 5V3.9a2 2 0 0 1 4 0V5" stroke="#fff" stroke-width="1.2" fill="none"/></svg>';
+      if (type === 'paint')
+        return '<svg viewBox="0 0 16 16" fill="none"><path d="M8 2a6 6 0 0 0 0 12c1 0 1.6-.7 1.6-1.5 0-.5-.3-.9-.3-1.4 0-.7.6-1.3 1.4-1.3H12A2 2 0 0 0 14 7.8C14 4.6 11.3 2 8 2Z" stroke="#c2410c" stroke-width="1.2"/><circle cx="5.6" cy="6" r=".8" fill="#c2410c"/><circle cx="8.2" cy="4.8" r=".8" fill="#c2410c"/><circle cx="10.7" cy="6.2" r=".8" fill="#c2410c"/></svg>';
+      if (type === 'clock')
+        return '<svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="#0f6cbd" stroke-width="1.3"/><path d="M8 4.6V8l2.4 1.6" stroke="#0f6cbd" stroke-width="1.3" stroke-linecap="round"/></svg>';
+      if (type === 'player')
+        return '<svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" fill="#c42b1c"/><path d="M6.5 5.2l4.2 2.8-4.2 2.8V5.2Z" fill="#fff"/></svg>';
       return '<svg viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#0067c0"/></svg>';
     },
     _svg: function (kind) {
@@ -431,7 +450,7 @@
         e.stopPropagation(); self.minimize(id);
       });
       win.querySelector('.win-btn.max').addEventListener('click', function (e) {
-        e.stopPropagation(); self.toggleMax(id);
+        e.stopPropagation(); self._showSnapPicker(id, this);
       });
     },
 
@@ -473,15 +492,77 @@
         win.style.width = win.dataset._w; win.style.height = win.dataset._h;
         win.style.left = win.dataset._l; win.style.top = win.dataset._t;
         win.dataset.maxed = '0';
+        win.dataset._snapped = '0';
+        win.dataset.snap = '';
       } else {
-        win.dataset._w = win.style.width; win.dataset._h = win.style.height;
-        win.dataset._l = win.style.left; win.dataset._t = win.style.top;
+        if (win.dataset._snapped !== '1') {
+          win.dataset._w = win.style.width; win.dataset._h = win.style.height;
+          win.dataset._l = win.style.left; win.dataset._t = win.style.top;
+        }
         var layer = win.parentElement;
         win.style.width = (layer.clientWidth - 20) + 'px';
         win.style.height = (layer.clientHeight - 20) + 'px';
         win.style.left = '10px'; win.style.top = '10px';
         win.dataset.maxed = '1';
+        win.dataset.snap = 'full';
       }
+    },
+    // v6.0：贴靠布局（左/右半屏、四分之一、最大化）
+    snap: function (id, mode) {
+      var win = state.openWindows[id];
+      if (!win) return;
+      var layer = win.parentElement;
+      if (!layer) return;
+      var W = layer.clientWidth, H = layer.clientHeight, m = 10;
+      if (win.dataset.maxed !== '1' && win.dataset._snapped !== '1') {
+        win.dataset._w = win.style.width; win.dataset._h = win.style.height;
+        win.dataset._l = win.style.left; win.dataset._t = win.style.top;
+      }
+      win.dataset._snapped = '1';
+      win.dataset.snap = mode;
+      win.dataset.maxed = mode === 'full' ? '1' : '0';
+      var halfW = Math.round((W - 3 * m) / 2);
+      var halfH = Math.round((H - 3 * m) / 2);
+      var x = m, y = m, w = W - 2 * m, h = H - 2 * m;
+      if (mode === 'left') { w = halfW; }
+      else if (mode === 'right') { w = halfW; x = W - m - halfW; }
+      else if (mode === 'tl') { w = halfW; h = halfH; }
+      else if (mode === 'bl') { w = halfW; h = halfH; y = H - m - halfH; }
+      else if (mode === 'tr') { w = halfW; h = halfH; x = W - m - halfW; }
+      else if (mode === 'br') { w = halfW; h = halfH; x = W - m - halfW; y = H - m - halfH; }
+      win.style.left = x + 'px'; win.style.top = y + 'px';
+      win.style.width = w + 'px'; win.style.height = h + 'px';
+      this.focus(id);
+    },
+    restore: function (id) {
+      var win = state.openWindows[id];
+      if (!win) return;
+      if (win.dataset._w) {
+        win.style.width = win.dataset._w; win.style.height = win.dataset._h;
+        win.style.left = win.dataset._l; win.style.top = win.dataset._t;
+      }
+      win.dataset.maxed = '0';
+      win.dataset._snapped = '0';
+      win.dataset.snap = '';
+    },
+    _showSnapPicker: function (id, anchor) {
+      var picker = $('#snapPicker'), desk = $('#s-desktop');
+      if (!picker || !desk) return;
+      state._snapTarget = id;
+      picker.classList.add('open');
+      var r = anchor.getBoundingClientRect(), base = desk.getBoundingClientRect();
+      var w = picker.offsetWidth || 214, h = picker.offsetHeight || 240;
+      var left = Math.max(8, Math.min(r.left - base.left - w + 34, desk.clientWidth - w - 8));
+      var top = Math.min(r.bottom - base.top + 6, desk.clientHeight - h - 60);
+      picker.style.left = left + 'px';
+      picker.style.top = Math.max(8, top) + 'px';
+    },
+    // v6.0：虚拟桌面 - 仅显示当前桌面的窗口
+    syncDesk: function () {
+      Object.keys(state.openWindows).forEach(function (id) {
+        var w = state.openWindows[id];
+        w.classList.toggle('hidden-desk', String(w.dataset.desk || 1) !== String(state.currentDesk));
+      });
     },
     closeAll: function () {
       Object.keys(state.openWindows).forEach(function (id) {
@@ -494,8 +575,10 @@
 
     _onWindowChange: function () {
       var self = this;
+      this.syncDesk();
       var types = {};
       Object.values(state.openWindows).forEach(function (w) {
+        if (String(w.dataset.desk || 1) !== String(state.currentDesk)) return;
         var t = w.dataset.type;
         if (!types[t]) types[t] = [];
         types[t].push(w.dataset.id);
@@ -506,12 +589,13 @@
         if (!winType) return;
         btn.classList.toggle('active', !!types[winType]);
       });
-      // v3.0：任务栏显示已打开窗口
+      // v3.0：任务栏显示已打开窗口（v6.0 只显示当前桌面）
       var host = $('#tbWins');
       if (!host) return;
       host.innerHTML = '';
       Object.keys(state.openWindows).forEach(function (id) {
         var w = state.openWindows[id];
+        if (String(w.dataset.desk || 1) !== String(state.currentDesk)) return;
         var type = w.dataset.type;
         var title = (w.querySelector('.win-title') || {}).textContent || self._defaultTitle(type);
         var b = document.createElement('button');
@@ -553,6 +637,9 @@
       else if (type === 'notepad') this._renderNotepad(body, opts);
       else if (type === 'photos') this._renderPhotos(body);
       else if (type === 'store') this._renderStore(body);
+      else if (type === 'paint') this._renderPaint(body);
+      else if (type === 'clock') this._renderClock(body);
+      else if (type === 'player') this._renderMedia(body);
     },
 
     _renderExplorer: function (body, opts) {
@@ -665,9 +752,21 @@
         'd-new': 'd', 'd-backup': 'd'
       };
 
+      // v6.0：合并本次会话中新建的文件夹
+      Object.keys(state.expFolders).forEach(function (fid) {
+        var f = state.expFolders[fid];
+        if (!contentMap[fid]) contentMap[fid] = [];
+        titles[fid] = f.name;
+        parents[fid] = f.parent;
+        if (!contentMap[f.parent]) contentMap[f.parent] = [];
+        var has = contentMap[f.parent].some(function (x) { return x.target === fid; });
+        if (!has) contentMap[f.parent].push({ name: f.name, type: 'folder', target: fid, icon: folderIcon });
+      });
+
       var startPath = contentMap[opts.path] ? opts.path : 'pc';
       var tabs = [{ current: startPath, stack: [startPath] }];
       var active = 0;
+      var selName = '', selPath = '';
 
       function tab() { return tabs[active]; }
 
@@ -696,13 +795,31 @@
         }).join('') + '<button class="exp-newtab" id="expNewTab" title="' + _t('exp_tab_new') + '">+</button>';
       }
 
-      function renderList() {
+      function visibleItems() {
         var t = tab();
         if (t.current === 'temp') contentMap.temp = tempItems();
-        var items = contentMap[t.current] || [];
+        var items = (contentMap[t.current] || []).slice();
+        var qEl = body.querySelector('#expSearch');
+        var q = qEl ? qEl.value.trim().toLowerCase() : '';
+        if (q) items = items.filter(function (it) { return String(it.name).toLowerCase().indexOf(q) >= 0; });
+        var sort = state.expSort || 'name';
+        items.sort(function (a, b) {
+          var af = a.type === 'file' ? 1 : 0, bf = b.type === 'file' ? 1 : 0;
+          if (af !== bf) return af - bf;
+          if (sort === 'type' && a.type !== b.type) return String(a.type) < String(b.type) ? -1 : 1;
+          return String(a.name).localeCompare(String(b.name));
+        });
+        return items;
+      }
+
+      function renderList() {
+        var t = tab();
+        var items = visibleItems();
         var container = body.querySelector('.explorer__files');
+        container.className = 'explorer__files' + (state.expView === 'list' ? ' list' : '');
         container.innerHTML = items.map(function (it) {
-          return '<div class="explorer__file" data-name="' + it.name + '"' +
+          var sel = selName && selPath === t.current && selName === it.name ? ' sel' : '';
+          return '<div class="explorer__file' + sel + '" data-name="' + it.name + '"' +
             ' data-target="' + (it.target || '') + '" data-app="' + (it.app || '') + '"' +
             ' data-file="' + (it.file || '') + '">' +
             '<div class="fi-icon">' + it.icon + '</div>' +
@@ -713,10 +830,16 @@
           return '<span class="seg" data-path="' + s.id + '">' + s.label + '</span>';
         }).join('<span class="sep">›</span>');
         var empty = body.querySelector('.explorer__empty');
+        var qEl = body.querySelector('#expSearch');
         container.style.display = items.length ? '' : 'none';
         empty.style.display = items.length ? 'none' : '';
+        empty.textContent = qEl && qEl.value.trim() ? _t('exp_no_match') : _t('exp_empty');
         var back = body.querySelector('#expBack');
         if (back) back.disabled = t.stack.length < 2;
+        var viewBtn = body.querySelector('#expView');
+        if (viewBtn) viewBtn.textContent = state.expView === 'list' ? _t('exp_view_icons') : _t('exp_view_list');
+        var sortSel = body.querySelector('#expSort');
+        if (sortSel) sortSel.value = state.expSort;
         body.querySelectorAll('.nav-item').forEach(function (x) {
           x.classList.toggle('active', x.dataset.id === t.current);
         });
@@ -727,8 +850,55 @@
         if (!id || (!contentMap[id] && id !== 'temp')) return;
         var t = tab();
         t.current = id;
+        selName = '';
         if (t.stack[t.stack.length - 1] !== id) t.stack.push(id);
         renderList();
+      }
+
+      function newFolder() {
+        var t = tab();
+        if (t.current === 'temp' || t.current === 'quick') { toast(_t('exp_protected')); return; }
+        state.folderSeq++;
+        var id = 'fx' + Date.now() + '-' + state.folderSeq;
+        var name = _t('folder_new') + (state.folderSeq > 1 ? ' (' + state.folderSeq + ')' : '');
+        state.expFolders[id] = { name: name, parent: t.current };
+        contentMap[id] = [];
+        titles[id] = name; parents[id] = t.current;
+        (contentMap[t.current] = contentMap[t.current] || []).unshift({ name: name, type: 'folder', target: id, icon: folderIcon });
+        renderList();
+        toast(_t('exp_folder_created', { name: name }));
+      }
+
+      function deleteSelected() {
+        var t = tab();
+        if (!selName || selPath !== t.current) { toast(_t('exp_protected')); return; }
+        var items = contentMap[t.current] || [];
+        var idx = -1, item = null;
+        items.forEach(function (x, i) { if (x.name === selName) { idx = i; item = x; } });
+        if (!item) return;
+        if (item.target && state.expFolders[item.target]) {
+          var removed = item.target;
+          Object.keys(state.expFolders).forEach(function (fid) {
+            if (fid === removed || state.expFolders[fid].parent === removed) delete state.expFolders[fid];
+          });
+          items.splice(idx, 1);
+          selName = ''; renderList();
+          toast(_t('exp_deleted', { name: item.name }));
+          return;
+        }
+        if (item.file && Object.prototype.hasOwnProperty.call(state.tempFiles, item.file)) {
+          delete state.tempFiles[item.file];
+          state.tempDeleted[item.file] = true;
+          try {
+            var all = fsLocalAll();
+            delete all[item.file];
+            localStorage.setItem(TEMP_KEY, JSON.stringify(all));
+          } catch (e) { /* 忽略本地存储异常 */ }
+          selName = ''; renderList();
+          toast(_t('exp_deleted', { name: item.name }));
+          return;
+        }
+        toast(_t('exp_protected'));
       }
 
       body.className = 'explorer';
@@ -746,6 +916,17 @@
               '<button id="expBack" title="' + _t('exp_back') + '">‹ ' + _t('exp_back') + '</button>' +
               '<button>' + _t('exp_file') + '</button><button>' + _t('exp_home') + '</button>' +
               '<button>' + _t('exp_share') + '</button><button>' + _t('exp_view') + '</button>' +
+            '</div>' +
+            '<div class="exp-tools">' +
+              '<button id="expNewFolder">' + _t('exp_new_folder') + '</button>' +
+              '<button id="expDelete">' + _t('exp_delete') + '</button>' +
+              '<span class="grow"></span>' +
+              '<select id="expSort" title="' + _t('exp_sort') + '">' +
+                '<option value="name">' + _t('exp_sort') + ': ' + _t('exp_sort_name') + '</option>' +
+                '<option value="type">' + _t('exp_sort') + ': ' + _t('exp_sort_type') + '</option>' +
+              '</select>' +
+              '<button id="expView">' + _t('exp_view_list') + '</button>' +
+              '<input id="expSearch" placeholder="' + _t('exp_search_ph') + '" autocomplete="off" spellcheck="false">' +
             '</div>' +
             '<div class="explorer__path"></div>' +
             '<div class="explorer__content">' +
@@ -786,6 +967,7 @@
           var t = tab();
           t.current = ni.dataset.id;
           t.stack = [ni.dataset.id];
+          selName = '';
           renderList();
         });
       });
@@ -795,6 +977,7 @@
         if (t.stack.length < 2) return;
         t.stack.pop();
         t.current = t.stack[t.stack.length - 1];
+        selName = '';
         renderList();
       });
       body.querySelector('.explorer__path').addEventListener('click', function (e) {
@@ -805,7 +988,27 @@
         if (idx >= 0) { t.stack = t.stack.slice(0, idx + 1); t.current = t.stack[t.stack.length - 1]; renderList(); }
         else navigate(seg.dataset.path);
       });
-      body.querySelector('.explorer__files').addEventListener('dblclick', function (e) {
+
+      // v6.0：工具栏（新建、删除、排序、视图、搜索）
+      body.querySelector('#expNewFolder').addEventListener('click', newFolder);
+      body.querySelector('#expDelete').addEventListener('click', deleteSelected);
+      body.querySelector('#expSort').addEventListener('change', function () {
+        state.expSort = this.value; renderList();
+      });
+      body.querySelector('#expView').addEventListener('click', function () {
+        state.expView = state.expView === 'list' ? 'icons' : 'list';
+        renderList();
+      });
+      body.querySelector('#expSearch').addEventListener('input', function () { renderList(); });
+
+      var filesEl = body.querySelector('.explorer__files');
+      filesEl.addEventListener('click', function (e) {
+        var f = e.target.closest('.explorer__file'); if (!f) return;
+        selName = f.dataset.name; selPath = tab().current;
+        body.querySelectorAll('.explorer__file.sel').forEach(function (x) { x.classList.remove('sel'); });
+        f.classList.add('sel');
+      });
+      filesEl.addEventListener('dblclick', function (e) {
         var f = e.target.closest('.explorer__file'); if (!f) return;
         if (f.dataset.target) { navigate(f.dataset.target); return; }
         if (f.dataset.file) {
@@ -1002,6 +1205,28 @@
             '<button class="tab-close" data-tabclose="' + i + '">×</button></div>';
         }).join('') + '<button class="edge__newtab" id="ebNewTab" title="' + _t('edge_newtab') + '">+</button>';
       }
+      // v6.0：书签栏与下载面板
+      function renderBookmarks() {
+        var host = body.querySelector('.edge__bookmarks'); if (!host) return;
+        host.innerHTML = state.bookmarks.map(function (b, i) {
+          return '<button data-bm="' + i + '" title="' + esc(b.url) + '">' + esc(b.title) + '</button>';
+        }).join('');
+      }
+      function renderDownloads() {
+        var host = body.querySelector('#ebDl'); if (!host) return;
+        host.innerHTML = '<b>' + _t('edge_downloads') + '</b>' +
+          (state.downloads.length ? state.downloads.map(function (d) {
+            return '<div class="edge-dl-item"><span>' + esc(d.name) + '</span><em>' + (d.done ? '100%' : '…') + '</em></div>';
+          }).join('') : '<div class="edge-dl-item">' + _t('edge_dl_empty') + '</div>');
+      }
+      function addBookmark() {
+        var t = tab();
+        if (!t.url) { toast(_t('edge_bookmark_add')); return; }
+        var exists = state.bookmarks.some(function (b) { return b.url === t.url; });
+        if (!exists) state.bookmarks.push({ title: hostOf(t.url), url: t.url });
+        renderBookmarks();
+        toast(_t('edge_bookmarked'));
+      }
       function renderPage() {
         var t = tab();
         var content = body.querySelector('#ebContent');
@@ -1051,15 +1276,19 @@
 
       body.innerHTML =
         '<div class="edge__tabs"></div>' +
+        '<div class="edge__bookmarks"></div>' +
         '<div class="edge__bar">' +
           '<button class="eb-nav" data-eb="back" title="后退"><svg viewBox="0 0 16 16" fill="none"><path d="M10 4L6 8l4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>' +
           '<button class="eb-nav" data-eb="forward" title="前进"><svg viewBox="0 0 16 16" fill="none"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>' +
           '<button class="eb-nav" data-eb="refresh" title="刷新"><svg viewBox="0 0 16 16" fill="none"><path d="M3 8a5 5 0 1 1 1.5 3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M3 4v4h4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></button>' +
           '<div class="eb-url"><svg viewBox="0 0 16 16"><rect x="7" y="3" width="2" height="4"/><rect x="11" y="7" width="2" height="6"/><rect x="3" y="7" width="2" height="6"/><path d="M7 7h2l2 6H5l2-6Z" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>' +
             '<input id="ebUrl" spellcheck="false" autocomplete="off" placeholder="' + _t('edge_search_ph') + '"></div>' +
+          '<button class="eb-nav" data-eb="bookmark" title="' + _t('edge_bookmark_add') + '"><svg viewBox="0 0 16 16" fill="none"><path d="M4.5 2.5h7v11l-3.5-2.6L4.5 13.5v-11Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg></button>' +
+          '<button class="eb-nav" data-eb="downloads" title="' + _t('edge_downloads') + '"><svg viewBox="0 0 16 16" fill="none"><path d="M8 2.5v6.5M5.5 6.5L8 9l2.5-2.5M3 12.5h10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></button>' +
           '<button class="eb-real" data-eb="real">' + _t('edge_real') + '</button>' +
         '</div>' +
-        '<div class="edge__content" id="ebContent"></div>';
+        '<div class="edge__content" id="ebContent"></div>' +
+        '<div class="edge__dl" id="ebDl"></div>';
 
       body.addEventListener('click', function (e) {
         var close = e.target.closest('[data-tabclose]');
@@ -1087,12 +1316,20 @@
         }
         var realBtn = e.target.closest('[data-real]');
         if (realBtn) { real(realBtn.dataset.real); return; }
+        var bm = e.target.closest('[data-bm]');
+        if (bm) { go(state.bookmarks[Number(bm.dataset.bm)].url); return; }
         var eb = e.target.closest('[data-eb]');
         if (eb) {
           var t = tab();
           if (eb.dataset.eb === 'back' && t.hi > 0) { t.hi--; t.url = t.history[t.hi]; t.title = t.url ? hostOf(t.url) : _t('edge_newtab'); renderPage(); }
           else if (eb.dataset.eb === 'forward' && t.hi < t.history.length - 1) { t.hi++; t.url = t.history[t.hi]; t.title = t.url ? hostOf(t.url) : _t('edge_newtab'); renderPage(); }
           else if (eb.dataset.eb === 'refresh') renderPage();
+          else if (eb.dataset.eb === 'bookmark') addBookmark();
+          else if (eb.dataset.eb === 'downloads') {
+            renderDownloads();
+            var dl = body.querySelector('#ebDl');
+            if (dl) dl.classList.toggle('open');
+          }
           else if (eb.dataset.eb === 'real') real(t.url || 'https://www.bing.com');
         }
       });
@@ -1107,6 +1344,8 @@
         }
       });
 
+      renderBookmarks();
+      renderDownloads();
       renderPage();
     },
 
@@ -1132,6 +1371,7 @@
         ['home', _t('set_home'), '<svg viewBox="0 0 16 16" fill="none"><path d="M2.5 7.5 8 2.5l5.5 5v6H10v-3.5H6V13.5H2.5v-6Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>'],
         ['update', _t('set_update'), '<svg viewBox="0 0 16 16" fill="none"><path d="M13 8a5 5 0 1 1-1.5-3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M13 2.5V5h-2.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>'],
         ['system', _t('set_system'), '<svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="3" fill="currentColor"/><path d="M8 2v2M8 12v2M2 8h2M12 8h2M4.2 4.2l1.4 1.4M10.4 10.4l1.4 1.4M4.2 11.8l1.4-1.4M10.4 5.6l1.4-1.4" stroke="currentColor" stroke-width="1.3" fill="none"/></svg>'],
+        ['multitask', _t('set_multitask'), '<svg viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="7" height="5" rx="1" stroke="currentColor" stroke-width="1.3"/><rect x="6.5" y="8" width="7" height="5" rx="1" fill="#fff" stroke="currentColor" stroke-width="1.3"/></svg>'],
         ['bt', _t('set_bt'), '<svg viewBox="0 0 16 16"><path d="M3 5h10v6H3zM6 2.5l1 1.5H9l1-1.5" stroke="currentColor" stroke-width="1.3" fill="none"/><path d="M7 11.5h2v2H7z" fill="currentColor"/></svg>'],
         ['net', _t('set_net'), '<svg viewBox="0 0 16 16" fill="none"><path d="M2 6.5C3.7 5 5.7 4.2 8 4.2s4.3.8 6 2.3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M4 9c1.1-.9 2.5-1.4 4-1.4S10.9 8.1 12 9" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><circle cx="8" cy="11.7" r="1" fill="currentColor"/></svg>'],
         ['personal', _t('set_personal'), '<svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.4"/><path d="M5.5 5.5l5 5M10.5 5.5l-5 5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>'],
@@ -1220,6 +1460,9 @@
               (bar >= 0 ? '<div class="upd-bar"><i style="width:' + Math.max(0, Math.min(100, Math.round(bar))) + '%"></i></div>' : '') +
             '</div>' + action + '</div>' +
           '<div class="switch-row"><div class="txt"><b>' + _t('upd_opt') + '</b><span>' + _t('upd_opt_desc') + '</span></div><div class="switch on"></div></div>' +
+          '<div class="settings__row"><div class="sr-left"><div><div class="sr-title">' + _t('upd_feature') + '</div>' +
+            '<div class="sr-desc">' + _t('upd_feature_desc') + '</div></div></div>' +
+            '<span class="sr-val">' + (u.installed ? _t('upd_installed_25h2') : _t('about_os')) + '</span></div>' +
           '<h2 style="font-size:14px;margin-top:24px;">' + _t('upd_history') + '</h2>' +
           '<div class="about-rows">' +
             '<div class="about-row"><span>' + _t('upd_hist_1') + '</span></div>' +
@@ -1283,7 +1526,7 @@
           (state.verTab === 'sim' ? '<div class="ver-list">' + list + '</div>' : table);
       } else if (page === 'personal') {
         var accents = ['#0067c0', '#8b5cf6', '#e3008c', '#0f7b3f', '#c2410c'];
-        var walls = [[1, 'set_wallpaper_1'], [2, 'set_wallpaper_2'], [3, 'set_wallpaper_3'], [4, 'set_wallpaper_4'], [5, 'set_wallpaper_5']];
+        var walls = [[1, 'set_wallpaper_1'], [2, 'set_wallpaper_2'], [3, 'set_wallpaper_3'], [4, 'set_wallpaper_4'], [5, 'set_wallpaper_5'], [6, 'set_wallpaper_6'], [7, 'set_wallpaper_7']];
         main =
           '<h2>' + _t('set_personal') + '</h2><p class="s-sub">' + _t('set_theme_desc') + '</p>' +
           '<div class="set-block"><b>' + _t('set_theme') + '</b><i>' + _t('set_theme_desc') + '</i>' +
@@ -1326,6 +1569,16 @@
             return '<div class="settings__row clickable" data-open-app="' + a[1] + '"><div class="sr-left"><div>' +
               '<div class="sr-title">' + _t(a[0]) + '</div><div class="sr-desc">' + _t('set_apps_desc') + '</div></div></div><span>›</span></div>';
           }).join('');
+      } else if (page === 'multitask') {
+        main =
+          '<h2>' + _t('set_multitask') + '</h2><p class="s-sub">' + _t('set_multitask_desc') + '</p>' +
+          row(_t('set_taskview'), _t('set_taskview_desc'), '<div class="switch on"></div>') +
+          row(_t('set_snap'), _t('set_snap_desc'), '<div class="switch on"></div>') +
+          row(_t('set_alt'), _t('set_alt_desc'), '<div class="switch on"></div>') +
+          row(_t('set_desks'), _t('set_desks_desc', { n: state.desktops.length }),
+            '<button class="btn" data-mt="newdesk">' + _t('set_new_desk') + '</button>') +
+          row(_t('set_widgets'), _t('set_widgets_desc'), '<div class="switch on"></div>') +
+          row(_t('set_open_tv'), '', '<button class="btn" data-mt="tv">' + _t('set_open_tv') + '</button>');
       } else if (page === 'about') {
         var langBtn = document.querySelector('.lang-switch button.on');
         var lang = langBtn ? langBtn.textContent : '简体中文';
@@ -1333,13 +1586,14 @@
           '<h2>' + _t('about_title') + '</h2>' +
           '<div class="about-hero">' +
             '<div class="about-logo"><svg viewBox="0 0 64 64"><g fill="#fff"><rect x="2" y="2" width="27" height="27"/><rect x="35" y="2" width="27" height="27"/><rect x="2" y="35" width="27" height="27"/><rect x="35" y="35" width="27" height="27"/></g></svg></div>' +
-            '<div><div class="about-name">Windows 11</div><div class="about-ver">' + _t('about_version') + ' 5.0.0 · ' + _t('about_edition') + ': ' + (state.edition || 'Pro') + '</div></div>' +
+            '<div><div class="about-name">Windows 11</div><div class="about-ver">' + _t('about_version') + ' 6.0.0 · ' + _t('about_edition') + ': ' + (state.edition || 'Pro') + '</div></div>' +
           '</div>' +
           '<div class="about-rows">' +
+            '<div class="about-row"><b>' + _t('about_os') + '</b><span>25H2</span></div>' +
             '<div class="about-row"><b>' + _t('about_device') + '</b><span>' + state.deviceName + '</span></div>' +
             '<div class="about-row"><b>' + _t('about_user') + '</b><span>' + (state.userName || 'Administrator') + '</span></div>' +
             '<div class="about-row"><b>' + _t('about_language') + '</b><span>' + lang + '</span></div>' +
-            '<div class="about-row"><b>' + _t('about_build') + '</b><span>22631.5.0 · ' + _t('about_sim') + '</span></div>' +
+            '<div class="about-row"><b>' + _t('about_build') + '</b><span>26200.6.0 · ' + _t('about_sim') + '</span></div>' +
           '</div>' +
           '<div class="about-actions"><button class="btn" data-page="system">' + _t('about_back') + '</button>' +
             '<button class="btn primary" id="aboutRestart">' + _t('about_restart') + '</button></div>' +
@@ -1460,6 +1714,17 @@
           fsSave('settings.json', JSON.stringify(prefsSnapshot(), null, 2), function (ok) {
             toast(ok ? _t('set_backup_done', { path: tempPathOf('settings.json') }) : _t('np_saved_local'));
           });
+          return;
+        }
+
+        var mt = e.target.closest('[data-mt]');
+        if (mt) {
+          if (mt.dataset.mt === 'newdesk') {
+            createDesktop();
+            self._renderSettings(body, 'multitask');
+          } else if (mt.dataset.mt === 'tv') {
+            openTaskView();
+          }
           return;
         }
 
@@ -1793,6 +2058,271 @@
       });
     },
 
+    /* ---- 画图（v6.0） ---- */
+    _renderPaint: function (body) {
+      var colors = ['#1b2430', '#0067c0', '#c42b1c', '#0f7b3f', '#f5c04a', '#8b5cf6'];
+      body.className = 'paint';
+      body.innerHTML =
+        '<div class="paint__bar">' +
+          '<button data-paint="brush" class="' + (state.paint.tool !== 'eraser' ? 'on' : '') + '">' + _t('paint_brush') + '</button>' +
+          '<button data-paint="eraser" class="' + (state.paint.tool === 'eraser' ? 'on' : '') + '">' + _t('paint_eraser') + '</button>' +
+          '<div class="paint__colors">' + colors.map(function (c) {
+            return '<button class="paint__sw' + (state.paint.color === c ? ' on' : '') + '" data-color="' + c + '" style="background:' + c + '"></button>';
+          }).join('') + '</div>' +
+          '<label class="paint__size">' + _t('paint_size') + '<input type="range" id="paintSize" min="1" max="30" value="' + state.paint.size + '"></label>' +
+          '<span class="grow"></span>' +
+          '<button data-paint="clear">' + _t('paint_clear') + '</button>' +
+          '<button data-paint="save">' + _t('paint_save') + '</button>' +
+        '</div>' +
+        '<div class="paint__stage"><canvas id="paintCanvas" width="760" height="460"></canvas></div>';
+
+      var canvas = body.querySelector('#paintCanvas');
+      var ctx = canvas.getContext('2d');
+      function clearCanvas() { ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height); }
+      clearCanvas();
+
+      var drawing = false, last = null;
+      function pos(e) {
+        var r = canvas.getBoundingClientRect();
+        return { x: (e.clientX - r.left) * canvas.width / r.width, y: (e.clientY - r.top) * canvas.height / r.height };
+      }
+      function stroke(a, b) {
+        ctx.strokeStyle = state.paint.tool === 'eraser' ? '#fff' : state.paint.color;
+        ctx.lineWidth = state.paint.size;
+        ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+        ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+      }
+      canvas.addEventListener('pointerdown', function (e) {
+        drawing = true; last = pos(e);
+        try { canvas.setPointerCapture(e.pointerId); } catch (err) { /* 忽略 */ }
+        e.preventDefault();
+      });
+      canvas.addEventListener('pointermove', function (e) {
+        if (!drawing) return;
+        var p = pos(e); stroke(last, p); last = p;
+      });
+      canvas.addEventListener('pointerup', function () { drawing = false; });
+      canvas.addEventListener('pointerleave', function () { drawing = false; });
+
+      body.querySelector('.paint__bar').addEventListener('click', function (e) {
+        var tool = e.target.closest('[data-paint]');
+        if (tool) {
+          var act = tool.dataset.paint;
+          if (act === 'brush' || act === 'eraser') {
+            state.paint.tool = act;
+            body.querySelectorAll('[data-paint="brush"],[data-paint="eraser"]').forEach(function (b) {
+              b.classList.toggle('on', b.dataset.paint === act);
+            });
+          } else if (act === 'clear') {
+            clearCanvas();
+          } else if (act === 'save') {
+            try {
+              var a = document.createElement('a');
+              a.href = canvas.toDataURL('image/png');
+              a.download = 'paint-' + Date.now() + '.png';
+              document.body.appendChild(a); a.click(); a.remove();
+            } catch (err) { /* 忽略 */ }
+            toast(_t('paint_saved'));
+          }
+          return;
+        }
+        var sw = e.target.closest('[data-color]');
+        if (sw) {
+          state.paint.color = sw.dataset.color;
+          state.paint.tool = 'brush';
+          body.querySelectorAll('.paint__sw').forEach(function (b) { b.classList.toggle('on', b.dataset.color === state.paint.color); });
+          body.querySelectorAll('[data-paint="brush"],[data-paint="eraser"]').forEach(function (b) {
+            b.classList.toggle('on', b.dataset.paint === 'brush');
+          });
+        }
+      });
+      body.querySelector('#paintSize').addEventListener('input', function () { state.paint.size = Number(this.value); });
+    },
+
+    /* ---- 时钟：秒表与计时器（v6.0） ---- */
+    _renderClock: function (body) {
+      body.className = 'clock-app';
+      var st = state.clock || (state.clock = { tab: 'stopwatch' });
+      var swElapsed = 0, swStart = 0, swRunning = false;
+      var tmLeftMs = 5 * 60000, tmRunning = false, tmEnd = 0, tmMinutes = 5;
+
+      body.innerHTML =
+        '<div class="clock__tabs">' +
+          '<button data-clk-tab="stopwatch" class="' + (st.tab !== 'timer' ? 'on' : '') + '">' + _t('clock_stopwatch') + '</button>' +
+          '<button data-clk-tab="timer" class="' + (st.tab === 'timer' ? 'on' : '') + '">' + _t('clock_timer') + '</button>' +
+        '</div>' +
+        '<div class="clock__body" id="clkBody"></div>';
+
+      function fmtSw(ms) {
+        var total = ms / 1000;
+        var m = Math.floor(total / 60), s = total - m * 60;
+        return String(m).padStart(2, '0') + ':' + (s < 10 ? '0' : '') + s.toFixed(1);
+      }
+      function fmtTm(ms) {
+        var total = Math.max(0, Math.round(ms / 1000));
+        var m = Math.floor(total / 60), s = total % 60;
+        return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+      }
+      function render() {
+        var host = body.querySelector('#clkBody'); if (!host) return;
+        if (st.tab === 'timer') {
+          var deg = Math.max(0, Math.min(360, (1 - tmLeftMs / Math.max(1000, tmMinutes * 60000)) * 360));
+          host.innerHTML =
+            '<div class="clock__ring" id="clkRing" style="background:conic-gradient(var(--accent) ' + deg + 'deg, rgba(0,0,0,.06) 0)">' +
+              '<div id="clkRingText">' + fmtTm(tmLeftMs) + '</div></div>' +
+            '<div class="clock__mins">' +
+              '<input id="clkMin" type="number" min="1" max="99" value="' + tmMinutes + '">' + _t('clock_minutes') +
+            '</div>' +
+            '<div class="clock__actions">' +
+              '<button class="primary" data-clk="tm-toggle">' + (tmRunning ? _t('clock_pause') : _t('clock_start')) + '</button>' +
+              '<button data-clk="tm-reset">' + _t('clock_reset') + '</button>' +
+            '</div>';
+          var minEl = host.querySelector('#clkMin');
+          if (minEl) minEl.addEventListener('change', function () {
+            tmMinutes = Math.max(1, Math.min(99, Number(this.value) || 5));
+            this.value = String(tmMinutes);
+            if (!tmRunning) { tmLeftMs = tmMinutes * 60000; render(); }
+          });
+        } else {
+          host.innerHTML =
+            '<div class="clock__time" id="clkSw">' + fmtSw(swElapsed + (swRunning ? Date.now() - swStart : 0)) + '</div>' +
+            '<div class="clock__sub">' + _t('clock_stopwatch') + '</div>' +
+            '<div class="clock__actions">' +
+              '<button class="primary" data-clk="sw-toggle">' + (swRunning ? _t('clock_pause') : _t('clock_start')) + '</button>' +
+              '<button data-clk="sw-reset">' + _t('clock_reset') + '</button>' +
+            '</div>';
+        }
+      }
+      body.addEventListener('click', function (e) {
+        var tabBtn = e.target.closest('[data-clk-tab]');
+        if (tabBtn) {
+          st.tab = tabBtn.dataset.clkTab;
+          body.querySelectorAll('[data-clk-tab]').forEach(function (b) {
+            b.classList.toggle('on', b.dataset.clkTab === st.tab);
+          });
+          render();
+          return;
+        }
+        var b = e.target.closest('[data-clk]'); if (!b) return;
+        var act = b.dataset.clk;
+        if (act === 'sw-toggle') {
+          if (swRunning) { swElapsed += Date.now() - swStart; swRunning = false; }
+          else { swStart = Date.now(); swRunning = true; }
+          render();
+        } else if (act === 'sw-reset') {
+          swElapsed = 0; swRunning = false; swStart = 0; render();
+        } else if (act === 'tm-toggle') {
+          if (tmRunning) { tmLeftMs = Math.max(0, tmEnd - Date.now()); tmRunning = false; }
+          else { tmEnd = Date.now() + tmLeftMs; tmRunning = true; }
+          render();
+        } else if (act === 'tm-reset') {
+          tmRunning = false; tmLeftMs = tmMinutes * 60000; render();
+        }
+      });
+      var tick = setInterval(function () {
+        if (!body.isConnected) { clearInterval(tick); return; }
+        if (st.tab === 'timer') {
+          if (!tmRunning) return;
+          tmLeftMs = Math.max(0, tmEnd - Date.now());
+          var ring = body.querySelector('#clkRing'), txt = body.querySelector('#clkRingText');
+          if (ring) {
+            var deg = Math.max(0, Math.min(360, (1 - tmLeftMs / Math.max(1000, tmMinutes * 60000)) * 360));
+            ring.style.background = 'conic-gradient(var(--accent) ' + deg + 'deg, rgba(0,0,0,.06) 0)';
+          }
+          if (txt) txt.textContent = fmtTm(tmLeftMs);
+          if (tmLeftMs <= 0) {
+            tmRunning = false;
+            toast(_t('clock_done'));
+            render();
+          }
+        } else if (swRunning) {
+          var el = body.querySelector('#clkSw');
+          if (el) el.textContent = fmtSw(swElapsed + (Date.now() - swStart));
+        }
+      }, 100);
+      render();
+    },
+
+    /* ---- 媒体播放器（v6.0） ---- */
+    _renderMedia: function (body) {
+      var tracks = [
+        { title: 'Aurora', artist: 'Windows Sounds', dur: 208 },
+        { title: 'Bloom', artist: 'Fluent Studio', dur: 186 },
+        { title: 'Midnight Drive', artist: 'Redmond Beats', dur: 231 }
+      ];
+      var p = state.player;
+      if (p.index >= tracks.length) p.index = 0;
+      var bars = '';
+      for (var bi = 0; bi < 9; bi++) bars += '<i></i>';
+
+      body.className = 'media';
+      body.innerHTML =
+        '<div class="media__main">' +
+          '<div class="media__cover"><span>♪</span></div>' +
+          '<div class="media__title" id="mdTitle"></div>' +
+          '<div class="media__artist" id="mdArtist"></div>' +
+          '<div class="media__viz" id="mdViz">' + bars + '</div>' +
+          '<div class="media__progress"><span id="mdCur">0:00</span>' +
+            '<div class="media__track"><i id="mdBar"></i></div><span id="mdDur">0:00</span></div>' +
+          '<div class="media__controls">' +
+            '<button data-md="prev" title="' + _t('media_prev') + '">⏮</button>' +
+            '<button class="play" data-md="play" id="mdPlay" title="' + _t('media_play') + '">▶</button>' +
+            '<button data-md="next" title="' + _t('media_next') + '">⏭</button>' +
+          '</div>' +
+        '</div>' +
+        '<div class="media__playlist"><div class="media__pl-hd">' + _t('media_tracks') + '</div>' +
+          tracks.map(function (t, i) {
+            return '<div class="media__item" data-track="' + i + '"><span>' + t.title + ' · ' + t.artist + '</span><em>' + fmt(t.dur) + '</em></div>';
+          }).join('') +
+        '</div>';
+
+      function fmt(sec) {
+        var s = Math.max(0, Math.round(sec));
+        return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+      }
+      function render() {
+        var tr = tracks[p.index];
+        var titleEl = body.querySelector('#mdTitle');
+        if (!titleEl) return;
+        titleEl.textContent = tr.title;
+        body.querySelector('#mdArtist').textContent = tr.artist;
+        body.querySelector('#mdDur').textContent = fmt(tr.dur);
+        body.querySelector('#mdCur').textContent = fmt(tr.dur * p.pct / 100);
+        body.querySelector('#mdBar').style.width = Math.min(100, p.pct) + '%';
+        var playBtn = body.querySelector('#mdPlay');
+        if (playBtn) {
+          playBtn.textContent = p.playing ? '❚❚' : '▶';
+          playBtn.title = p.playing ? _t('media_pause') : _t('media_play');
+        }
+        var viz = body.querySelector('#mdViz');
+        if (viz) viz.classList.toggle('play', p.playing);
+        body.querySelectorAll('.media__item').forEach(function (it, i) {
+          it.classList.toggle('on', i === p.index);
+        });
+      }
+      body.addEventListener('click', function (e) {
+        var b = e.target.closest('[data-md]');
+        if (b) {
+          var act = b.dataset.md;
+          if (act === 'play') p.playing = !p.playing;
+          else if (act === 'next') { p.index = (p.index + 1) % tracks.length; p.pct = 0; p.playing = true; }
+          else if (act === 'prev') { p.index = (p.index + tracks.length - 1) % tracks.length; p.pct = 0; p.playing = true; }
+          render();
+          return;
+        }
+        var it = e.target.closest('[data-track]');
+        if (it) { p.index = Number(it.dataset.track); p.pct = 0; p.playing = true; render(); }
+      });
+      var tick = setInterval(function () {
+        if (!body.isConnected) { clearInterval(tick); return; }
+        if (!p.playing) return;
+        p.pct += 0.4;
+        if (p.pct >= 100) { p.pct = 0; p.index = (p.index + 1) % tracks.length; }
+        render();
+      }, 300);
+      render();
+    },
+
     _renderSetupUpgrade: function (body, win) {
       var self = this;
       body.className = 'upg';
@@ -2013,11 +2543,15 @@
     var lk = $('#lockUser'), la = $('#lockAvatar');
     if (lk) lk.textContent = name;
     if (la) la.textContent = name.charAt(0).toUpperCase();
+    var lu = $('#lsUser'), lsa = $('#lsAvatar');
+    if (lu) lu.textContent = name;
+    if (lsa) lsa.textContent = name.charAt(0).toUpperCase();
     startClock();
     _apply();
     applyTheme();
     buildAllApps();
     renderCalendar(calYear, calMonth);
+    renderWidgetsCalendar();
     syncQuickPanel();
     fsList(function () { /* Temp 目录文件在资源管理器中按需刷新 */ });
     var wt = $('#welcomeToast');
@@ -2044,7 +2578,18 @@
     var cm = $('#ctxMenu'); if (cm) cm.classList.remove('open');
     var pm = $('#powerMenu'); if (pm) pm.classList.remove('open');
     var ps = $('#powerScreen'); if (ps) ps.classList.remove('open', 'asleep');
-    var lk = $('#lockScreen'); if (lk) lk.classList.remove('open');
+    var lk = $('#lockScreen'); if (lk) lk.classList.remove('open', 'stage-signin');
+    // v6.0：重置多桌面、贴靠、搜索、小组件与新应用状态
+    var tvEl = $('#taskView'); if (tvEl) tvEl.classList.remove('open');
+    var soEl = $('#searchOverlay'); if (soEl) soEl.classList.remove('open');
+    var spEl = $('#snapPicker'); if (spEl) spEl.classList.remove('open');
+    var wpEl = $('#widgetsPanel'); if (wpEl) wpEl.classList.remove('open');
+    var atEl = $('#altTab'); if (atEl) atEl.classList.remove('open');
+    altOpen = false;
+    state.desktops = [{ id: 1, name: '' }]; state.currentDesk = 1; state.deskSeq = 1;
+    state.expFolders = {}; state.expView = 'icons'; state.expSort = 'name'; state.tempDeleted = {};
+    state.player = { index: 0, playing: false, pct: 0 };
+    state.paint = { color: '#1b2430', size: 6, tool: 'brush' };
     $('#deviceInput').value = state.deviceName;
     $('#localUser').value = ''; $('#localPass').value = ''; $('#localPass2').value = '';
     $('#localErr').style.display = 'none'; $('#msEmail').value = '';
@@ -2099,8 +2644,11 @@
       var n = state.userName || 'Administrator'; $('#smUser').textContent = n; $('#smAvatar').textContent = n.charAt(0).toUpperCase();
       buildAllApps();
       renderCalendar(calYear, calMonth);
+      renderWidgetsCalendar();
       syncQuickPanel();
       filterStartApps();
+      var tvLang = $('#taskView'); if (tvLang && tvLang.classList.contains('open')) renderTaskView();
+      var soLang = $('#searchOverlay'); if (soLang && soLang.classList.contains('open')) renderSearch();
     }
     AppWindows.retitleAll();
     Object.keys(state.openWindows).forEach(function (wid) {
@@ -2293,7 +2841,7 @@
   /* v4.0：启动应用（未实现的仍给出演示提示） */
   function openAppType(type) {
     if (!type) return;
-    var demoLabels = { player: 'app_player', camera: 'app_camera', mail: 'app_mail', weather: 'app_weather' };
+    var demoLabels = { camera: 'app_camera', mail: 'app_mail', weather: 'app_weather' };
     if (demoLabels[type]) { toast(_t('toast_demo_unavailable', { name: _t(demoLabels[type]) })); return; }
     if (type === 'setup') { AppWindows.open('setup'); return; }
     AppWindows.open(type);
@@ -2385,7 +2933,7 @@
       }
     });
   });
-  $$('.tb-btn:not(.running):not(#startBtn):not(#searchBtn)').forEach(function (btn) {
+  $$('.tb-btn:not(.running):not(#startBtn):not(#searchBtn):not(#widgetsBtn):not(#taskViewBtn)').forEach(function (btn) {
     btn.addEventListener('click', function () { toast(_t('toast_demo_unavailable', { name: btn.getAttribute('title') || '' })); });
   });
   // 开始菜单里的应用磁贴与所有应用列表
@@ -2405,7 +2953,6 @@
     if ($('#startMenu').classList.contains('open')) closeStart();
     else openStartSearch();
   });
-  $('#searchBtn').addEventListener('click', function (e) { e.stopPropagation(); openStartSearch(); });
   $('#startSearch').addEventListener('input', filterStartApps);
   $('#startSearch').addEventListener('keydown', function (e) {
     if (e.key !== 'Enter') return;
@@ -2415,7 +2962,7 @@
   $('#startMenu').addEventListener('click', function (e) { e.stopPropagation(); });
   $('#s-desktop').addEventListener('click', function (e) {
     if (!e.target.closest('.taskbar') && !e.target.closest('.dicon') && !e.target.closest('.app-window') && !e.target.closest('.start-menu')) {
-      closeStart(); closeNotif(); closeQuick();
+      closeStart(); closeNotif(); closeQuick(); closeWidgets();
     }
   });
 
@@ -2432,11 +2979,7 @@
     runPower(b.dataset.power);
   });
   function runPower(kind) {
-    if (kind === 'lock') {
-      var lay = $('#lockScreen');
-      if (lay) lay.classList.add('open');
-      return;
-    }
+    if (kind === 'lock') { openLockScreen(); return; }
     var ps = $('#powerScreen'), txt = $('#psText'), hint = $('#psHint');
     if (!ps) return;
     ps.classList.add('open'); ps.classList.remove('asleep');
@@ -2456,8 +2999,20 @@
     this.classList.remove('open', 'asleep');
   });
   var lockScreen = $('#lockScreen');
-  if (lockScreen) lockScreen.addEventListener('click', function () {
-    this.classList.remove('open');
+  if (lockScreen) lockScreen.addEventListener('click', function (e) {
+    if (e.target.closest('#lockSignin')) return;
+    if (this.classList.contains('stage-signin')) return;
+    showLockSignin();
+  });
+  var lockGoBtn = $('#lockGo'); if (lockGoBtn) lockGoBtn.addEventListener('click', signIn);
+  var lockBackBtn = $('#lockBack');
+  if (lockBackBtn) lockBackBtn.addEventListener('click', function (e) {
+    e.stopPropagation();
+    var lk = $('#lockScreen'); if (lk) lk.classList.remove('stage-signin');
+  });
+  var lockPassEl = $('#lockPass');
+  if (lockPassEl) lockPassEl.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); signIn(); }
   });
 
   /* v5.0：全屏（F11 / 快速设置 / 设置） */
@@ -2585,6 +3140,313 @@
     var n = new Date(); calYear = n.getFullYear(); calMonth = n.getMonth(); renderCalendar(calYear, calMonth);
   });
 
+  /* ============================================================
+   * v6.0：任务视图、虚拟桌面、窗口切换、贴靠、搜索、小组件、锁屏
+   * ============================================================ */
+  function closeTaskView() { var tv = $('#taskView'); if (tv) tv.classList.remove('open'); }
+
+  function switchDesktop(id) {
+    var exists = state.desktops.some(function (d) { return d.id === id; });
+    if (!exists) return;
+    state.currentDesk = id;
+    AppWindows._focusedId = null;
+    AppWindows._onWindowChange();
+    renderTaskView();
+  }
+  function createDesktop() {
+    state.deskSeq++;
+    state.desktops.push({ id: state.deskSeq, name: '' });
+    state.currentDesk = state.deskSeq;
+    AppWindows._focusedId = null;
+    AppWindows._onWindowChange();
+    renderTaskView();
+    toast(_t('toast_desk_created'));
+  }
+  function closeDesktop(id) {
+    if (state.desktops.length <= 1) return;
+    Object.keys(state.openWindows).forEach(function (wid) {
+      var w = state.openWindows[wid];
+      if (String(w.dataset.desk || 1) === String(id)) AppWindows.close(wid);
+    });
+    state.desktops = state.desktops.filter(function (d) { return d.id !== id; });
+    if (state.currentDesk === id) state.currentDesk = state.desktops[0].id;
+    AppWindows._onWindowChange();
+    renderTaskView();
+    toast(_t('toast_desk_closed'));
+  }
+  function renderTaskView() {
+    var tvDesks = $('#tvDesks'), tvWins = $('#tvWins');
+    if (!tvDesks || !tvWins) return;
+    tvDesks.innerHTML = state.desktops.map(function (d, i) {
+      return '<div class="tv-desk' + (d.id === state.currentDesk ? ' active' : '') + '" data-desk="' + d.id + '">' +
+        '<div class="tv-thumb"></div><div class="tv-desk-name"><span>' + _t('tv_desk', { n: i + 1 }) + '</span>' +
+        (state.desktops.length > 1 ? '<button class="tv-desk-close" data-closedesk="' + d.id + '" title="' + _t('tv_close_desk') + '">×</button>' : '') +
+        '</div></div>';
+    }).join('');
+    var html = '';
+    Object.keys(state.openWindows).forEach(function (id) {
+      var w = state.openWindows[id];
+      if (String(w.dataset.desk || 1) !== String(state.currentDesk)) return;
+      var title = (w.querySelector('.win-title') || {}).textContent || AppWindows._defaultTitle(w.dataset.type);
+      html += '<div class="tv-win" data-win="' + id + '">' +
+        '<button class="tw-close" data-winclose="' + id + '" title="' + _t('win_close') + '">×</button>' +
+        '<div class="tw-hd">' + AppWindows._defaultIcon(w.dataset.type) + '<span>' + title + '</span></div>' +
+        '<div class="tw-prev"></div></div>';
+    });
+    tvWins.innerHTML = html || '<div class="tv-empty">' + _t('tv_empty') + '</div>';
+  }
+  function openTaskView() {
+    closeStart(); closeNotif(); closeQuick(); closeWidgets(); closeSearch();
+    var tv = $('#taskView'); if (!tv) return;
+    renderTaskView();
+    tv.classList.add('open');
+  }
+
+  var taskViewEl = $('#taskView');
+  if (taskViewEl) {
+    taskViewEl.addEventListener('click', function (e) {
+      if (e.target === this) { closeTaskView(); return; }
+      var cd = e.target.closest('[data-closedesk]');
+      if (cd) { e.stopPropagation(); closeDesktop(Number(cd.dataset.closedesk)); return; }
+      var d = e.target.closest('[data-desk]');
+      if (d) { switchDesktop(Number(d.dataset.desk)); return; }
+      var wc = e.target.closest('[data-winclose]');
+      if (wc) { e.stopPropagation(); AppWindows.close(wc.dataset.winclose); renderTaskView(); return; }
+      var win = e.target.closest('[data-win]');
+      if (win) { closeTaskView(); AppWindows.focus(win.dataset.win); }
+    });
+  }
+  var tvClose = $('#tvClose'); if (tvClose) tvClose.addEventListener('click', closeTaskView);
+  var tvNewDesk = $('#tvNewDesk'); if (tvNewDesk) tvNewDesk.addEventListener('click', createDesktop);
+  var taskViewBtn = $('#taskViewBtn');
+  if (taskViewBtn) taskViewBtn.addEventListener('click', function (e) {
+    e.stopPropagation();
+    var tv = $('#taskView');
+    if (tv && tv.classList.contains('open')) closeTaskView();
+    else openTaskView();
+  });
+
+  /* ---- Ctrl+Tab 窗口切换 ---- */
+  var altOpen = false, altIndex = 0, altIds = [];
+  function altCandidates() {
+    var ids = Object.keys(state.openWindows).filter(function (id) {
+      var w = state.openWindows[id];
+      return String(w.dataset.desk || 1) === String(state.currentDesk);
+    });
+    ids.sort(function (a, b) {
+      return Number(state.openWindows[b].style.zIndex || 0) - Number(state.openWindows[a].style.zIndex || 0);
+    });
+    return ids;
+  }
+  function renderAltTab() {
+    var host = $('#altList'); if (!host) return;
+    host.innerHTML = altIds.map(function (id, i) {
+      var w = state.openWindows[id]; if (!w) return '';
+      var title = (w.querySelector('.win-title') || {}).textContent || AppWindows._defaultTitle(w.dataset.type);
+      return '<div class="at-card' + (i === altIndex ? ' sel' : '') + '" data-alt="' + i + '">' +
+        '<div class="ac-prev"></div><div class="ac-name">' + AppWindows._defaultIcon(w.dataset.type) + '<span>' + title + '</span></div></div>';
+    }).join('');
+  }
+  function openAltTab() {
+    altIds = altCandidates();
+    if (!altIds.length) return;
+    altOpen = true; altIndex = 0;
+    renderAltTab();
+    $('#altTab').classList.add('open');
+  }
+  function commitAltTab() {
+    if (!altOpen) return;
+    var id = altIds[altIndex];
+    altOpen = false;
+    $('#altTab').classList.remove('open');
+    if (id && state.openWindows[id]) AppWindows.focus(id);
+  }
+  function cancelAltTab() { altOpen = false; $('#altTab').classList.remove('open'); }
+  var altTabEl = $('#altTab');
+  if (altTabEl) altTabEl.addEventListener('click', function (e) {
+    var card = e.target.closest('[data-alt]');
+    if (card) { altIndex = Number(card.dataset.alt); commitAltTab(); return; }
+    if (e.target === this) cancelAltTab();
+  });
+
+  /* ---- 全局搜索 ---- */
+  var searchTab = 'all', searchResults = [];
+  var SETTINGS_PAGES = ['home', 'update', 'system', 'multitask', 'bt', 'net', 'personal',
+    'apps', 'account', 'time', 'privacy', 'versions', 'recovery', 'about'];
+  function searchApps() {
+    return $$('#startMenu .sm-app').map(function (a) {
+      var labelEl = a.querySelector('[data-i18n]');
+      return { kind: 'app', key: a.dataset.open, label: labelEl ? labelEl.textContent.trim() : a.textContent.trim() };
+    }).filter(function (x) { return x.key && x.label; });
+  }
+  function searchSettings() {
+    return SETTINGS_PAGES.map(function (p) {
+      var label = p === 'about' ? _t('about_title') : _t('set_' + p);
+      var descKey = 'set_' + p + '_desc';
+      var desc = _t(descKey);
+      return { kind: 'setting', key: p, label: label, desc: desc === descKey ? '' : desc };
+    });
+  }
+  function searchFiles() {
+    var out = [];
+    Object.keys(state.tempFiles).forEach(function (n) {
+      if (n !== 'settings.json') out.push({ kind: 'file', key: n, label: n, desc: _t('exp_temp'), file: n });
+    });
+    ['演示文档.docx', '工作计划.xlsx', '说明.txt'].forEach(function (n) {
+      out.push({ kind: 'file', key: n, label: n, desc: _t('exp_docs'), doc: n });
+    });
+    return out;
+  }
+  function renderSearch() {
+    var list = $('#searchList'), input = $('#globalSearch');
+    if (!list || !input) return;
+    var q = input.value.trim().toLowerCase();
+    var all = [];
+    if (searchTab === 'all' || searchTab === 'apps') all = all.concat(searchApps());
+    if (searchTab === 'all' || searchTab === 'settings') all = all.concat(searchSettings());
+    if (searchTab === 'all' || searchTab === 'files') all = all.concat(searchFiles());
+    if (q) all = all.filter(function (x) { return (x.label + ' ' + (x.desc || '')).toLowerCase().indexOf(q) >= 0; });
+    all = all.slice(0, 24);
+    searchResults = all;
+    list.innerHTML = all.length ? all.map(function (x, i) {
+      var ico = x.kind === 'app' ? AppWindows._defaultIcon(x.key)
+        : x.kind === 'setting'
+          ? '<svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="2.6" stroke="currentColor" stroke-width="1.3"/><path d="M8 2v2M8 12v2M2 8h2M12 8h2" stroke="currentColor" stroke-width="1.3"/></svg>'
+          : '<svg viewBox="0 0 16 16" fill="none"><path d="M4 2h5l3 3v9H4V2Z" stroke="currentColor" stroke-width="1.2"/><path d="M6 7.5h4M6 9.8h4M6 12h2.5" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>';
+      return '<button class="search-item' + (i === 0 ? ' sel' : '') + '" data-si="' + i + '">' +
+        '<span class="si-ico">' + ico + '</span><span><span class="si-t">' + x.label + '</span>' +
+        (x.desc ? '<span class="si-d">' + x.desc + '</span>' : '') + '</span></button>';
+    }).join('') : '<div class="search-empty">' + _t('search_none') + '</div>';
+  }
+  function openSearchItem(i) {
+    var x = searchResults[i]; if (!x) return;
+    closeSearch();
+    if (x.kind === 'app') openAppType(x.key);
+    else if (x.kind === 'setting') openSettingsPage(x.key);
+    else if (x.kind === 'file') {
+      if (x.file) AppWindows.open('notepad', { multi: true, file: x.file, content: state.tempFiles[x.file] || '' });
+      else AppWindows.open('explorer', { path: 'docs' });
+    }
+  }
+  function openSearch() {
+    closeStart(); closeNotif(); closeQuick(); closeWidgets(); closeTaskView();
+    var ov = $('#searchOverlay'); if (!ov) return;
+    searchTab = 'all';
+    $$('#searchOverlay [data-search-tab]').forEach(function (b) {
+      b.classList.toggle('on', b.dataset.searchTab === 'all');
+    });
+    var input = $('#globalSearch');
+    if (input) input.value = '';
+    renderSearch();
+    ov.classList.add('open');
+    later(function () { try { if (input) input.focus(); } catch (e) { /* 忽略 */ } }, 80);
+  }
+  function closeSearch() { var ov = $('#searchOverlay'); if (ov) ov.classList.remove('open'); }
+
+  var searchOverlayEl = $('#searchOverlay');
+  if (searchOverlayEl) {
+    searchOverlayEl.addEventListener('click', function (e) {
+      if (e.target === this) { closeSearch(); return; }
+      var tabBtn = e.target.closest('[data-search-tab]');
+      if (tabBtn) {
+        searchTab = tabBtn.dataset.searchTab;
+        $$('#searchOverlay [data-search-tab]').forEach(function (b) {
+          b.classList.toggle('on', b.dataset.searchTab === searchTab);
+        });
+        renderSearch();
+        return;
+      }
+      var item = e.target.closest('[data-si]');
+      if (item) openSearchItem(Number(item.dataset.si));
+    });
+  }
+  var globalSearchEl = $('#globalSearch');
+  if (globalSearchEl) {
+    globalSearchEl.addEventListener('input', renderSearch);
+    globalSearchEl.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); openSearchItem(0); }
+    });
+  }
+  var searchBtnEl = $('#searchBtn');
+  if (searchBtnEl) searchBtnEl.addEventListener('click', function (e) { e.stopPropagation(); openSearch(); });
+  var searchCloseEl = $('#searchClose'); if (searchCloseEl) searchCloseEl.addEventListener('click', closeSearch);
+
+  /* ---- 小组件 ---- */
+  function renderWidgetsCalendar() {
+    var big = $('#wgCalBig'), date = $('#wgCalDate'), grid = $('#wgCalGrid');
+    if (!big || !grid) return;
+    var n = new Date();
+    big.textContent = String(n.getDate());
+    if (date) {
+      try {
+        date.textContent = new Intl.DateTimeFormat(document.documentElement.lang || 'zh-CN',
+          { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' }).format(n);
+      } catch (e) { date.textContent = n.toLocaleDateString(); }
+    }
+    var start = new Date(n.getFullYear(), n.getMonth(), 1).getDay();
+    var days = new Date(n.getFullYear(), n.getMonth() + 1, 0).getDate();
+    var cells = '';
+    for (var i = 0; i < start; i++) cells += '<span></span>';
+    for (var d = 1; d <= days; d++) cells += '<span class="' + (d === n.getDate() ? 'today' : '') + '">' + d + '</span>';
+    grid.innerHTML = cells;
+  }
+  function closeWidgets() { var p = $('#widgetsPanel'); if (p) p.classList.remove('open'); }
+  function toggleWidgets(force) {
+    var p = $('#widgetsPanel'); if (!p) return;
+    var open = typeof force === 'boolean' ? force : !p.classList.contains('open');
+    if (open) { closeStart(); closeNotif(); closeQuick(); closeTaskView(); closeSearch(); renderWidgetsCalendar(); }
+    p.classList.toggle('open', open);
+  }
+  var widgetsBtn = $('#widgetsBtn');
+  if (widgetsBtn) widgetsBtn.addEventListener('click', function (e) { e.stopPropagation(); toggleWidgets(); });
+  var wgCloseEl = $('#wgClose'); if (wgCloseEl) wgCloseEl.addEventListener('click', closeWidgets);
+  var wgPersonEl = $('#wgPersonalize');
+  if (wgPersonEl) wgPersonEl.addEventListener('click', function () { closeWidgets(); openSettingsPage('personal'); });
+  var wgPanelEl = $('#widgetsPanel');
+  if (wgPanelEl) wgPanelEl.addEventListener('click', function (e) { e.stopPropagation(); });
+
+  /* ---- 贴靠布局 ---- */
+  var snapPickerEl = $('#snapPicker');
+  if (snapPickerEl) {
+    snapPickerEl.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-snap]'); if (!b) return;
+      var id = state._snapTarget;
+      snapPickerEl.classList.remove('open');
+      if (id && state.openWindows[id]) AppWindows.snap(id, b.dataset.snap);
+    });
+  }
+  document.addEventListener('click', function (e) {
+    if (snapPickerEl && snapPickerEl.classList.contains('open') &&
+        !e.target.closest('#snapPicker') && !e.target.closest('.win-btn.max')) {
+      snapPickerEl.classList.remove('open');
+    }
+    if (wgPanelEl && wgPanelEl.classList.contains('open') &&
+        !e.target.closest('#widgetsPanel') && !e.target.closest('#widgetsBtn')) {
+      wgPanelEl.classList.remove('open');
+    }
+  });
+
+  /* ---- 锁屏两阶段登录 ---- */
+  function openLockScreen() {
+    var lk = $('#lockScreen'); if (!lk) return;
+    lk.classList.add('open');
+    lk.classList.remove('stage-signin');
+    var nm = state.userName || 'Administrator', initial = nm.charAt(0).toUpperCase();
+    ['#lockUser', '#lsUser'].forEach(function (s) { var el = $(s); if (el) el.textContent = nm; });
+    ['#lockAvatar', '#lsAvatar'].forEach(function (s) { var el = $(s); if (el) el.textContent = initial; });
+    var pass = $('#lockPass'); if (pass) pass.value = '';
+  }
+  function showLockSignin() {
+    var lk = $('#lockScreen'); if (!lk) return;
+    lk.classList.add('stage-signin');
+    later(function () { var p = $('#lockPass'); if (p) { try { p.focus(); } catch (e) { /* 忽略 */ } } }, 80);
+  }
+  function signIn() {
+    var lk = $('#lockScreen'); if (!lk) return;
+    lk.classList.remove('open', 'stage-signin');
+    toast(_t('lock_signin'));
+  }
+
   /* v4.0：桌面右键菜单与新建文件夹 */
   var ctxMenu = $('#ctxMenu');
   $('#s-desktop').addEventListener('contextmenu', function (e) {
@@ -2655,10 +3517,39 @@
   document.addEventListener('keydown', function (e) {
     var lockLay = $('#lockScreen');
     if (lockLay && lockLay.classList.contains('open')) {
-      if (e.key === 'Escape' || e.key === 'Enter') { lockLay.classList.remove('open'); e.preventDefault(); }
+      if (lockLay.classList.contains('stage-signin')) {
+        if (e.key === 'Escape') { e.preventDefault(); lockLay.classList.remove('stage-signin'); }
+        return;
+      }
+      if (e.key === 'Escape') { e.preventDefault(); return; }
+      showLockSignin();
+      e.preventDefault();
       return;
     }
     if (e.key === 'F11') { e.preventDefault(); toggleFullscreen(); return; }
+    // v6.0：Ctrl+Shift+F 全局搜索、Ctrl+Tab 窗口切换、Ctrl+Alt+方向键贴靠
+    if (e.ctrlKey && e.shiftKey && (e.key === 'F' || e.key === 'f')) {
+      e.preventDefault(); openSearch(); return;
+    }
+    if (e.ctrlKey && e.key === 'Tab') {
+      e.preventDefault();
+      if (!altOpen) openAltTab();
+      else if (altIds.length) { altIndex = (altIndex + 1) % altIds.length; renderAltTab(); }
+      return;
+    }
+    if (e.ctrlKey && e.altKey && AppWindows._focusedId) {
+      var fid = AppWindows._focusedId, fw = state.openWindows[fid];
+      if (fw) {
+        if (e.key === 'ArrowLeft') { e.preventDefault(); AppWindows.snap(fid, 'left'); return; }
+        if (e.key === 'ArrowRight') { e.preventDefault(); AppWindows.snap(fid, 'right'); return; }
+        if (e.key === 'ArrowUp') { e.preventDefault(); AppWindows.snap(fid, 'full'); return; }
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          if (fw.dataset.maxed === '1' || fw.dataset._snapped === '1') AppWindows.restore(fid);
+          return;
+        }
+      }
+    }
     var ps = $('#powerScreen');
     if (ps && ps.classList.contains('asleep')) {
       ps.classList.remove('open', 'asleep'); e.preventDefault(); return;
@@ -2674,6 +3565,13 @@
     }
     if (e.key === 'Escape') {
       if (modalOpen) { closeModal(); return; }
+      var so = $('#searchOverlay'), tvEl2 = $('#taskView'), sp = $('#snapPicker'), wp = $('#widgetsPanel');
+      if ((so && so.classList.contains('open')) || (tvEl2 && tvEl2.classList.contains('open')) ||
+          (sp && sp.classList.contains('open')) || (wp && wp.classList.contains('open')) || altOpen) {
+        closeSearch(); closeTaskView(); closeWidgets(); cancelAltTab();
+        if (sp) sp.classList.remove('open');
+        return;
+      }
       var qp = $('#quickPanel'), cm = $('#ctxMenu'), pm = $('#powerMenu');
       if ($('#startMenu').classList.contains('open') || $('#notifCenter').classList.contains('open') ||
           demoPanel.classList.contains('open') ||
@@ -2704,6 +3602,9 @@
     }
     if (!inInput && !e.ctrlKey && !e.altKey && !e.metaKey && (e.key === 'd' || e.key === 'D')) { toggleDemo(); }
   });
+  document.addEventListener('keyup', function (e) {
+    if (e.key === 'Control' && altOpen) commitAltTab();
+  });
 
   /* ============================================================
    * 启动
@@ -2722,7 +3623,10 @@
     go: go, state: state,
     openWindow: function (type, opts) { return AppWindows.open(type, opts); },
     openApp: openAppType, applyTheme: applyTheme, renderCalendar: renderCalendar,
-    toggleFullscreen: toggleFullscreen, fsList: fsList, savePrefs: savePrefs
+    toggleFullscreen: toggleFullscreen, fsList: fsList, savePrefs: savePrefs,
+    openTaskView: openTaskView, createDesktop: createDesktop, switchDesktop: switchDesktop,
+    openSearch: openSearch, toggleWidgets: toggleWidgets,
+    snap: function (id, mode) { return AppWindows.snap(id, mode); }
   };
 })();
 </script>
