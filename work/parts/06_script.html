@@ -101,7 +101,7 @@
   function updateVersionBadge() {
     var badge = $('#versionBadge');
     if (!badge) return;
-    badge.textContent = 'v6.0';
+    badge.textContent = 'v7.0';
   }
 
   /* ============================================================
@@ -2468,37 +2468,118 @@
   }
 
   /* ============================================================
-   * 安装 / 重启
+   * 安装 / 重启（v7.0：13 阶段 + 速度/时间 + 暂停/继续/取消）
    * ============================================================ */
-  var INST_STAGES_KEYS = ['inst_stage_1', 'inst_stage_2', 'inst_stage_3', 'inst_stage_4', 'inst_stage_5'];
-  var INST_STAGES_PCT = [0, 26, 46, 70, 92];
+  var INST_STAGES_KEYS = [
+    'inst_stage_prep', 'inst_stage_phase1', 'inst_stage_phase2',
+    'inst_stage_phase3', 'inst_stage_phase4', 'inst_stage_phase5',
+    'inst_stage_phase6', 'inst_stage_phase7',
+    'inst_stage_oobe1', 'inst_stage_oobe2', 'inst_stage_oobe3',
+    'inst_stage_oobe4', 'inst_stage_oobe5', 'inst_stage_done'
+  ];
+  var INST_STAGES_PCT = [0, 4, 12, 28, 42, 52, 60, 68, 74, 82, 88, 94, 98, 100];
+  var INST_ERRORS = [
+    { code: '0x80300001', n: 'err_0x80300001_n', d: 'err_0x80300001_d' },
+    { code: '0x80070057', n: 'err_0x80070057_n', d: 'err_0x80070057_d' },
+    { code: '0x8007025d', n: 'err_0x8007025d_n', d: 'err_0x8007025d_d' },
+    { code: '0x80004005', n: 'err_0x80004005_n', d: 'err_0x80004005_d' },
+    { code: '0xC1900101', n: 'err_0xC1900101_n', d: 'err_0xC1900101_d' },
+  ];
+  var INST_SPEEDS = ['12 MB/s', '18 MB/s', '24 MB/s', '30 MB/s', '15 MB/s', '9 MB/s', '22 MB/s'];
 
   function startInstall() {
     var p = null;
     for (var i = 0; i < state.disk.length; i++) if (state.disk[i].id === state.selected) p = state.disk[i];
     var instTargetName = p ? (diskName(p) + '（' + fmtSize(p.total) + '）') : _t('inst_target_primary');
     $('#instTarget').textContent = instTargetName;
-    _apply();
-    $('#instTarget').textContent = instTargetName;
 
-    var dur = 44000;
+    var dur = 60000; // v7.0：安装更长更真实
     var bar = $('#instBar'), pct = $('#instPct'), stage = $('#instStage');
     state.installStart = performance.now();
+    state.installPaused = false; state.installPauseOffset = 0;
+    state.installFrozen = 0;
     bar.style.width = '0%'; pct.textContent = '0';
-    stage.textContent = _t('inst_stage_1');
+    stage.textContent = _t('inst_stage_prep');
+
+    // v7.0：增加安装信息栏 + 暂停/继续/取消按钮（如果存在）
+    var infoBar = $('#instInfoBar');
+    if (infoBar) infoBar.style.display = '';
+    var pauseBtn = $('#instPause'), cancelBtn = $('#instCancel');
+    if (pauseBtn) { pauseBtn.disabled = false; pauseBtn.textContent = _t('inst_pause'); }
+    if (cancelBtn) cancelBtn.disabled = false;
+
+    var pausedFrom = 0;
+    if (pauseBtn) pauseBtn.onclick = function () {
+      state.installPaused = !state.installPaused;
+      if (state.installPaused) { pausedFrom = performance.now(); pauseBtn.textContent = _t('inst_resume'); }
+      else { state.installPauseOffset += performance.now() - pausedFrom; pauseBtn.textContent = _t('inst_pause'); }
+    };
+    if (cancelBtn) cancelBtn.onclick = function () {
+      $('#mTitle').textContent = _t('inst_cancel');
+      $('#mBody').innerHTML = '<p>' + _t('inst_cancel_conf') + '</p>';
+      $('#mOk').textContent = _t('inst_cancel'); $('#mCancel').style.display = ''; $('#mCancel').textContent = _t('modal_default_cancel');
+      okHandler = function () { clearTimers(); $('#instCancel').disabled = true; $('#instPause').disabled = true; go('disk'); return true; };
+      modalOpen = true; $('#modal').classList.add('open');
+    };
+
+    // v7.0：约 3% 概率触发错误
+    var willError = Math.random() < 0.08;
+    var errorAt = 0.4 + Math.random() * 0.4;
+    var speedIdx = 0;
+
+    function fmtTime(ms) {
+      var s = Math.max(0, Math.round(ms / 1000));
+      return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+    }
 
     function frame(now) {
-      var t = Math.min(1, (now - state.installStart) / dur);
-      var v = Math.round((1 - Math.pow(1 - t, 1.9)) * 100);
+      if (state.installPaused) { state._raf = requestAnimationFrame(frame); return; }
+      var elapsed = now - state.installStart - state.installPauseOffset;
+      var t = Math.min(1, elapsed / dur);
+      var v = Math.round((1 - Math.pow(1 - t, 1.7)) * 100);
       bar.style.width = v + '%'; pct.textContent = String(v);
+
       var idx = 0;
       for (var j = INST_STAGES_PCT.length - 1; j >= 0; j--) { if (v >= INST_STAGES_PCT[j]) { idx = j; break; } }
       var stageText = _t(INST_STAGES_KEYS[idx]);
-      if (stage.textContent !== stageText) stage.textContent = stageText;
+      if (stage.textContent !== stageText) { stage.textContent = stageText; }
+
+      // v7.0：速度、已用、剩余时间
+      if (v % 8 === 0) speedIdx = Math.floor(Math.random() * INST_SPEEDS.length);
+      $('#instSpeed').textContent = INST_SPEEDS[speedIdx];
+      $('#instUsed').textContent = fmtTime(elapsed);
+      var remain = (dur - elapsed) * (1 - v / 100);
+      $('#instRemain').textContent = fmtTime(remain);
+
+      // v7.0：模拟错误（小概率）
+      if (willError && t > errorAt && v > 15) {
+        var err = INST_ERRORS[Math.floor(Math.random() * INST_ERRORS.length)];
+        state._lastError = err;
+        clearTimers();
+        setTimeout(function () { go('installerr'); }, 600);
+        return;
+      }
+
       if (t < 1) { state._raf = requestAnimationFrame(frame); }
-      else { state._raf = 0; later(function () { go('restart'); }, 1800); }
+      else {
+        bar.style.width = '100%'; pct.textContent = '100';
+        stage.textContent = _t('inst_stage_done');
+        $('#instRemain').textContent = '00:00';
+        state._raf = 0;
+        if (pauseBtn) pauseBtn.disabled = true;
+        if (cancelBtn) cancelBtn.disabled = true;
+        later(function () { go('restart'); }, 1800);
+      }
     }
     state._raf = requestAnimationFrame(frame);
+  }
+
+  // v7.0：安装错误页渲染
+  function renderInstallError() {
+    var err = state._lastError || INST_ERRORS[Math.floor(Math.random() * INST_ERRORS.length)];
+    $('#errCode').textContent = err.code;
+    $('#errTitle').textContent = _t(err.n);
+    $('#errDesc').textContent = _t(err.d);
   }
 
   function startRestart() {
@@ -2602,16 +2683,64 @@
    * hooks
    * ============================================================ */
   var hooks = {
-    boot: function () { _apply(); updateVersionBadge('boot'); later(function () { go('lang'); }, 2600); },
+    boot: function () {
+      _apply();
+      updateVersionBadge('boot');
+      later(function () {
+        // v7.0：启动后短暂显示检查动画
+        _apply();
+        go('bootcheck');
+      }, 2200);
+    },
+    bootcheck: function () {
+      _apply();
+      // 逐条点亮检查项
+      var checks = $$('#bootCheck .boot-item');
+      checks.forEach(function (el, i) {
+        later(function () { el.classList.add('pass'); }, (i + 1) * 220);
+      });
+      later(function () { go('lang'); }, checks.length * 220 + 700);
+    },
     disk: function () { _apply(); renderDisk(); },
     install: function () { _apply(); startInstall(); },
+    installerr: function () { _apply(); renderInstallError(); },
     restart: function () { _apply(); startRestart(); },
-    prepare1: function () { _apply(); later(function () { go('region'); }, 4600); },
+    prepare1: function () { _apply(); later(function () { go('region'); }, 2800); },
     region: function () { _apply(); },
     keyboard: function () { _apply(); },
     keyboard2: function () { _apply(); },
-    network: function () { _apply(); },
+    network: function () {
+      _apply();
+      // v7.0：网络检测动画
+      var netStatus = $('#netStatus'), netNext = $('#netNext');
+      if (netStatus) netStatus.textContent = _t('net_checking');
+      if (netNext) netNext.disabled = true;
+      // 80% 概率检测到网络
+      var connected = Math.random() < 0.8;
+      later(function () {
+        if (connected) {
+          if (netStatus) netStatus.textContent = _t('net_have');
+          if (netNext) netNext.disabled = false;
+        } else {
+          if (netStatus) netStatus.textContent = _t('net_none_desc');
+          if (netNext) netNext.disabled = false;
+        }
+      }, 2200);
+    },
     limited: function () { _apply(); },
+    hello: function () { _apply(); },
+    cloud: function () { _apply(); },
+    final: function () {
+      _apply();
+      $('#finalName').textContent = state.userName || 'Administrator';
+      later(function () { go('done'); }, 2400);
+    },
+    done: function () {
+      _apply();
+      var nm = state.userName || 'Administrator';
+      $('#doneName').textContent = nm;
+      later(function () { go('desktop'); }, 3600);
+    },
     device: function () { _apply(); $('#deviceInput').value = state.deviceName; },
     acc: function () { _apply(); },
     acctype: function () { _apply(); },
@@ -2619,11 +2748,6 @@
     local: function () { _apply(); },
     privacy: function () { _apply(); },
     custom: function () { _apply(); },
-    final: function () {
-      _apply();
-      $('#finalName').textContent = state.userName || 'Administrator';
-      later(function () { go('desktop'); }, 5600);
-    },
     desktop: function () { _apply(); enterDesktop(); }
   };
 
@@ -2632,13 +2756,17 @@
     var id = active ? active.id.replace(/^s-/, '') : '';
     if (id === 'disk') renderDisk();
     else if (id === 'install') {
-      var pct = parseInt(($('#instPct') || {}).textContent || '0', 10);
+      var pctEl = $('#instPct');
+      var pctNum = parseInt((pctEl || {}).textContent || '0', 10);
       var idx = 0;
-      for (var i = INST_STAGES_PCT.length - 1; i >= 0; i--) { if (pct >= INST_STAGES_PCT[i]) { idx = i; break; } }
-      $('#instStage').textContent = _t(INST_STAGES_KEYS[idx]);
+      for (var i = INST_STAGES_PCT.length - 1; i >= 0; i--) { if (pctNum >= INST_STAGES_PCT[i]) { idx = i; break; } }
+      var stg = $('#instStage'); if (stg) stg.textContent = _t(INST_STAGES_KEYS[idx]);
+      var err = $('#errStage'); if (err) err.textContent = _t(INST_STAGES_KEYS[idx]);
       var selected = state.disk.filter(function (x) { return x.id === state.selected; })[0];
-      if (selected) $('#instTarget').textContent = diskName(selected) + '（' + fmtSize(selected.total) + '）';
+      var tgt = $('#instTarget');
+      if (tgt && selected) tgt.textContent = diskName(selected) + '（' + fmtSize(selected.total) + '）';
     }
+    else if (id === 'installerr') renderInstallError();
     else if (id === 'final') $('#finalName').textContent = state.userName || 'Administrator';
     else if (id === 'desktop') {
       var n = state.userName || 'Administrator'; $('#smUser').textContent = n; $('#smAvatar').textContent = n.charAt(0).toUpperCase();
@@ -2711,7 +2839,7 @@
   /* 安装类型 */
   $('#typeList').addEventListener('click', function (e) {
     var opt = e.target.closest('.opt'); if (!opt) return;
-    if (opt.dataset.type === 'upgrade') { toast(_t('toast_upgrade_from_media')); return; }
+    if (opt.dataset.type === 'upgrade' || opt.dataset.type === 'keepfiles') { toast(_t('type_hint_upgrade2')); return; }
     $$('#typeList .opt').forEach(function (o) { o.classList.remove('sel'); });
     opt.classList.add('sel'); $('#typeNext').disabled = false;
   });
@@ -2786,6 +2914,34 @@
       $('#wifiStatus').textContent = _t('toast_wifi_connected', { ssid: w.dataset.ssid });
       $('#netNext').disabled = false;
     }, 1500);
+  });
+
+  /* v7.0：Windows Hello PIN */
+  var helloPin = $('#helloPin'), helloPin2 = $('#helloPin2'), helloNext = $('#helloNext'), helloErr = $('#helloErr');
+  function checkHelloPin() {
+    if (!helloPin || !helloPin2 || !helloNext) return;
+    var v1 = helloPin.value.trim(), v2 = helloPin2.value.trim();
+    helloNext.disabled = !(v1.length >= 4 && v1 === v2);
+    if (helloErr) {
+      if (v1.length > 0 && v2.length > 0 && v1 !== v2) { helloErr.textContent = _t('hello_pin_mismatch') || '两次输入的 PIN 不一致'; helloErr.style.display = ''; }
+      else { helloErr.style.display = 'none'; }
+    }
+  }
+  if (helloPin) helloPin.addEventListener('input', checkHelloPin);
+  if (helloPin2) helloPin2.addEventListener('input', checkHelloPin);
+  if (helloNext) helloNext.addEventListener('click', function () {
+    var v1 = helloPin.value.trim(), v2 = helloPin2.value.trim();
+    if (v1.length >= 4 && v1 === v2) { go('cloud'); }
+  });
+
+  /* v7.0：安装错误页按钮 */
+  var errRetry = $('#errRetry'), errCustom = $('#errCustom'), errDump = $('#errDump');
+  if (errRetry) errRetry.addEventListener('click', function () {
+    state.selected = null; clearTimers(); go('disk');
+  });
+  if (errCustom) errCustom.addEventListener('click', function () { go('disk'); });
+  if (errDump) errDump.addEventListener('click', function () {
+    toast(_t('toast_demo_log') || '错误日志已导出到 Temp 目录');
   });
 
   /* 设备名 */

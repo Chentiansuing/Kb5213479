@@ -173,13 +173,18 @@
       <div id="typeList">
         <div class="opt dim" data-type="upgrade">
           <span class="radio"></span>
-          <div><div class="opt__t">升级：安装 Windows 并保留文件、设置和应用</div><div class="opt__d">当前是从安装介质启动，无法执行升级安装。请移除介质并从 Windows 中运行安装程序。</div></div>
+          <div><div class="opt__t" data-i18n="type_upgrade_keep_apps">升级：保留文件、设置和应用</div><div class="opt__d" data-i18n="type_upgrade_keep_apps_d">最完整的升级体验，保留你的所有个人数据、已安装的程序和系统设置。</div></div>
+        </div>
+        <div class="opt dim" data-type="keepfiles">
+          <span class="radio"></span>
+          <div><div class="opt__t" data-i18n="type_upgrade_keep_files">仅保留文件</div><div class="opt__d" data-i18n="type_upgrade_keep_files_d">仅迁移用户文件夹中的个人文件（桌面、文档、图片），不保留已安装的应用和系统设置。</div></div>
         </div>
         <div class="opt" data-type="custom">
           <span class="radio"></span>
-          <div><div class="opt__t">自定义：仅安装 Windows（高级）</div><div class="opt__d">使用此选项全新安装 Windows。你可以选择要安装到的分区，已安装的程序和文件不会保留。</div></div>
+          <div><div class="opt__t" data-i18n="type_custom_clean">自定义：不保留任何内容（高级）</div><div class="opt__d" data-i18n="type_custom_clean_d">全新安装 Windows。将删除所有分区上的内容并重新格式化。</div></div>
         </div>
       </div>
+      <p class="dlg-note" style="margin-top:6px;" data-i18n="type_hint_upgrade">从安装介质启动时，升级选项不可用。Windows 会直接引导到自定义安装。</p>
     </div>
     <div class="dialog__foot">
       <div class="spacer"></div>

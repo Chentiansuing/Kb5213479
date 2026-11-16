@@ -1,4 +1,4 @@
-/* Windows 11 Setup Simulator 6.0.0 — 窗口管理与语言切换（外部依赖） */
+/* Windows 11 Setup Simulator 7.0.0 — 窗口管理与语言切换（外部依赖） */
 /* ============ 窗口管理 ============ */
 .win-layer{position:absolute; inset:0; pointer-events:none; z-index:5;}
 .setup-win-layer{position:fixed;z-index:40;}

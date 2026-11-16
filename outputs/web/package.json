@@ -1,6 +1,6 @@
 {
   "name": "windows11-setup-sim",
-  "version": "6.0.0",
+  "version": "7.0.0",
   "private": true,
   "description": "Windows 11 安装程序模拟器（多文件版，依赖本地静态服务器）",
   "scripts": {

@@ -327,6 +327,46 @@
 }
 .demo__reset:hover{background:#1976c9;}
 
+/* ============ v7.0 启动检查 ============ */
+.boot-item{
+  display:flex; align-items:center; padding:10px 14px;
+  border:1px solid #e1e7ef; border-radius:6px;
+  background:rgba(255,255,255,.6); transition:background .25s, border-color .25s, transform .25s;
+  opacity:.55;
+}
+.boot-item.pass{
+  opacity:1; background:#eaf6ee; border-color:#9cd1a8;
+}
+.boot-item.pass .bi-ic{color:#0f7b3f;}
+.boot-item b{flex:1; font-weight:500;}
+.boot-item .bi-ic{
+  width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  background:#e5e7eb; color:#8b95a1; font-size:12px; font-weight:700; flex-shrink:0;
+  transition:background .25s, color .25s;
+}
+
+/* ============ v7.0 OneDrive 云备份 ============ */
+.cloud-box{
+  display:flex; gap:12px; margin:16px 0 8px;
+}
+.cloud-item{
+  flex:1; padding:14px 10px; text-align:center;
+  border:1px solid #e1e7ef; border-radius:8px;
+  background:rgba(250,252,255,.7); transition:transform .15s, box-shadow .15s;
+}
+.cloud-item:hover{transform:translateY(-2px); box-shadow:0 6px 18px rgba(0,0,0,.07);}
+.cloud-ic{font-size:28px; margin-bottom:6px;}
+.cloud-item b{display:block; font-size:12.5px; font-weight:600; color:#1f2937;}
+
+/* ============ v7.0 安装错误页 ============ */
+#s-installerr .errCode{
+  padding:10px 16px; background:rgba(0,0,0,.05); border-radius:5px;
+  font-family:Consolas,monospace; font-size:13px; letter-spacing:.5px;
+}
+
+/* ============ v7.0 Hello PIN ============ */
+#helloPin, #helloPin2{letter-spacing:2px;}
+
 /* ============ 窗口管理 ============ */
 .win-layer{position:absolute; inset:0; pointer-events:none; z-index:5;}
 .setup-win-layer{position:fixed;z-index:40;}
