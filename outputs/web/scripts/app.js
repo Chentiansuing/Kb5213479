@@ -2685,15 +2685,85 @@
     boot: function () {
       _apply();
       updateVersionBadge('boot');
+      // v7.0 特大更新：如果有安装配置，显示 hist 导入页；否则走正常流程
+      var savedHist = (function () {
+        try { return JSON.parse(localStorage.getItem('win11_hist') || 'null'); } catch(e) { return null; }
+      })();
       later(function () {
-        // v7.0：启动后短暂显示检查动画
-        _apply();
-        go('bootcheck');
+        if (savedHist && savedHist.length > 0 && !state._histSeen) {
+          state._histSeen = true;
+          go('hist');
+        } else {
+          go('bootcheck');
+        }
       }, 2200);
+    },
+    hist: function () {
+      _apply();
+      // 渲染已保存的安装配置列表
+      var list = (function () {
+        try { return JSON.parse(localStorage.getItem('win11_hist') || '[]'); } catch(e) { return []; }
+      })();
+      var host = $('#histList');
+      if (!host) return;
+      if (!list.length) {
+        host.innerHTML = '<div class="hist-list"><div class="hist-item" style="justify-content:center; color:#6b7280;">📦 ' + _t('hist_none') + '</div></div>';
+        $('#histRestoreBtn').disabled = true;
+        $('#histRestoreBtn').textContent = _t('hist_restore');
+        host.onclick = null;
+        return;
+      }
+      var html = '<div class="hist-list">';
+      list.forEach(function (item, i) {
+        html += '<div class="hist-item" data-idx="' + i + '">' +
+          '<div class="hi-ic">💾</div>' +
+          '<div class="hi-info">' +
+          '<div class="hi-name">' + _t('hist_name', { i: i + 1 }) + ' — ' + (item.edition || '专业版') + '</div>' +
+          '<div class="hi-meta">' + _t('hist_time', { t: item.time || '未知时间' }) + ' · ' + _t('hist_source', { s: item.source || '本地保存' }) + '</div>' +
+          '</div>' +
+          '<button class="link hist-del" data-del="' + i + '" title="删除">✕</button>' +
+          '</div>';
+      });
+      html += '</div>';
+      host.innerHTML = html;
+      var btn = $('#histRestoreBtn'); btn.disabled = true;
+      function sel(idx) {
+        $$('#histList .hist-item').forEach(function (x) { x.classList.remove('sel'); });
+        var el = document.querySelector('#histList .hist-item[data-idx="' + idx + '"]');
+        if (el) el.classList.add('sel');
+        btn.disabled = false;
+      }
+      host.onclick = function (e) {
+        var del = e.target.closest('.hist-del');
+        if (del) {
+          e.stopPropagation();
+          var i = parseInt(del.dataset.del, 10);
+          list.splice(i, 1);
+          try { localStorage.setItem('win11_hist', JSON.stringify(list)); } catch(e) {}
+          hooks.hist();
+          return;
+        }
+        var item = e.target.closest('#histList .hist-item');
+        if (item) { sel(parseInt(item.dataset.idx, 10)); }
+      };
+      btn.onclick = function () {
+        var active = document.querySelector('#histList .hist-item.sel');
+        if (!active) return;
+        var idx = parseInt(active.dataset.idx, 10);
+        var item = list[idx];
+        if (item && item.edition) {
+          state.edition = item.edition;
+          state.deviceName = item.deviceName || state.deviceName;
+        }
+        toast(_t('toast_hist_restored') || '安装配置已恢复');
+        go('bootcheck');
+      };
+    },
+    compare: function () {
+      _apply();
     },
     bootcheck: function () {
       _apply();
-      // 逐条点亮检查项
       var checks = $$('#bootCheck .boot-item');
       checks.forEach(function (el, i) {
         later(function () { el.classList.add('pass'); }, (i + 1) * 220);
@@ -2707,28 +2777,38 @@
     prepare1: function () { _apply(); later(function () { go('region'); }, 2800); },
     region: function () { _apply(); },
     keyboard: function () { _apply(); },
-    keyboard2: function () { _apply(); },
-    network: function () {
+    keyboard2: function () {
       _apply();
-      // v7.0：网络检测动画
-      var netStatus = $('#netStatus'), netNext = $('#netNext');
-      if (netStatus) netStatus.textContent = _t('net_checking');
-      if (netNext) netNext.disabled = true;
-      // 80% 概率检测到网络
-      var connected = Math.random() < 0.8;
+      // v7.0 特大更新：跳过旧的 device/account 流程，直接进 netcheck
+      // （旧 network 页保留但不经过它）
+      later(function () { go('netcheck'); }, 100);
+    },
+    network: function () { _apply(); },
+    netcheck: function () {
+      _apply();
+      var sub = $('#netcheckSub');
+      var connected = Math.random() < 0.85;
+      if (sub) sub.textContent = _t('net_checking');
       later(function () {
         if (connected) {
-          if (netStatus) netStatus.textContent = _t('net_have');
-          if (netNext) netNext.disabled = false;
+          if (sub) sub.textContent = _t('net_have');
         } else {
-          if (netStatus) netStatus.textContent = _t('net_none_desc');
-          if (netNext) netNext.disabled = false;
+          if (sub) sub.textContent = _t('net_none_desc');
         }
-      }, 2200);
+        later(function () { go('hello'); }, 1000);
+      }, 1800);
     },
     limited: function () { _apply(); },
-    hello: function () { _apply(); },
+    hello: function () {
+      _apply();
+      var pin = $('#helloPin'), pin2 = $('#helloPin2');
+      if (pin) pin.value = '';
+      if (pin2) pin2.value = '';
+      checkHelloPin();
+    },
     cloud: function () { _apply(); },
+    privacy: function () { _apply(); },
+    connect: function () { _apply(); },
     final: function () {
       _apply();
       $('#finalName').textContent = state.userName || 'Administrator';
@@ -2738,6 +2818,23 @@
       _apply();
       var nm = state.userName || 'Administrator';
       $('#doneName').textContent = nm;
+      // v7.0 特大更新：安装完成自动保存配置
+      (function saveConfig() {
+        try {
+          var list = JSON.parse(localStorage.getItem('win11_hist') || '[]');
+          var exists = list.some(function (x) { return x.edition === state.edition && x.deviceName === state.deviceName; });
+          if (!exists && state.edition) {
+            var now = new Date();
+            var t = now.getFullYear() + '/' + String(now.getMonth() + 1).padStart(2, '0') + '/' + String(now.getDate()).padStart(2, '0');
+            list.unshift({
+              edition: state.edition, deviceName: state.deviceName,
+              time: t, source: '自动保存'
+            });
+            list = list.slice(0, 5);
+            localStorage.setItem('win11_hist', JSON.stringify(list));
+          }
+        } catch(e) {}
+      })();
       later(function () { go('desktop'); }, 3600);
     },
     device: function () { _apply(); $('#deviceInput').value = state.deviceName; },
@@ -2745,7 +2842,6 @@
     acctype: function () { _apply(); },
     msaccount: function () { _apply(); },
     local: function () { _apply(); },
-    privacy: function () { _apply(); },
     custom: function () { _apply(); },
     desktop: function () { _apply(); enterDesktop(); }
   };
@@ -2888,6 +2984,30 @@
     modalOpen = true; $('#modal').classList.add('open');
   });
   $('#btnDriver').addEventListener('click', function () { toast(_t('toast_no_driver')); });
+  // v7.0 特大更新：GPT 转换 + 扩展分区
+  $('#btnGpt').addEventListener('click', function () {
+    $('#mTitle').textContent = _t('disk_gpt_convert');
+    $('#mBody').innerHTML = '<p>' + _t('disk_guid_warn') + '</p>' +
+      '<p style="margin-top:10px;color:#6b7280;font-size:12px;">' + _t('disk_gpt') + ' 格式支持 UEFI 安全启动和超过 2TB 的磁盘。</p>';
+    $('#mOk').textContent = _t('disk_gpt_convert'); $('#mCancel').style.display = ''; $('#mCancel').textContent = _t('modal_default_cancel');
+    okHandler = function () { toast(_t('toast_gpt_converted') || '磁盘已转换为 GPT'); renderDisk(); };
+    modalOpen = true; $('#modal').classList.add('open');
+  });
+  $('#btnExtend').addEventListener('click', function () {
+    var p = state.disk.filter(function (x) { return x.id === state.selected; })[0];
+    if (!p) { toast(_t('toast_select_part_first')); return; }
+    $('#mTitle').textContent = _t('disk_extend');
+    $('#mBody').innerHTML = '<p>' + _t('disk_primary_req') + '</p>' +
+      '<div class="fld"><label class="fld__label">' + _t('disk_apply_size') + '</label>' +
+      '<input class="inp" id="extendSize" type="number" value="4096" min="512"></div>';
+    $('#mOk').textContent = _t('disk_apply_ok'); $('#mCancel').style.display = ''; $('#mCancel').textContent = _t('modal_default_cancel');
+    okHandler = function () {
+      var el = document.getElementById('extendSize'); var v = parseInt(el ? el.value : '', 10);
+      if (!v || v < 512) { toast('无效大小'); return false; }
+      p.free += v * 1024 * 1024; renderDisk(); toast('分区已扩展');
+    };
+    modalOpen = true; $('#modal').classList.add('open');
+  });
   $('#diskNext').addEventListener('click', function () { go('install'); });
 
   /* 重启 */

@@ -125,6 +125,7 @@
           <div><div class="opt__t" data-i18n="ed_edu">Windows 11 教育版</div><div class="opt__d" data-i18n="ed_edu_d">为学校、教师和学生打造，包含教育机构常用的应用与管理工具。</div></div>
         </div>
       </div>
+      <div style="margin-top:10px;"><a class="link" data-go="compare" data-i18n="compare_more">查看完整对比</a></div>
     </div>
     <div class="dialog__foot">
       <div class="spacer"></div>
@@ -227,6 +228,8 @@
         <button class="link" id="btnFormat" data-i18n="disk_link3">格式化</button>
         <span class="sep"></span>
         <button class="link" id="btnNew" data-i18n="disk_link4">新建</button>
+        <button class="link" id="btnExtend" data-i18n="disk_extend">扩展</button>
+        <button class="link" id="btnGpt" data-i18n="disk_gpt_convert">转换成 GPT</button>
         <button class="link" id="btnDriver" data-i18n="disk_link5">加载驱动程序</button>
       </div>
       <div class="disk-info" id="diskInfo" data-i18n="disk_info_none">请选择一个分区。</div>
@@ -485,6 +488,90 @@
     <div style="margin-top:12px; font-size:14px; color:#4a5568;"><span id="doneName">Administrator</span> · <span data-i18n="done_hint">建议先查看“开始”菜单，或者打开 Microsoft Store 安装喜欢的应用。</span></div>
     <div class="oobe-foot" style="justify-content:center;">
       <div class="right"><button class="btn primary" data-go="desktop" data-i18n="done_start">开始使用</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== v7.0 特大更新：版本功能对比表 ===== -->
+<section class="screen" id="s-compare">
+  <div class="dialog dialog--wide">
+    <div class="dialog__bar">
+      <div class="dialog__title" data-i18n="setup_title">Windows 11 安装程序</div>
+    </div>
+    <div class="dialog__body">
+      <h1 class="dlg-h" data-i18n="compare_title">版本功能对比</h1>
+      <p class="dlg-sub">查看不同版本的功能差异，帮助你选择最适合的版本。</p>
+      <div class="cmp-table">
+        <div class="cmp-row cmp-head">
+          <div class="cmp-cmp-f" data-i18n="compare_feature">功能</div>
+          <div class="cmp-cmp-h" data-i18n="compare_home">家庭版</div>
+          <div class="cmp-cmp-p" data-i18n="compare_pro">专业版</div>
+          <div class="cmp-cmp-e" data-i18n="compare_ent">企业版</div>
+          <div class="cmp-cmp-ed" data-i18n="compare_edu">教育版</div>
+        </div>
+        <div class="cmp-row"><div data-i18n="feat_desktop">全新桌面与开始菜单</div><span>✓</span><span>✓</span><span>✓</span><span>✓</span></div>
+        <div class="cmp-row"><div data-i18n="feat_snap">贴靠布局与任务视图</div><span>✓</span><span>✓</span><span>✓</span><span>✓</span></div>
+        <div class="cmp-row"><div data-i18n="feat_store">Microsoft Store</div><span>✓</span><span>✓</span><span>✓</span><span>✓</span></div>
+        <div class="cmp-row"><div data-i18n="feat_sandbox">Windows Sandbox</div><span>—</span><span>✓</span><span>✓</span><span>✓</span></div>
+        <div class="cmp-row"><div data-i18n="feat_remote">远程桌面主机</div><span>—</span><span>✓</span><span>✓</span><span>✓</span></div>
+        <div class="cmp-row"><div data-i18n="feat_hyperv">Hyper-V 虚拟机</div><span>—</span><span>✓</span><span>✓</span><span>✓</span></div>
+        <div class="cmp-row"><div data-i18n="feat_bitlocker">BitLocker 设备加密</div><span>—</span><span>✓</span><span>✓</span><span>✓</span></div>
+        <div class="cmp-row"><div data-i18n="feat_defender">Windows Defender 应用控制</div><span>—</span><span>—</span><span>✓</span><span>✓</span></div>
+        <div class="cmp-row"><div data-i18n="feat_mgmt">移动设备管理 (MDM)</div><span>—</span><span>—</span><span>✓</span><span>✓</span></div>
+        <div class="cmp-row"><div data-i18n="feat_business">Microsoft 365 商业版支持</div><span>—</span><span>✓</span><span>✓</span><span>✓</span></div>
+        <div class="cmp-row"><div data-i18n="feat_assigned">分配访问权限</div><span>—</span><span>—</span><span>✓</span><span>✓</span></div>
+        <div class="cmp-row"><div data-i18n="feat_longterm">长期服务通道 (LTSC)</div><span>—</span><span>—</span><span>✓</span><span>—</span></div>
+      </div>
+    </div>
+    <div class="dialog__foot">
+      <button class="btn" data-go="edition" data-i18n="compare_back">返回选择</button>
+    </div>
+  </div>
+</section>
+
+<!-- ===== v7.0 特大更新：网络连接检测过渡页 ===== -->
+<section class="screen oobe" id="s-netcheck">
+  <div class="oobe-card oobe-wait">
+    <div class="wait-spin"></div>
+    <h1 data-i18n="net_checking">正在检查网络连接...</h1>
+    <p class="sub" id="netcheckSub" data-i18n="net_checking">检测 Wi-Fi 和以太网连接，请稍候。</p>
+  </div>
+</section>
+
+<!-- ===== v7.0 特大更新：连接设备 ===== -->
+<section class="screen oobe" id="s-connect">
+  <div class="oobe-card">
+    <h1 data-i18n="connect_title">连接你的设备</h1>
+    <p class="sub" data-i18n="connect_desc">现在连接手机、打印机或其他设备，或稍后在设置中添加。</p>
+    <div class="connect-grid">
+      <div class="connect-card" id="connectPhone">
+        <div class="connect-ic">📱</div>
+        <b data-i18n="connect_phone">连接 Android 或 iPhone</b>
+      </div>
+      <div class="connect-card" id="connectPrinter">
+        <div class="connect-ic">🖨️</div>
+        <b data-i18n="connect_printer">添加打印机或扫描仪</b>
+      </div>
+    </div>
+    <div class="oobe-foot">
+      <button class="link" data-go="privacy" data-i18n="connect_skip">稍后再说</button>
+      <div class="right"><button class="btn primary" data-go="privacy" data-i18n="btn_next">下一步</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== v7.0 特大更新：导入安装配置 ===== -->
+<section class="screen" id="s-hist">
+  <div class="dialog">
+    <div class="dialog__body" style="padding:28px 32px;">
+      <h1 class="dlg-h" data-i18n="hist_title">导入安装配置</h1>
+      <p class="dlg-sub" data-i18n="hist_desc">从上次的安装中恢复设置，快速跳过配置步骤。</p>
+      <div id="histList" style="margin-top:16px;"></div>
+    </div>
+    <div class="dialog__foot">
+      <button class="btn" data-go="key" data-i18n="hist_skip">手动配置</button>
+      <div class="spacer"></div>
+      <button class="btn primary" id="histRestoreBtn" disabled data-i18n="hist_restore">恢复此配置</button>
     </div>
   </div>
 </section>
