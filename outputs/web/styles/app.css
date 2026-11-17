@@ -1,4 +1,4 @@
-/* Windows 11 Setup Simulator 7.0.0 — 基础样式（外部依赖） */
+/* Windows 11 Setup Simulator 8.0.0 — 基础样式（外部依赖） */
 
 :root{
   --accent:#0067c0;
@@ -658,4 +658,194 @@ select.inp{
   background:rgba(0,103,192,.06); border-radius:8px; padding:8px 16px;
   border:1px solid rgba(0,103,192,.12);
 }
+
+/* ============================================================
+   v8.0 特大更新
+   ============================================================ */
+
+/* 覆盖层 */
+.v8-overlay{
+  position:fixed; inset:0; z-index:950; display:none;
+  align-items:center; justify-content:center;
+  background:rgba(10,16,26,.42); backdrop-filter:blur(2px);
+}
+.v8-overlay.open{display:flex;}
+
+/* 版本标签 */
+.ver-tag{
+  margin-left:auto; padding:2px 8px; border-radius:10px;
+  background:rgba(0,103,192,.12); color:var(--accent);
+  font-size:11px; font-weight:700; letter-spacing:.4px;
+}
+
+/* 浮动工具按钮（安装界面右上角） */
+.setup-fab{
+  position:fixed; right:18px; top:14px; z-index:900;
+  display:flex; gap:8px;
+}
+body:has(#s-desktop.active) .setup-fab{display:none;}
+.setup-fab button{
+  width:32px; height:32px; border-radius:50%; cursor:pointer;
+  border:1px solid var(--line); background:var(--card); color:var(--ink-2);
+  font-size:14px; line-height:1; display:flex; align-items:center; justify-content:center;
+  backdrop-filter:blur(8px); transition:background .15s, color .15s, transform .15s;
+}
+.setup-fab button:hover{background:var(--accent); color:#fff; transform:scale(1.06);}
+
+/* 屏幕切换淡入 */
+.screen.active{animation:v8fade .22s ease-out;}
+@keyframes v8fade{from{opacity:0; transform:translateY(6px);}to{opacity:1; transform:none;}}
+
+/* 系统扫描报告 */
+.scan-score{
+  display:flex; align-items:baseline; gap:8px; margin:10px 0 14px;
+}
+.scan-score b{font-size:32px; color:#0f7b3f; line-height:1;}
+.scan-score span{font-size:12px; color:var(--ink-3);}
+.scan-grid{
+  display:grid; grid-template-columns:1fr 1fr; gap:8px;
+}
+.scan-item{
+  display:flex; gap:10px; padding:10px 12px;
+  border:1px solid var(--line); border-radius:7px; background:rgba(255,255,255,.66);
+}
+.scan-item .si-ic{font-size:18px; line-height:1.2;}
+.scan-item b{display:block; font-size:12px; color:var(--ink-2); font-weight:600; margin-bottom:2px;}
+.scan-item span{font-size:11.5px; color:var(--ink); line-height:1.5;}
+.scan-tip{
+  margin-top:12px; padding:9px 12px; border-radius:6px;
+  background:rgba(15,123,63,.08); border:1px solid rgba(15,123,63,.18);
+  font-size:12px; display:flex; gap:10px; align-items:baseline;
+}
+.scan-tip b{color:#0f7b3f;}
+
+/* 安装速度档位 */
+.speed-pick{margin-top:14px; text-align:left;}
+.speed-pick > b{font-size:12px; color:var(--ink-2);}
+.speed-chips{display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;}
+.chip{
+  padding:6px 14px; border-radius:16px; cursor:pointer;
+  border:1px solid var(--line); background:rgba(255,255,255,.7);
+  font-size:12px; color:var(--ink-2); transition:all .15s;
+}
+.chip:hover{border-color:var(--accent); color:var(--accent);}
+.chip.on{background:var(--accent); border-color:var(--accent); color:#fff;}
+.speed-hint{margin-top:6px; font-size:11px; color:var(--ink-3);}
+
+/* 辅助功能 */
+.access-preview{
+  margin-top:12px; padding:14px 16px; border-radius:8px;
+  border:1px solid var(--line); background:rgba(255,255,255,.62);
+  transition:font-size .2s, filter .2s, background .2s;
+}
+.access-preview > b{font-size:11.5px; color:var(--ink-3); display:block; margin-bottom:6px;}
+.access-preview p{margin:0; font-size:13px; line-height:1.7;}
+.access-preview.bigtext p{font-size:19.5px;}
+.access-preview.contrast{background:#000; color:#ffe14d;}
+.access-preview.contrast p{color:#fff;}
+.access-preview.contrast > b{color:#ffe14d;}
+
+/* Windows 更新检查 */
+.upd-progress{
+  display:flex; align-items:center; gap:12px; margin:16px 0 14px;
+}
+.upd-progress .bar{flex:1; height:6px; border-radius:3px; background:#e1e7ef; overflow:hidden;}
+.upd-progress .bar i{display:block; height:100%; width:0; background:var(--accent); border-radius:3px; transition:width .25s;}
+.upd-progress span{font-size:12px; color:var(--ink-2); min-width:42px; text-align:right; font-variant-numeric:tabular-nums;}
+.upd-list{display:flex; flex-direction:column; gap:6px;}
+.upd-item{
+  display:flex; gap:10px; align-items:center; padding:8px 12px;
+  border:1px solid var(--line); border-radius:6px;
+  background:rgba(255,255,255,.6); font-size:12px; color:var(--ink-2);
+  transition:background .2s, border-color .2s;
+}
+.upd-item .upd-ic{
+  width:18px; height:18px; border-radius:50%; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  background:#e5e7eb; color:#8b95a1; font-size:11px;
+}
+.upd-item.active{background:#eef6ff; border-color:#b8d6ff; color:var(--ink);}
+.upd-item.active .upd-ic{background:var(--accent); color:#fff;}
+.upd-item.done{background:#eaf6ee; border-color:#9cd1a8;}
+.upd-item.done .upd-ic{background:#0f7b3f; color:#fff;}
+
+/* 日志查看器 */
+.logview{max-width:860px; width:min(92vw,860px); max-height:86vh; display:flex; flex-direction:column;}
+.log-badge{
+  margin-left:auto; padding:2px 9px; border-radius:10px;
+  background:#e8f5e9; color:#2e7d32; font-size:11px; font-weight:600;
+}
+.log-badge.paused{background:#fff4e0; color:#a86400;}
+.log-tools{
+  display:flex; gap:10px; align-items:center; padding:10px 16px;
+  border-bottom:1px solid var(--line); background:rgba(0,0,0,.02);
+}
+.log-tools .inp{max-width:220px; height:28px; font-size:12px;}
+.log-chk{display:flex; align-items:center; gap:5px; font-size:11.5px; color:var(--ink-2); cursor:pointer;}
+.log-body{
+  margin:0; padding:12px 16px; height:46vh; overflow:auto;
+  background:#0f1722; color:#c8e1d0;
+  font-family:Consolas,"Cascadia Mono",monospace; font-size:11.5px; line-height:1.65;
+  white-space:pre-wrap; word-break:break-all; user-select:text;
+}
+.log-body .lg-warn{color:#ffcc66;}
+.log-body .lg-err{color:#ff8a80;}
+
+/* 快捷键帮助 */
+.help-list{display:flex; flex-direction:column; gap:8px; margin-top:12px;}
+.help-row{display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--ink-2);}
+.help-row kbd{
+  display:inline-block; min-width:28px; padding:2px 7px; text-align:center;
+  border:1px solid #c9d1dd; border-bottom-width:2px; border-radius:5px;
+  background:#f7fafd; font-family:Consolas,monospace; font-size:11px; color:var(--ink);
+}
+
+/* 安装摘要 */
+.sum-card{
+  margin:16px 0 4px; padding:14px 16px; border-radius:9px;
+  border:1px solid var(--line); background:rgba(255,255,255,.66);
+  text-align:left;
+}
+.sum-head{font-size:12px; font-weight:700; color:var(--ink-2); margin-bottom:10px;}
+.sum-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px 18px;}
+.sum-grid div{display:flex; flex-direction:column; gap:2px;}
+.sum-grid span{font-size:11px; color:var(--ink-3);}
+.sum-grid b{font-size:12.5px; color:var(--ink); font-weight:600;}
+
+/* 深色模式 */
+body.v8-dark{
+  --ink:#eef3fb; --ink-2:#b7c2d4; --ink-3:#8794a8;
+  --line:rgba(255,255,255,.14); --card:rgba(26,34,48,.9);
+  background:#0d1420; color:var(--ink);
+}
+body.v8-dark .bg{opacity:.16;}
+body.v8-dark .dialog, body.v8-dark .oobe-card{background:rgba(20,28,42,.95); color:var(--ink);}
+body.v8-dark .dialog__bar{background:rgba(255,255,255,.05); color:var(--ink);}
+body.v8-dark .dlg-h, body.v8-dark .oobe-card h1{color:#f2f6ff;}
+body.v8-dark .dlg-sub, body.v8-dark .sub, body.v8-dark .install__hint{color:#a8b4c8;}
+body.v8-dark .btn{background:rgba(255,255,255,.08); color:#e8eefb; border-color:rgba(255,255,255,.16);}
+body.v8-dark .btn:hover{background:rgba(255,255,255,.14);}
+body.v8-dark .btn.primary{background:var(--accent); color:#fff; border-color:transparent;}
+body.v8-dark .inp, body.v8-dark .opt, body.v8-dark .chip{
+  background:rgba(255,255,255,.06); color:#e8eefb; border-color:rgba(255,255,255,.14);
+}
+body.v8-dark .switch-row{border-color:rgba(255,255,255,.10);}
+body.v8-dark .switch{background:rgba(255,255,255,.28);}
+body.v8-dark .switch.on{background:var(--accent);}
+body.v8-dark .boot-item,
+body.v8-dark .cloud-item,
+body.v8-dark .connect-card,
+body.v8-dark .hist-item,
+body.v8-dark .scan-item,
+body.v8-dark .upd-item,
+body.v8-dark .access-preview,
+body.v8-dark .sum-card,
+body.v8-dark .scan-tip,
+body.v8-dark .cmp-table{background:rgba(255,255,255,.05); border-color:rgba(255,255,255,.12);}
+body.v8-dark .boot-item.pass{background:rgba(15,123,63,.2); border-color:rgba(110,200,140,.4);}
+body.v8-dark .cmp-row.cmp-head{background:rgba(255,255,255,.07);}
+body.v8-dark .upd-progress .bar{background:rgba(255,255,255,.12);}
+body.v8-dark .help-row kbd{background:rgba(255,255,255,.08); border-color:rgba(255,255,255,.2); color:#e8eefb;}
+body.v8-dark .log-tools{background:rgba(255,255,255,.03);}
+body.v8-dark .scan-grid .scan-item span{color:#d5deec;}
 

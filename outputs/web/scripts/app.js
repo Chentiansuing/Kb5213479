@@ -40,7 +40,15 @@
       { title: 'Bing', url: 'https://www.bing.com' },
       { title: 'GitHub', url: 'https://github.com' }
     ],
-    downloads: [{ name: 'Windows11.iso', done: true }]
+    downloads: [{ name: 'Windows11.iso', done: true }],
+    // v8.0：安装速度档位、辅助功能、深色模式、实时日志
+    v8: {
+      speed: 'standard',
+      access: { narrator: false, magnifier: false, contrast: false, bigtext: false },
+      dark: false,
+      log: [], logSeq: 0, logPaused: false,
+      instStartAt: 0, instEndAt: 0
+    }
   };
 
   var timers = [];
@@ -100,7 +108,7 @@
   function updateVersionBadge() {
     var badge = $('#versionBadge');
     if (!badge) return;
-    badge.textContent = 'v7.0';
+    badge.textContent = 'v8.0';
   }
 
   /* ============================================================
@@ -2492,11 +2500,21 @@
     var instTargetName = p ? (diskName(p) + '（' + fmtSize(p.total) + '）') : _t('inst_target_primary');
     $('#instTarget').textContent = instTargetName;
 
-    var dur = 60000; // v7.0：安装更长更真实
+    // v8.0：按安装速度档位决定时长
+    var DUR_MAP = { standard: 60000, fast: 20000, demo: 8000 };
+    var dur = DUR_MAP[state.v8.speed] || 60000;
     var bar = $('#instBar'), pct = $('#instPct'), stage = $('#instStage');
     state.installStart = performance.now();
     state.installPaused = false; state.installPauseOffset = 0;
     state.installFrozen = 0;
+    state.v8.instStartAt = Date.now();
+    state.v8.instEndAt = 0;
+    // v8.0：重置并开始记录安装日志
+    state.v8.log = []; state.v8.logSeq = 0;
+    v8Log('Windows Setup 8.0 — build 26100.1742');
+    v8Log('Install type: custom (clean install)');
+    v8Log('Target: ' + instTargetName);
+    v8Log('Simulation speed: ' + state.v8.speed);
     bar.style.width = '0%'; pct.textContent = '0';
     stage.textContent = _t('inst_stage_prep');
 
@@ -2521,8 +2539,8 @@
       modalOpen = true; $('#modal').classList.add('open');
     };
 
-    // v7.0：约 3% 概率触发错误
-    var willError = Math.random() < 0.08;
+    // v8.0：约 8% 概率触发错误（演示模式不触发，避免打断演示）
+    var willError = state.v8.speed !== 'demo' && Math.random() < 0.08;
     var errorAt = 0.4 + Math.random() * 0.4;
     var speedIdx = 0;
 
@@ -2541,7 +2559,7 @@
       var idx = 0;
       for (var j = INST_STAGES_PCT.length - 1; j >= 0; j--) { if (v >= INST_STAGES_PCT[j]) { idx = j; break; } }
       var stageText = _t(INST_STAGES_KEYS[idx]);
-      if (stage.textContent !== stageText) { stage.textContent = stageText; }
+      if (stage.textContent !== stageText) { stage.textContent = stageText; v8Log(stageText + ' (' + v + '%)'); }
 
       // v7.0：速度、已用、剩余时间
       if (v % 8 === 0) speedIdx = Math.floor(Math.random() * INST_SPEEDS.length);
@@ -2554,6 +2572,8 @@
       if (willError && t > errorAt && v > 15) {
         var err = INST_ERRORS[Math.floor(Math.random() * INST_ERRORS.length)];
         state._lastError = err;
+        v8Log('FATAL: installation failed with error ' + err.code, 'err');
+        v8Log('See CBS.log / setupact.log for details', 'warn');
         clearTimers();
         setTimeout(function () { go('installerr'); }, 600);
         return;
@@ -2565,6 +2585,9 @@
         stage.textContent = _t('inst_stage_done');
         $('#instRemain').textContent = '00:00';
         state._raf = 0;
+        state.v8.instEndAt = Date.now();
+        v8Log('Installation completed successfully');
+        v8Log('Image applied on ' + instTargetName + ' — rebooting');
         if (pauseBtn) pauseBtn.disabled = true;
         if (cancelBtn) cancelBtn.disabled = true;
         later(function () { go('restart'); }, 1800);
@@ -2679,6 +2702,162 @@
   }
 
   /* ============================================================
+   * v8.0 特大更新：日志引擎 / 深色模式 / 辅助功能 / 更新检查 / 导航历史
+   * ============================================================ */
+  function v8Log(text, level) {
+    if (!text) return;
+    var s = state.v8;
+    s.logSeq++;
+    var d = new Date();
+    var p2 = function (n) { return String(n).length < 2 ? '0' + n : String(n); };
+    var ts = p2(d.getHours()) + ':' + p2(d.getMinutes()) + ':' + p2(d.getSeconds()) + '.' + String(d.getMilliseconds()).padStart(3, '0');
+    s.log.push({ ts: ts, text: String(text), level: level || 'info' });
+    if (s.log.length > 500) s.log.shift();
+    var ov = $('#logOverlay');
+    if (ov && ov.classList.contains('open')) v8RenderLog();
+  }
+  function v8LogText() {
+    return state.v8.log.map(function (x) {
+      return x.ts + '  [' + (x.level === 'err' ? 'ERR' : x.level === 'warn' ? 'WRN' : 'INF') + ']  ' + x.text;
+    }).join('\n');
+  }
+  function v8RenderLog() {
+    var body = $('#logBody'); if (!body) return;
+    var fEl = $('#logFilter');
+    var f = fEl ? fEl.value.trim().toLowerCase() : '';
+    var rows = state.v8.log.filter(function (x) {
+      return !f || (x.text + ' ' + x.level).toLowerCase().indexOf(f) >= 0;
+    });
+    if (!rows.length) { body.textContent = _t('log_empty'); return; }
+    body.innerHTML = rows.map(function (x) {
+      var cls = x.level === 'err' ? 'lg-err' : (x.level === 'warn' ? 'lg-warn' : '');
+      var tag = x.level === 'err' ? 'ERR' : (x.level === 'warn' ? 'WRN' : 'INF');
+      var t = (x.ts + '  [' + tag + ']  ' + x.text).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+      return '<span class="' + cls + '">' + t + '</span>';
+    }).join('\n');
+    var auto = $('#logAuto');
+    if (!auto || auto.checked) body.scrollTop = body.scrollHeight;
+  }
+  function v8OpenLog() {
+    var ov = $('#logOverlay'); if (!ov) return;
+    ov.classList.add('open');
+    var badge = $('#logBadge');
+    if (badge) {
+      badge.textContent = state.v8.logPaused ? _t('log_paused') : _t('log_live');
+      badge.classList.toggle('paused', !!state.v8.logPaused);
+    }
+    v8RenderLog();
+  }
+  function v8CloseLog() { var ov = $('#logOverlay'); if (ov) ov.classList.remove('open'); }
+
+  function v8ExportLog() {
+    var name = 'setup-log.txt';
+    var content = v8LogText() || _t('log_empty');
+    fetch('/api/save', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: name, content: content })
+    }).then(function (r) { return r.json(); }).then(function () {
+      toast(_t('log_exported'));
+    }).catch(function () {
+      toast(_t('log_exported'));
+    });
+  }
+
+  function v8ApplyDark() {
+    document.body.classList.toggle('v8-dark', !!state.v8.dark);
+    var b = $('#v8Theme');
+    if (b) b.textContent = state.v8.dark ? '☀️' : '🌙';
+    try { localStorage.setItem('win11_v8_dark', state.v8.dark ? '1' : '0'); } catch (e) {}
+  }
+
+  function v8SyncAccess() {
+    var a = state.v8.access;
+    $$('#accessList [data-access]').forEach(function (row) {
+      var sw = row.querySelector('.switch');
+      if (sw) sw.classList.toggle('on', !!a[row.dataset.access]);
+    });
+    var pv = $('#accessPreview');
+    if (pv) {
+      pv.classList.toggle('bigtext', !!a.bigtext);
+      pv.classList.toggle('contrast', !!a.contrast);
+    }
+  }
+
+  var v8UpdTimer = 0;
+  function v8RunUpdates() {
+    var items = $$('#updList .upd-item');
+    var bar = $('#updBar'), pct = $('#updPct'), status = $('#updStatus'), next = $('#updNext');
+    items.forEach(function (it) {
+      it.classList.remove('done', 'active');
+      var ic = it.querySelector('.upd-ic'); if (ic) ic.textContent = '◌';
+    });
+    if (bar) bar.style.width = '0%';
+    if (pct) pct.textContent = '0%';
+    if (next) next.disabled = true;
+    if (status) status.textContent = _t('upd_checking');
+    if (v8UpdTimer) { clearInterval(v8UpdTimer); v8UpdTimer = 0; }
+    var total = items.length || 1;
+    var idx = 0;
+    v8Log('Windows Update: checking for updates...');
+    later(function () {
+      if (status) status.textContent = _t('upd_found', { n: total });
+      v8Log('Windows Update: ' + total + ' update(s) found');
+      step();
+    }, 900);
+    function step() {
+      if (idx >= total) {
+        if (bar) bar.style.width = '100%';
+        if (pct) pct.textContent = '100%';
+        if (status) status.textContent = _t('upd_done');
+        if (next) next.disabled = false;
+        v8Log('Windows Update: all updates installed');
+        return;
+      }
+      items.forEach(function (x) { x.classList.remove('active'); });
+      var it = items[idx];
+      it.classList.add('active');
+      var ic = it.querySelector('.upd-ic'); if (ic) ic.textContent = '↓';
+      var p = 0;
+      v8UpdTimer = setInterval(function () {
+        p += 9 + Math.random() * 12;
+        if (p >= 100) {
+          p = 100;
+          clearInterval(v8UpdTimer); v8UpdTimer = 0;
+          it.classList.remove('active');
+          it.classList.add('done');
+          if (ic) ic.textContent = '✓';
+          v8Log('Installed: ' + it.textContent.trim().slice(0, 60));
+          idx++;
+          step();
+          return;
+        }
+        var overall = Math.round(((idx + p / 100) / total) * 100);
+        if (bar) bar.style.width = overall + '%';
+        if (pct) pct.textContent = overall + '%';
+        if (status) status.textContent = (p > 55) ? _t('upd_installing') : _t('upd_downloading', { p: Math.round(p) });
+      }, 120);
+    }
+  }
+
+  var v8OrigGo = go;
+  go = function (id) {
+    if (!document.getElementById('s-' + id)) return;
+    if (v8UpdTimer) { clearInterval(v8UpdTimer); v8UpdTimer = 0; }
+    var st = state._navStack || (state._navStack = []);
+    var cur = (location.hash || '').replace('#', '');
+    if (cur && cur !== id && !state._navBack) { st.push(cur); if (st.length > 40) st.shift(); }
+    state._navBack = false;
+    v8OrigGo(id);
+  };
+  function v8Back() {
+    var st = state._navStack || [];
+    if (!st.length) return;
+    var prev = st.pop();
+    state._navBack = true;
+    v8OrigGo(prev);
+  }
+
+  /* ============================================================
    * hooks
    * ============================================================ */
   var hooks = {
@@ -2762,13 +2941,35 @@
     compare: function () {
       _apply();
     },
+    scan: function () {
+      _apply();
+      var score = 96 + Math.floor(Math.random() * 5);
+      var sc = $('#scanScore'); if (sc) sc.textContent = String(score);
+      var sv = $('#scanScoreVal'); if (sv) sv.textContent = _t('scan_score_val', { n: score });
+      v8Log('System scan: compatibility score ' + score + '/100');
+    },
+    access: function () {
+      _apply();
+      v8SyncAccess();
+    },
+    updatesetup: function () {
+      _apply();
+      v8RunUpdates();
+    },
     bootcheck: function () {
       _apply();
       var checks = $$('#bootCheck .boot-item');
+      var pass = $('#bootPass');
+      checks.forEach(function (el) { el.classList.remove('pass'); });
+      if (pass) pass.style.display = 'none';
       checks.forEach(function (el, i) {
         later(function () { el.classList.add('pass'); }, (i + 1) * 220);
       });
-      later(function () { go('lang'); }, checks.length * 220 + 700);
+      later(function () {
+        if (pass) pass.style.display = '';
+        v8Log('System requirements check passed (CPU / RAM / Storage / Secure Boot / TPM 2.0)');
+      }, checks.length * 220 + 320);
+      later(function () { go('lang'); }, checks.length * 220 + 5200);
     },
     disk: function () { _apply(); renderDisk(); },
     install: function () { _apply(); startInstall(); },
@@ -2818,6 +3019,20 @@
       _apply();
       var nm = state.userName || 'Administrator';
       $('#doneName').textContent = nm;
+      // v8.0：填充安装摘要
+      var edEl = document.querySelector('#editionList .opt.sel .opt__t');
+      var edition = edEl ? edEl.textContent : (state.edition || 'Windows 11');
+      var p = null;
+      for (var i = 0; i < state.disk.length; i++) if (state.disk[i].id === state.selected) p = state.disk[i];
+      if (!p) { for (var k = 0; k < state.disk.length; k++) if (state.disk[k].total > 0) { p = state.disk[k]; break; } }
+      var durMs = (state.v8.instEndAt || Date.now()) - (state.v8.instStartAt || Date.now());
+      var dsec = Math.max(1, Math.round(durMs / 1000));
+      var durStr = String(Math.floor(dsec / 60)).padStart(2, '0') + ':' + String(dsec % 60).padStart(2, '0');
+      var se = $('#sumEdition'); if (se) se.textContent = edition;
+      var sd = $('#sumDevice'); if (sd) sd.textContent = state.deviceName;
+      var sp = $('#sumPartition'); if (sp) sp.textContent = p ? (diskName(p) + ' · ' + fmtSize(p.total)) : '—';
+      var sdu = $('#sumDuration'); if (sdu) sdu.textContent = durStr;
+      v8Log('OOBE completed — device name ' + state.deviceName);
       // v7.0 特大更新：安装完成自动保存配置
       (function saveConfig() {
         try {
@@ -2835,7 +3050,7 @@
           }
         } catch(e) {}
       })();
-      later(function () { go('desktop'); }, 3600);
+      // v8.0：停留在完成页，让用户查看安装摘要；点击“开始使用”再进入桌面
     },
     device: function () { _apply(); $('#deviceInput').value = state.deviceName; },
     acc: function () { _apply(); },
@@ -3059,9 +3274,7 @@
     state.selected = null; clearTimers(); go('disk');
   });
   if (errCustom) errCustom.addEventListener('click', function () { go('disk'); });
-  if (errDump) errDump.addEventListener('click', function () {
-    toast(_t('toast_demo_log') || '错误日志已导出到 Temp 目录');
-  });
+  if (errDump) errDump.addEventListener('click', function () { v8OpenLog(); });
 
   /* 设备名 */
   $('#deviceInput').addEventListener('input', function () { $('#deviceNext').disabled = !this.value.trim(); });
@@ -3101,8 +3314,114 @@
 
   /* 隐私开关 */
   document.addEventListener('click', function (e) {
-    var sw = e.target.closest('.switch'); if (!sw) return; sw.classList.toggle('on');
+    var sw = e.target.closest('.switch'); if (!sw) return;
+    sw.classList.toggle('on');
+    // v8.0：辅助功能开关同步到预览
+    var row = sw.closest('[data-access]');
+    if (row) {
+      state.v8.access[row.dataset.access] = sw.classList.contains('on');
+      v8SyncAccess();
+    }
   });
+
+  /* ============ v8.0 事件绑定 ============ */
+  if ($('#scanOpen')) $('#scanOpen').addEventListener('click', function () { go('scan'); });
+
+  if ($('#speedChips')) $('#speedChips').addEventListener('click', function (e) {
+    var b = e.target.closest('.chip'); if (!b) return;
+    $$('#speedChips .chip').forEach(function (x) { x.classList.remove('on'); });
+    b.classList.add('on');
+    state.v8.speed = b.dataset.speed || 'standard';
+    toast(_t('speed_title') + '：' + b.textContent);
+  });
+
+  if ($('#instOpenLog')) $('#instOpenLog').addEventListener('click', v8OpenLog);
+  if ($('#logClose')) $('#logClose').addEventListener('click', v8CloseLog);
+  if ($('#logPause')) $('#logPause').addEventListener('click', function () {
+    state.v8.logPaused = !state.v8.logPaused;
+    this.textContent = state.v8.logPaused ? _t('inst_resume') : _t('inst_pause');
+    var badge = $('#logBadge');
+    if (badge) {
+      badge.textContent = state.v8.logPaused ? _t('log_paused') : _t('log_live');
+      badge.classList.toggle('paused', state.v8.logPaused);
+    }
+  });
+  if ($('#logExport')) $('#logExport').addEventListener('click', v8ExportLog);
+  if ($('#logFilter')) $('#logFilter').addEventListener('input', function () { v8RenderLog(); });
+
+  if ($('#v8Theme')) $('#v8Theme').addEventListener('click', function () {
+    state.v8.dark = !state.v8.dark;
+    v8ApplyDark();
+  });
+  function v8ToggleHelp() {
+    var ov = $('#helpOverlay'); if (!ov) return;
+    ov.classList.toggle('open');
+  }
+  if ($('#v8Help')) $('#v8Help').addEventListener('click', v8ToggleHelp);
+  if ($('#helpClose')) $('#helpClose').addEventListener('click', v8ToggleHelp);
+
+  if ($('#updSkip')) $('#updSkip').addEventListener('click', function () {
+    if (v8UpdTimer) { clearInterval(v8UpdTimer); v8UpdTimer = 0; }
+    go('privacy');
+  });
+  if ($('#updNext')) $('#updNext').addEventListener('click', function () { go('privacy'); });
+
+  if ($('#sumExport')) $('#sumExport').addEventListener('click', function () {
+    var edEl = document.querySelector('#editionList .opt.sel .opt__t');
+    var edition = edEl ? edEl.textContent : (state.edition || 'Windows 11');
+    var p = null;
+    for (var i = 0; i < state.disk.length; i++) if (state.disk[i].id === state.selected) p = state.disk[i];
+    var report = [
+      'Windows 11 Setup Simulator 8.0 — Installation Report',
+      'Generated: ' + new Date().toString(),
+      '',
+      'Edition       : ' + edition,
+      'Device name   : ' + state.deviceName,
+      'User name     : ' + state.userName,
+      'Install target: ' + (p ? (diskName(p) + ' (' + fmtSize(p.total) + ')') : 'n/a'),
+      'Speed profile : ' + state.v8.speed,
+      'Started       : ' + new Date(state.v8.instStartAt || Date.now()).toString(),
+      'Finished      : ' + new Date(state.v8.instEndAt || Date.now()).toString(),
+      '',
+      '--- Setup log ---',
+      v8LogText()
+    ].join('\n');
+    fetch('/api/save', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: 'install-report.txt', content: report })
+    }).then(function (r) { return r.json(); })
+      .then(function () { toast(_t('sum_exported')); })
+      .catch(function () { toast(_t('sum_exported')); });
+  });
+
+  /* 键盘快捷键 */
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'F1') {
+      e.preventDefault();
+      v8ToggleHelp();
+      return;
+    }
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'l' || e.key === 'L')) {
+      e.preventDefault();
+      var lo = $('#logOverlay');
+      if (lo && lo.classList.contains('open')) v8CloseLog(); else v8OpenLog();
+      return;
+    }
+    if (e.key === 'Escape') {
+      var lo2 = $('#logOverlay'), ho = $('#helpOverlay');
+      if (lo2 && lo2.classList.contains('open')) { v8CloseLog(); return; }
+      if (ho && ho.classList.contains('open')) { ho.classList.remove('open'); return; }
+      v8Back();
+    }
+  });
+
+  /* v8.0 初始化深色模式偏好 */
+  (function initV8Prefs() {
+    try {
+      if (localStorage.getItem('win11_v8_dark') === '1') state.v8.dark = true;
+    } catch (e) {}
+    v8ApplyDark();
+  })();
 
   /* 桌面图标 */
   $('#icoPC').addEventListener('dblclick', function () {

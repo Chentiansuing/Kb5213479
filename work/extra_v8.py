@@ -1,0 +1,573 @@
+"""v8.0 安装程序特大更新文案：系统详细扫描报告、辅助功能、Windows 更新检查、
+实时安装日志查看器、安装程序深色模式、键盘快捷键帮助、安装摘要与报告导出、
+安装速度档位。
+
+五种语言键完全一致，由 build_multi.py 合并进 LANG_JSON。
+"""
+
+EXTRA_V8 = {
+    "zh-CN": {
+        # 版本
+        "version_v8": "8.0",
+        "notif_v80_title": "安装程序 8.0 已就绪",
+        "notif_v80_body": "新增系统扫描、辅助功能、更新检查、实时日志与深色模式。",
+
+        # 系统扫描报告
+        "scan_title": "系统兼容性报告",
+        "scan_desc": "这是针对此电脑的详细硬件检测结果，完全满足 Windows 11 的要求。",
+        "scan_cpu": "处理器",
+        "scan_cpu_val": "12th Gen Intel Core i7-12700H（14 核 / 20 线程 @ 2.30 GHz）",
+        "scan_ram": "内存",
+        "scan_ram_val": "16 GB DDR4-3200（双通道）",
+        "scan_gpu": "显卡",
+        "scan_gpu_val": "NVIDIA GeForce RTX 3060 Laptop / Intel Iris Xe 核显",
+        "scan_disk": "系统磁盘",
+        "scan_disk_val": "NVMe SSD 512 GB · SMART 健康度 96%",
+        "scan_tpm": "受信任平台模块",
+        "scan_tpm_val": "TPM 2.0 · 已启用 · 规范版本 2.0",
+        "scan_secureboot": "安全启动",
+        "scan_secureboot_val": "已启用 · UEFI 固件",
+        "scan_battery": "电池",
+        "scan_battery_val": "设计容量 70 Wh · 当前健康度 94%",
+        "scan_net": "网络适配器",
+        "scan_net_val": "Intel Wi-Fi 6E AX211 · 千兆以太网",
+        "scan_score": "兼容性评分",
+        "scan_score_val": "{n} / 100 · 完全兼容 Windows 11",
+        "scan_detail": "查看详细报告",
+        "scan_close": "关闭",
+
+        # 辅助功能
+        "access_title": "辅助功能",
+        "access_desc": "选择适合你的辅助功能，安装完成后随时可以在设置中更改。",
+        "access_narrator": "讲述人",
+        "access_narrator_d": "朗读屏幕上的文字，帮助视障用户使用电脑。",
+        "access_magnifier": "放大镜",
+        "access_magnifier_d": "放大屏幕的一部分，让文字和图标更清晰。",
+        "access_contrast": "高对比度",
+        "access_contrast_d": "增强屏幕元素的对比度，让内容更易辨认。",
+        "access_bigtext": "更大的文字",
+        "access_bigtext_d": "将系统文字放大 150%，减轻阅读负担。",
+        "access_preview": "实时预览",
+        "access_preview_text": "这是预览文字，勾选左侧选项查看效果。",
+        "access_skip": "跳过",
+
+        # Windows 更新检查
+        "upd_title": "正在检查更新",
+        "upd_checking": "正在查找适用于你的设备的更新...",
+        "upd_found": "发现 {n} 个可用更新",
+        "upd_item_cum": "2026-11 适用于 Windows 11 的累积更新 (KB5040442)",
+        "upd_item_net": ".NET Framework 4.8.1 安全更新 (KB5040990)",
+        "upd_item_def": "Windows Defender 反病毒定义更新",
+        "upd_item_drv": "Intel 图形驱动程序 31.0.101.5333",
+        "upd_item_edge": "Microsoft Edge 安全更新 (KB5041095)",
+        "upd_downloading": "正在下载更新（{p}%）",
+        "upd_installing": "正在安装更新，请不要关闭你的电脑...",
+        "upd_done": "更新安装完成，即将继续",
+        "upd_skip": "暂时跳过",
+        "upd_continue": "继续",
+
+        # 安装日志查看器
+        "log_title": "安装日志",
+        "log_desc": "实时查看安装程序的内部日志，可用于排查失败原因。",
+        "log_filter": "过滤关键字...",
+        "log_autoscroll": "自动滚动",
+        "log_export": "导出到 Temp",
+        "log_exported": "日志已导出到 Temp 目录",
+        "log_empty": "暂无日志",
+        "log_paused": "已暂停",
+        "log_live": "实时",
+        "log_copy": "复制",
+        "log_copied": "日志已复制到剪贴板",
+
+        # 深色模式
+        "theme_light": "浅色",
+        "theme_dark": "深色",
+        "theme_toggle": "切换安装程序主题",
+
+        # 快捷键帮助
+        "help_title": "键盘快捷键",
+        "help_desc": "在任意界面按 F1 打开或关闭此帮助。",
+        "help_esc": "Esc — 返回上一步",
+        "help_enter": "Enter — 下一步 / 确认",
+        "help_f1": "F1 — 打开或关闭帮助",
+        "help_f10": "Shift+F10 — 打开命令行",
+        "help_log": "Ctrl+L — 打开安装日志",
+        "help_close": "关闭",
+
+        # 安装摘要
+        "sum_title": "安装摘要",
+        "sum_edition": "版本",
+        "sum_device": "设备名称",
+        "sum_partition": "安装位置",
+        "sum_duration": "总耗时",
+        "sum_account": "账户类型",
+        "sum_export": "导出安装报告",
+        "sum_exported": "安装报告已导出到 Temp 目录",
+        "sum_done": "一切就绪",
+        "sum_logs": "查看安装日志",
+
+        # 安装速度档位
+        "speed_title": "安装速度",
+        "speed_standard": "标准（真实体验）",
+        "speed_fast": "快速",
+        "speed_demo": "演示",
+        "speed_hint": "选择安装过程的模拟速度。",
+
+        # 进度补充
+        "inst_open_log": "查看安装日志",
+        "inst_show_log": "显示日志",
+        "back_prev": "返回上一步",
+    },
+
+    "zh-TW": {
+        # 版本
+        "version_v8": "8.0",
+        "notif_v80_title": "安裝程式 8.0 已就緒",
+        "notif_v80_body": "新增系統掃描、協助工具、更新檢查、即時記錄與深色模式。",
+
+        # 系统扫描报告
+        "scan_title": "系統相容性報告",
+        "scan_desc": "這是針對此電腦的詳細硬體檢測結果，完全符合 Windows 11 的要求。",
+        "scan_cpu": "處理器",
+        "scan_cpu_val": "12th Gen Intel Core i7-12700H（14 核 / 20 執行緒 @ 2.30 GHz）",
+        "scan_ram": "記憶體",
+        "scan_ram_val": "16 GB DDR4-3200（雙通道）",
+        "scan_gpu": "顯示卡",
+        "scan_gpu_val": "NVIDIA GeForce RTX 3060 Laptop / Intel Iris Xe 內顯",
+        "scan_disk": "系統磁碟",
+        "scan_disk_val": "NVMe SSD 512 GB · SMART 健康度 96%",
+        "scan_tpm": "受信任平台模組",
+        "scan_tpm_val": "TPM 2.0 · 已啟用 · 規格版本 2.0",
+        "scan_secureboot": "安全開機",
+        "scan_secureboot_val": "已啟用 · UEFI 韌體",
+        "scan_battery": "電池",
+        "scan_battery_val": "設計容量 70 Wh · 目前健康度 94%",
+        "scan_net": "網路卡",
+        "scan_net_val": "Intel Wi-Fi 6E AX211 · 千兆乙太網路",
+        "scan_score": "相容性評分",
+        "scan_score_val": "{n} / 100 · 完全相容 Windows 11",
+        "scan_detail": "查看詳細報告",
+        "scan_close": "關閉",
+
+        # 辅助功能
+        "access_title": "協助工具",
+        "access_desc": "選擇適合你的協助工具，安裝完成後隨時可以在設定中變更。",
+        "access_narrator": "朗讀程式",
+        "access_narrator_d": "朗讀螢幕上的文字，協助視障使用者操作電腦。",
+        "access_magnifier": "放大鏡",
+        "access_magnifier_d": "放大螢幕的一部分，讓文字與圖示更清晰。",
+        "access_contrast": "高對比",
+        "access_contrast_d": "增強螢幕元素的對比度，讓內容更容易辨識。",
+        "access_bigtext": "放大文字",
+        "access_bigtext_d": "將系統文字放大 150%，減輕閱讀負擔。",
+        "access_preview": "即時預覽",
+        "access_preview_text": "這是預覽文字，勾選左側選項查看效果。",
+        "access_skip": "略過",
+
+        # Windows 更新检查
+        "upd_title": "正在檢查更新",
+        "upd_checking": "正在尋找適用於你裝置的更新...",
+        "upd_found": "找到 {n} 個可用更新",
+        "upd_item_cum": "2026-11 適用於 Windows 11 的累積更新 (KB5040442)",
+        "upd_item_net": ".NET Framework 4.8.1 安全性更新 (KB5040990)",
+        "upd_item_def": "Windows Defender 防毒定義更新",
+        "upd_item_drv": "Intel 圖形驅動程式 31.0.101.5333",
+        "upd_item_edge": "Microsoft Edge 安全性更新 (KB5041095)",
+        "upd_downloading": "正在下載更新（{p}%）",
+        "upd_installing": "正在安裝更新，請勿關閉電腦...",
+        "upd_done": "更新安裝完成，即將繼續",
+        "upd_skip": "暫時略過",
+        "upd_continue": "繼續",
+
+        # 安装日志查看器
+        "log_title": "安裝記錄",
+        "log_desc": "即時查看安裝程式的內部記錄，可用於排查失敗原因。",
+        "log_filter": "篩選關鍵字...",
+        "log_autoscroll": "自動捲動",
+        "log_export": "匯出到 Temp",
+        "log_exported": "記錄已匯出到 Temp 目錄",
+        "log_empty": "尚無記錄",
+        "log_paused": "已暫停",
+        "log_live": "即時",
+        "log_copy": "複製",
+        "log_copied": "記錄已複製到剪貼簿",
+
+        # 深色模式
+        "theme_light": "淺色",
+        "theme_dark": "深色",
+        "theme_toggle": "切換安裝程式主題",
+
+        # 快捷键帮助
+        "help_title": "鍵盤快速鍵",
+        "help_desc": "在任意介面按 F1 開啟或關閉此說明。",
+        "help_esc": "Esc — 返回上一步",
+        "help_enter": "Enter — 下一步 / 確認",
+        "help_f1": "F1 — 開啟或關閉說明",
+        "help_f10": "Shift+F10 — 開啟命令列",
+        "help_log": "Ctrl+L — 開啟安裝記錄",
+        "help_close": "關閉",
+
+        # 安装摘要
+        "sum_title": "安裝摘要",
+        "sum_edition": "版本",
+        "sum_device": "裝置名稱",
+        "sum_partition": "安裝位置",
+        "sum_duration": "總耗時",
+        "sum_account": "帳戶類型",
+        "sum_export": "匯出安裝報告",
+        "sum_exported": "安裝報告已匯出到 Temp 目錄",
+        "sum_done": "一切就緒",
+        "sum_logs": "查看安裝記錄",
+
+        # 安装速度档位
+        "speed_title": "安裝速度",
+        "speed_standard": "標準（真實體驗）",
+        "speed_fast": "快速",
+        "speed_demo": "示範",
+        "speed_hint": "選擇安裝過程的模擬速度。",
+
+        # 进度补充
+        "inst_open_log": "查看安裝記錄",
+        "inst_show_log": "顯示記錄",
+        "back_prev": "返回上一步",
+    },
+
+    "en-US": {
+        # 版本
+        "version_v8": "8.0",
+        "notif_v80_title": "Setup 8.0 is ready",
+        "notif_v80_body": "New: system scan, accessibility, update check, live logs and dark mode.",
+
+        # 系统扫描报告
+        "scan_title": "System compatibility report",
+        "scan_desc": "Detailed hardware detection results for this PC. It fully meets Windows 11 requirements.",
+        "scan_cpu": "Processor",
+        "scan_cpu_val": "12th Gen Intel Core i7-12700H (14 cores / 20 threads @ 2.30 GHz)",
+        "scan_ram": "Memory",
+        "scan_ram_val": "16 GB DDR4-3200 (dual channel)",
+        "scan_gpu": "Graphics",
+        "scan_gpu_val": "NVIDIA GeForce RTX 3060 Laptop / Intel Iris Xe",
+        "scan_disk": "System disk",
+        "scan_disk_val": "NVMe SSD 512 GB · SMART health 96%",
+        "scan_tpm": "Trusted Platform Module",
+        "scan_tpm_val": "TPM 2.0 · Enabled · Spec version 2.0",
+        "scan_secureboot": "Secure Boot",
+        "scan_secureboot_val": "Enabled · UEFI firmware",
+        "scan_battery": "Battery",
+        "scan_battery_val": "Design capacity 70 Wh · Current health 94%",
+        "scan_net": "Network adapter",
+        "scan_net_val": "Intel Wi-Fi 6E AX211 · Gigabit Ethernet",
+        "scan_score": "Compatibility score",
+        "scan_score_val": "{n} / 100 · Fully compatible with Windows 11",
+        "scan_detail": "View detailed report",
+        "scan_close": "Close",
+
+        # 辅助功能
+        "access_title": "Accessibility",
+        "access_desc": "Choose the accessibility options that suit you. You can change them in Settings later.",
+        "access_narrator": "Narrator",
+        "access_narrator_d": "Reads text on screen aloud to help users with visual impairments.",
+        "access_magnifier": "Magnifier",
+        "access_magnifier_d": "Enlarges part of the screen so text and icons are easier to see.",
+        "access_contrast": "High contrast",
+        "access_contrast_d": "Increases contrast of screen elements for easier reading.",
+        "access_bigtext": "Larger text",
+        "access_bigtext_d": "Scales system text to 150% to reduce reading strain.",
+        "access_preview": "Live preview",
+        "access_preview_text": "This is preview text. Toggle an option to see the effect.",
+        "access_skip": "Skip",
+
+        # Windows 更新检查
+        "upd_title": "Checking for updates",
+        "upd_checking": "Looking for updates for your device...",
+        "upd_found": "Found {n} available updates",
+        "upd_item_cum": "2026-11 Cumulative Update for Windows 11 (KB5040442)",
+        "upd_item_net": ".NET Framework 4.8.1 Security Update (KB5040990)",
+        "upd_item_def": "Windows Defender antivirus definition update",
+        "upd_item_drv": "Intel Graphics Driver 31.0.101.5333",
+        "upd_item_edge": "Microsoft Edge Security Update (KB5041095)",
+        "upd_downloading": "Downloading updates ({p}%)",
+        "upd_installing": "Installing updates. Do not turn off your PC...",
+        "upd_done": "Updates installed, continuing",
+        "upd_skip": "Skip for now",
+        "upd_continue": "Continue",
+
+        # 安装日志查看器
+        "log_title": "Setup log",
+        "log_desc": "View live internal setup logs to help diagnose failures.",
+        "log_filter": "Filter keyword...",
+        "log_autoscroll": "Auto-scroll",
+        "log_export": "Export to Temp",
+        "log_exported": "Log exported to the Temp folder",
+        "log_empty": "No log entries yet",
+        "log_paused": "Paused",
+        "log_live": "Live",
+        "log_copy": "Copy",
+        "log_copied": "Log copied to clipboard",
+
+        # 深色模式
+        "theme_light": "Light",
+        "theme_dark": "Dark",
+        "theme_toggle": "Toggle setup theme",
+
+        # 快捷键帮助
+        "help_title": "Keyboard shortcuts",
+        "help_desc": "Press F1 on any screen to open or close this help.",
+        "help_esc": "Esc — Go back one step",
+        "help_enter": "Enter — Next / Confirm",
+        "help_f1": "F1 — Open or close help",
+        "help_f10": "Shift+F10 — Open command prompt",
+        "help_log": "Ctrl+L — Open setup log",
+        "help_close": "Close",
+
+        # 安装摘要
+        "sum_title": "Installation summary",
+        "sum_edition": "Edition",
+        "sum_device": "Device name",
+        "sum_partition": "Install location",
+        "sum_duration": "Total time",
+        "sum_account": "Account type",
+        "sum_export": "Export installation report",
+        "sum_exported": "Installation report exported to the Temp folder",
+        "sum_done": "All set",
+        "sum_logs": "View setup log",
+
+        # 安装速度档位
+        "speed_title": "Installation speed",
+        "speed_standard": "Standard (realistic)",
+        "speed_fast": "Fast",
+        "speed_demo": "Demo",
+        "speed_hint": "Choose how fast the installation is simulated.",
+
+        # 进度补充
+        "inst_open_log": "View setup log",
+        "inst_show_log": "Show log",
+        "back_prev": "Back",
+    },
+
+    "ja-JP": {
+        # 版本
+        "version_v8": "8.0",
+        "notif_v80_title": "セットアップ 8.0 の準備ができました",
+        "notif_v80_body": "システムスキャン、アクセシビリティ、更新プログラムの確認、リアルタイムログ、ダークモードを追加。",
+
+        # 系统扫描报告
+        "scan_title": "システム互換性レポート",
+        "scan_desc": "この PC の詳細なハードウェア検出結果です。Windows 11 の要件を完全に満たしています。",
+        "scan_cpu": "プロセッサ",
+        "scan_cpu_val": "12th Gen Intel Core i7-12700H（14 コア / 20 スレッド @ 2.30 GHz）",
+        "scan_ram": "メモリ",
+        "scan_ram_val": "16 GB DDR4-3200（デュアルチャネル）",
+        "scan_gpu": "グラフィックス",
+        "scan_gpu_val": "NVIDIA GeForce RTX 3060 Laptop / Intel Iris Xe",
+        "scan_disk": "システムディスク",
+        "scan_disk_val": "NVMe SSD 512 GB · SMART 健全性 96%",
+        "scan_tpm": "トラステッド プラットフォーム モジュール",
+        "scan_tpm_val": "TPM 2.0 · 有効 · 仕様バージョン 2.0",
+        "scan_secureboot": "セキュア ブート",
+        "scan_secureboot_val": "有効 · UEFI ファームウェア",
+        "scan_battery": "バッテリー",
+        "scan_battery_val": "設計容量 70 Wh · 現在の健全性 94%",
+        "scan_net": "ネットワーク アダプター",
+        "scan_net_val": "Intel Wi-Fi 6E AX211 · ギガビット イーサネット",
+        "scan_score": "互換性スコア",
+        "scan_score_val": "{n} / 100 · Windows 11 と完全互換",
+        "scan_detail": "詳細レポートを表示",
+        "scan_close": "閉じる",
+
+        # 辅助功能
+        "access_title": "アクセシビリティ",
+        "access_desc": "自分に合ったアクセシビリティ機能を選択してください。後で設定から変更できます。",
+        "access_narrator": "ナレーター",
+        "access_narrator_d": "画面上のテキストを読み上げ、視覚に障がいのある方を支援します。",
+        "access_magnifier": "拡大鏡",
+        "access_magnifier_d": "画面の一部を拡大し、テキストやアイコンを見やすくします。",
+        "access_contrast": "ハイ コントラスト",
+        "access_contrast_d": "画面要素のコントラストを高め、読みやすくします。",
+        "access_bigtext": "大きいテキスト",
+        "access_bigtext_d": "システムのテキストを 150% に拡大し、読みやすくします。",
+        "access_preview": "ライブ プレビュー",
+        "access_preview_text": "これはプレビュー テキストです。左のオプションを切り替えて効果を確認してください。",
+        "access_skip": "スキップ",
+
+        # Windows 更新检查
+        "upd_title": "更新プログラムを確認しています",
+        "upd_checking": "このデバイスに適用できる更新プログラムを検索しています...",
+        "upd_found": "{n} 個の更新プログラムが見つかりました",
+        "upd_item_cum": "2026-11 Windows 11 用の累積更新プログラム (KB5040442)",
+        "upd_item_net": ".NET Framework 4.8.1 セキュリティ更新プログラム (KB5040990)",
+        "upd_item_def": "Windows Defender ウイルス定義の更新",
+        "upd_item_drv": "Intel グラフィックス ドライバー 31.0.101.5333",
+        "upd_item_edge": "Microsoft Edge セキュリティ更新プログラム (KB5041095)",
+        "upd_downloading": "更新プログラムをダウンロードしています（{p}%）",
+        "upd_installing": "更新プログラムをインストールしています。PC の電源を切らないでください...",
+        "upd_done": "更新プログラムのインストールが完了しました。続行します",
+        "upd_skip": "後で",
+        "upd_continue": "続行",
+
+        # 安装日志查看器
+        "log_title": "セットアップ ログ",
+        "log_desc": "セットアップの内部ログをリアルタイムで表示します。失敗の原因調査に役立ちます。",
+        "log_filter": "キーワードで絞り込む...",
+        "log_autoscroll": "自動スクロール",
+        "log_export": "Temp にエクスポート",
+        "log_exported": "ログを Temp フォルダーにエクスポートしました",
+        "log_empty": "ログはまだありません",
+        "log_paused": "一時停止",
+        "log_live": "ライブ",
+        "log_copy": "コピー",
+        "log_copied": "ログをクリップボードにコピーしました",
+
+        # 深色模式
+        "theme_light": "ライト",
+        "theme_dark": "ダーク",
+        "theme_toggle": "セットアップのテーマを切り替え",
+
+        # 快捷键帮助
+        "help_title": "キーボード ショートカット",
+        "help_desc": "どの画面でも F1 を押すとこのヘルプを開閉できます。",
+        "help_esc": "Esc — 前の手順に戻る",
+        "help_enter": "Enter — 次へ / 確認",
+        "help_f1": "F1 — ヘルプを開閉",
+        "help_f10": "Shift+F10 — コマンド プロンプトを開く",
+        "help_log": "Ctrl+L — セットアップ ログを開く",
+        "help_close": "閉じる",
+
+        # 安装摘要
+        "sum_title": "インストールの概要",
+        "sum_edition": "エディション",
+        "sum_device": "デバイス名",
+        "sum_partition": "インストール先",
+        "sum_duration": "合計時間",
+        "sum_account": "アカウントの種類",
+        "sum_export": "インストール レポートをエクスポート",
+        "sum_exported": "インストール レポートを Temp フォルダーにエクスポートしました",
+        "sum_done": "準備完了",
+        "sum_logs": "セットアップ ログを表示",
+
+        # 安装速度档位
+        "speed_title": "インストール速度",
+        "speed_standard": "標準（リアル）",
+        "speed_fast": "高速",
+        "speed_demo": "デモ",
+        "speed_hint": "インストールのシミュレーション速度を選択します。",
+
+        # 进度补充
+        "inst_open_log": "セットアップ ログを表示",
+        "inst_show_log": "ログを表示",
+        "back_prev": "戻る",
+    },
+
+    "ko-KR": {
+        # 版本
+        "version_v8": "8.0",
+        "notif_v80_title": "설치 프로그램 8.0 준비 완료",
+        "notif_v80_body": "시스템 검사, 접근성, 업데이트 확인, 실시간 로그, 다크 모드가 추가되었습니다.",
+
+        # 系统扫描报告
+        "scan_title": "시스템 호환성 보고서",
+        "scan_desc": "이 PC에 대한 자세한 하드웨어 검사 결과입니다. Windows 11 요구 사항을 완전히 충족합니다.",
+        "scan_cpu": "프로세서",
+        "scan_cpu_val": "12th Gen Intel Core i7-12700H(14코어 / 20스레드 @ 2.30 GHz)",
+        "scan_ram": "메모리",
+        "scan_ram_val": "16GB DDR4-3200(듀얼 채널)",
+        "scan_gpu": "그래픽",
+        "scan_gpu_val": "NVIDIA GeForce RTX 3060 Laptop / Intel Iris Xe",
+        "scan_disk": "시스템 디스크",
+        "scan_disk_val": "NVMe SSD 512GB · SMART 상태 96%",
+        "scan_tpm": "신뢰할 수 있는 플랫폼 모듈",
+        "scan_tpm_val": "TPM 2.0 · 사용 · 사양 버전 2.0",
+        "scan_secureboot": "보안 부팅",
+        "scan_secureboot_val": "사용 · UEFI 펌웨어",
+        "scan_battery": "배터리",
+        "scan_battery_val": "설계 용량 70Wh · 현재 상태 94%",
+        "scan_net": "네트워크 어댑터",
+        "scan_net_val": "Intel Wi-Fi 6E AX211 · 기가비트 이더넷",
+        "scan_score": "호환성 점수",
+        "scan_score_val": "{n} / 100 · Windows 11과 완전 호환",
+        "scan_detail": "자세한 보고서 보기",
+        "scan_close": "닫기",
+
+        # 辅助功能
+        "access_title": "접근성",
+        "access_desc": "사용자에게 맞는 접근성 기능을 선택하세요. 나중에 설정에서 변경할 수 있습니다.",
+        "access_narrator": "내레이터",
+        "access_narrator_d": "화면의 텍스트를 소리 내어 읽어 시각 장애가 있는 사용자를 돕습니다.",
+        "access_magnifier": "돋보기",
+        "access_magnifier_d": "화면의 일부를 확대하여 텍스트와 아이콘을 더 쉽게 볼 수 있습니다.",
+        "access_contrast": "고대비",
+        "access_contrast_d": "화면 요소의 대비를 높여 더 쉽게 읽을 수 있습니다.",
+        "access_bigtext": "큰 텍스트",
+        "access_bigtext_d": "시스템 텍스트를 150%로 확대하여 읽기 부담을 줄입니다.",
+        "access_preview": "실시간 미리 보기",
+        "access_preview_text": "미리 보기 텍스트입니다. 왼쪽 옵션을 켜서 효과를 확인하세요.",
+        "access_skip": "건너뛰기",
+
+        # Windows 更新检查
+        "upd_title": "업데이트 확인 중",
+        "upd_checking": "이 장치에 사용할 수 있는 업데이트를 찾는 중...",
+        "upd_found": "사용 가능한 업데이트 {n}개를 찾았습니다",
+        "upd_item_cum": "2026-11 Windows 11용 누적 업데이트(KB5040442)",
+        "upd_item_net": ".NET Framework 4.8.1 보안 업데이트(KB5040990)",
+        "upd_item_def": "Windows Defender 바이러스 백신 정의 업데이트",
+        "upd_item_drv": "Intel 그래픽 드라이버 31.0.101.5333",
+        "upd_item_edge": "Microsoft Edge 보안 업데이트(KB5041095)",
+        "upd_downloading": "업데이트 다운로드 중({p}%)",
+        "upd_installing": "업데이트 설치 중입니다. PC를 끄지 마세요...",
+        "upd_done": "업데이트 설치 완료, 계속 진행합니다",
+        "upd_skip": "나중에",
+        "upd_continue": "계속",
+
+        # 安装日志查看器
+        "log_title": "설치 로그",
+        "log_desc": "설치 프로그램의 내부 로그를 실시간으로 확인하여 실패 원인을 진단합니다.",
+        "log_filter": "키워드 필터...",
+        "log_autoscroll": "자동 스크롤",
+        "log_export": "Temp로 내보내기",
+        "log_exported": "로그를 Temp 폴더로 내보냈습니다",
+        "log_empty": "로그가 없습니다",
+        "log_paused": "일시 중지됨",
+        "log_live": "실시간",
+        "log_copy": "복사",
+        "log_copied": "로그를 클립보드에 복사했습니다",
+
+        # 深色模式
+        "theme_light": "라이트",
+        "theme_dark": "다크",
+        "theme_toggle": "설치 프로그램 테마 전환",
+
+        # 快捷键帮助
+        "help_title": "키보드 단축키",
+        "help_desc": "어느 화면에서든 F1을 눌러 이 도움말을 열거나 닫습니다.",
+        "help_esc": "Esc — 이전 단계로",
+        "help_enter": "Enter — 다음 / 확인",
+        "help_f1": "F1 — 도움말 열기/닫기",
+        "help_f10": "Shift+F10 — 명령 프롬프트 열기",
+        "help_log": "Ctrl+L — 설치 로그 열기",
+        "help_close": "닫기",
+
+        # 安装摘要
+        "sum_title": "설치 요약",
+        "sum_edition": "버전",
+        "sum_device": "장치 이름",
+        "sum_partition": "설치 위치",
+        "sum_duration": "총 소요 시간",
+        "sum_account": "계정 유형",
+        "sum_export": "설치 보고서 내보내기",
+        "sum_exported": "설치 보고서를 Temp 폴더로 내보냈습니다",
+        "sum_done": "모두 준비되었습니다",
+        "sum_logs": "설치 로그 보기",
+
+        # 安装速度档位
+        "speed_title": "설치 속도",
+        "speed_standard": "표준(실제)",
+        "speed_fast": "빠름",
+        "speed_demo": "데모",
+        "speed_hint": "설치 시뮬레이션 속도를 선택하세요.",
+
+        # 进度补充
+        "inst_open_log": "설치 로그 보기",
+        "inst_show_log": "로그 표시",
+        "back_prev": "뒤로",
+    },
+}

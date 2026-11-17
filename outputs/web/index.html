@@ -6,8 +6,8 @@
 <title>Windows 11 安装程序</title>
 
 <!-- 外部依赖：样式（带版本号，避免更新后仍命中旧缓存） -->
-<link rel="stylesheet" href="styles/app.css?v=7.0.0">
-<link rel="stylesheet" href="styles/windows.css?v=7.0.0">
+<link rel="stylesheet" href="styles/app.css?v=8.0.0">
+<link rel="stylesheet" href="styles/windows.css?v=8.0.0">
 </head>
 <body>
 <body>
@@ -383,7 +383,21 @@
       <div id="bootPass" style="margin-top:16px; display:none;">
         <div style="color:#0f7b3f; font-weight:600; font-size:14px;" data-i18n="boot_pass">✓ 电脑满足 Windows 11 的要求</div>
         <div class="dlg-sub" style="margin-top:4px;" data-i18n="boot_pass_desc">一切就绪，可以继续安装。</div>
+        <div class="speed-pick">
+          <b data-i18n="speed_title">安装速度</b>
+          <div class="speed-chips" id="speedChips">
+            <button class="chip on" data-speed="standard" data-i18n="speed_standard">标准（真实体验）</button>
+            <button class="chip" data-speed="fast" data-i18n="speed_fast">快速</button>
+            <button class="chip" data-speed="demo" data-i18n="speed_demo">演示</button>
+          </div>
+          <div class="speed-hint" data-i18n="speed_hint">选择安装过程的模拟速度。</div>
+        </div>
       </div>
+    </div>
+    <div class="dialog__foot">
+      <button class="link" id="scanOpen" data-i18n="scan_detail">查看详细报告</button>
+      <div class="spacer"></div>
+      <button class="btn" id="bootSkip" data-go="lang" data-i18n="btn_next">下一步</button>
     </div>
   </div>
 </section>
@@ -405,9 +419,10 @@
       <div><b data-i18n="inst_used">已用时间</b> <span id="instUsed">00:00</span></div>
       <div><b data-i18n="inst_remain">剩余时间</b> <span id="instRemain">—</span></div>
     </div>
-    <div style="margin-top:14px; display:flex; gap:10px; justify-content:center;">
+    <div style="margin-top:14px; display:flex; gap:10px; justify-content:center; align-items:center;">
       <button class="btn" id="instPause" style="min-width:96px;" disabled data-i18n="inst_pause">暂停</button>
       <button class="btn" id="instCancel" style="min-width:96px;" disabled data-i18n="inst_cancel">取消</button>
+      <button class="link" id="instOpenLog" data-i18n="inst_open_log">查看安装日志</button>
     </div>
   </div>
 </section>
@@ -456,7 +471,7 @@
     </div>
     <div id="helloErr" class="oobe-warn" style="display:none;"></div>
     <div class="oobe-foot">
-      <button class="link" data-go="privacy" id="helloSkip" data-i18n="hello_skip_warn">跳过（不推荐）</button>
+      <button class="link" data-go="cloud" id="helloSkip" data-i18n="hello_skip_warn">跳过（不推荐）</button>
       <div class="right"><button class="btn primary" id="helloNext" data-enter="1" disabled data-i18n="hello_pin_next">确定</button></div>
     </div>
   </div>
@@ -473,21 +488,31 @@
       <div class="cloud-item"><div class="cloud-ic">📦</div><div><b data-i18n="cloud_apps">自动还原 Microsoft Store 应用</b></div></div>
     </div>
     <div class="oobe-foot">
-      <button class="link" data-go="privacy" data-i18n="hello_skip">跳过</button>
-      <div class="right"><button class="btn primary" data-go="final" data-i18n="cloud_signin">登录 Microsoft 账户</button></div>
+      <button class="link" data-go="updatesetup" data-i18n="hello_skip">跳过</button>
+      <div class="right"><button class="btn primary" data-go="updatesetup" data-i18n="cloud_signin">登录 Microsoft 账户</button></div>
     </div>
   </div>
 </section>
 
-<!-- ===== v7.0：安装完成庆祝页 ===== -->
+<!-- ===== v7.0：安装完成庆祝页（v8.0 增加安装摘要） ===== -->
 <section class="screen oobe" id="s-done">
   <div class="oobe-card" style="text-align:center;">
     <div style="width:72px; height:72px; margin:0 auto 12px; border-radius:50%; background:#e8f5e9; color:#2e7d32; font-size:36px; display:flex; align-items:center; justify-content:center;">✓</div>
     <h1 data-i18n="done_title">一切就绪</h1>
     <p class="sub" data-i18n="done_desc">Windows 11 已成功安装并准备好使用。</p>
     <div style="margin-top:12px; font-size:14px; color:#4a5568;"><span id="doneName">Administrator</span> · <span data-i18n="done_hint">建议先查看“开始”菜单，或者打开 Microsoft Store 安装喜欢的应用。</span></div>
-    <div class="oobe-foot" style="justify-content:center;">
-      <div class="right"><button class="btn primary" data-go="desktop" data-i18n="done_start">开始使用</button></div>
+    <div class="sum-card">
+      <div class="sum-head" data-i18n="sum_title">安装摘要</div>
+      <div class="sum-grid">
+        <div><span data-i18n="sum_edition">版本</span><b id="sumEdition">—</b></div>
+        <div><span data-i18n="sum_device">设备名称</span><b id="sumDevice">—</b></div>
+        <div><span data-i18n="sum_partition">安装位置</span><b id="sumPartition">—</b></div>
+        <div><span data-i18n="sum_duration">总耗时</span><b id="sumDuration">—</b></div>
+      </div>
+    </div>
+    <div class="oobe-foot" style="justify-content:center; gap:10px;">
+      <button class="btn" id="sumExport" data-i18n="sum_export">导出安装报告</button>
+      <button class="btn primary" data-go="desktop" data-i18n="done_start">开始使用</button>
     </div>
   </div>
 </section>
@@ -554,8 +579,8 @@
       </div>
     </div>
     <div class="oobe-foot">
-      <button class="link" data-go="privacy" data-i18n="connect_skip">稍后再说</button>
-      <div class="right"><button class="btn primary" data-go="privacy" data-i18n="btn_next">下一步</button></div>
+      <button class="link" data-go="custom" data-i18n="connect_skip">稍后再说</button>
+      <div class="right"><button class="btn primary" data-go="custom" data-i18n="btn_next">下一步</button></div>
     </div>
   </div>
 </section>
@@ -575,6 +600,139 @@
     </div>
   </div>
 </section>
+
+<!-- ===== v8.0 特大更新：系统兼容性详细报告 ===== -->
+<section class="screen" id="s-scan">
+  <div class="dialog dialog--wide">
+    <div class="dialog__bar">
+      <div class="dialog__title" data-i18n="setup_title">Windows 11 安装程序</div>
+      <span class="ver-tag" data-i18n="version_v8">8.0</span>
+    </div>
+    <div class="dialog__body">
+      <h1 class="dlg-h" data-i18n="scan_title">系统兼容性报告</h1>
+      <p class="dlg-sub" data-i18n="scan_desc">这是针对此电脑的详细硬件检测结果，完全满足 Windows 11 的要求。</p>
+      <div class="scan-score">
+        <b id="scanScore">98</b>
+        <span data-i18n="scan_score">兼容性评分</span>
+      </div>
+      <div class="scan-grid">
+        <div class="scan-item"><div class="si-ic">🧠</div><div><b data-i18n="scan_cpu">处理器</b><span data-i18n="scan_cpu_val">12th Gen Intel Core i7-12700H（14 核 / 20 线程 @ 2.30 GHz）</span></div></div>
+        <div class="scan-item"><div class="si-ic">🧩</div><div><b data-i18n="scan_ram">内存</b><span data-i18n="scan_ram_val">16 GB DDR4-3200（双通道）</span></div></div>
+        <div class="scan-item"><div class="si-ic">🎮</div><div><b data-i18n="scan_gpu">显卡</b><span data-i18n="scan_gpu_val">NVIDIA GeForce RTX 3060 Laptop / Intel Iris Xe 核显</span></div></div>
+        <div class="scan-item"><div class="si-ic">💾</div><div><b data-i18n="scan_disk">系统磁盘</b><span data-i18n="scan_disk_val">NVMe SSD 512 GB · SMART 健康度 96%</span></div></div>
+        <div class="scan-item"><div class="si-ic">🔐</div><div><b data-i18n="scan_tpm">受信任平台模块</b><span data-i18n="scan_tpm_val">TPM 2.0 · 已启用 · 规范版本 2.0</span></div></div>
+        <div class="scan-item"><div class="si-ic">🛡️</div><div><b data-i18n="scan_secureboot">安全启动</b><span data-i18n="scan_secureboot_val">已启用 · UEFI 固件</span></div></div>
+        <div class="scan-item"><div class="si-ic">🔋</div><div><b data-i18n="scan_battery">电池</b><span data-i18n="scan_battery_val">设计容量 70 Wh · 当前健康度 94%</span></div></div>
+        <div class="scan-item"><div class="si-ic">📶</div><div><b data-i18n="scan_net">网络适配器</b><span data-i18n="scan_net_val">Intel Wi-Fi 6E AX211 · 千兆以太网</span></div></div>
+      </div>
+      <div class="scan-tip">
+        <b data-i18n="scan_score">兼容性评分</b>
+        <span id="scanScoreVal" data-i18n="scan_score_val">98 / 100 · 完全兼容 Windows 11</span>
+      </div>
+    </div>
+    <div class="dialog__foot">
+      <div class="spacer"></div>
+      <button class="btn primary" data-go="bootcheck" data-i18n="scan_close">关闭</button>
+    </div>
+  </div>
+</section>
+
+<!-- ===== v8.0 特大更新：辅助功能 ===== -->
+<section class="screen oobe" id="s-access">
+  <div class="oobe-card">
+    <h1 data-i18n="access_title">辅助功能</h1>
+    <p class="sub" data-i18n="access_desc">选择适合你的辅助功能，安装完成后随时可以在设置中更改。</p>
+    <div id="accessList">
+      <div class="switch-row" data-access="narrator"><div class="txt"><b data-i18n="access_narrator">讲述人</b><span data-i18n="access_narrator_d">朗读屏幕上的文字，帮助视障用户使用电脑。</span></div><div class="switch"></div></div>
+      <div class="switch-row" data-access="magnifier"><div class="txt"><b data-i18n="access_magnifier">放大镜</b><span data-i18n="access_magnifier_d">放大屏幕的一部分，让文字和图标更清晰。</span></div><div class="switch"></div></div>
+      <div class="switch-row" data-access="contrast"><div class="txt"><b data-i18n="access_contrast">高对比度</b><span data-i18n="access_contrast_d">增强屏幕元素的对比度，让内容更易辨认。</span></div><div class="switch"></div></div>
+      <div class="switch-row" data-access="bigtext"><div class="txt"><b data-i18n="access_bigtext">更大的文字</b><span data-i18n="access_bigtext_d">将系统文字放大 150%，减轻阅读负担。</span></div><div class="switch"></div></div>
+    </div>
+    <div class="access-preview" id="accessPreview">
+      <b data-i18n="access_preview">实时预览</b>
+      <p id="accessPreviewText" data-i18n="access_preview_text">这是预览文字，勾选左侧选项查看效果。</p>
+    </div>
+    <div class="oobe-foot">
+      <button class="link" data-go="connect" data-i18n="access_skip">跳过</button>
+      <div class="right"><button class="btn primary" data-go="connect" data-enter="1" data-i18n="btn_next">下一步</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== v8.0 特大更新：Windows 更新检查 ===== -->
+<section class="screen oobe" id="s-updatesetup">
+  <div class="oobe-card" style="max-width:660px;">
+    <h1 data-i18n="upd_title">正在检查更新</h1>
+    <p class="sub" id="updStatus" data-i18n="upd_checking">正在查找适用于你的设备的更新...</p>
+    <div class="upd-progress">
+      <div class="bar"><i id="updBar"></i></div>
+      <span id="updPct">0%</span>
+    </div>
+    <div class="upd-list" id="updList">
+      <div class="upd-item" data-upd="0"><span class="upd-ic">◌</span><span data-i18n="upd_item_cum">2026-11 适用于 Windows 11 的累积更新 (KB5040442)</span></div>
+      <div class="upd-item" data-upd="1"><span class="upd-ic">◌</span><span data-i18n="upd_item_net">.NET Framework 4.8.1 安全更新 (KB5040990)</span></div>
+      <div class="upd-item" data-upd="2"><span class="upd-ic">◌</span><span data-i18n="upd_item_def">Windows Defender 反病毒定义更新</span></div>
+      <div class="upd-item" data-upd="3"><span class="upd-ic">◌</span><span data-i18n="upd_item_drv">Intel 图形驱动程序 31.0.101.5333</span></div>
+      <div class="upd-item" data-upd="4"><span class="upd-ic">◌</span><span data-i18n="upd_item_edge">Microsoft Edge 安全更新 (KB5041095)</span></div>
+    </div>
+    <div class="oobe-foot">
+      <button class="link" id="updSkip" data-i18n="upd_skip">暂时跳过</button>
+      <div class="right"><button class="btn primary" id="updNext" data-enter="1" disabled data-i18n="upd_continue">继续</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== v8.0 特大更新：实时安装日志（覆盖层，不中断安装） ===== -->
+<div class="v8-overlay" id="logOverlay">
+  <div class="dialog logview">
+    <div class="dialog__bar">
+      <div class="dialog__title" data-i18n="log_title">安装日志</div>
+      <span class="log-badge" id="logBadge" data-i18n="log_live">实时</span>
+    </div>
+    <div class="dialog__body" style="padding:0;">
+      <div class="log-tools">
+        <input class="inp" id="logFilter" data-i18n-ph="log_filter" placeholder="过滤关键字...">
+        <label class="log-chk"><input type="checkbox" id="logAuto" checked> <span data-i18n="log_autoscroll">自动滚动</span></label>
+        <button class="link" id="logPause" data-i18n="inst_pause">暂停</button>
+        <button class="link" id="logExport" data-i18n="log_export">导出到 Temp</button>
+      </div>
+      <pre class="log-body" id="logBody"></pre>
+    </div>
+    <div class="dialog__foot">
+      <div class="spacer"></div>
+      <button class="btn primary" id="logClose" data-i18n="scan_close">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== v8.0 特大更新：快捷键帮助（覆盖层） ===== -->
+<div class="v8-overlay" id="helpOverlay">
+  <div class="dialog" style="max-width:480px;">
+    <div class="dialog__bar">
+      <div class="dialog__title" data-i18n="help_title">键盘快捷键</div>
+    </div>
+    <div class="dialog__body">
+      <p class="dlg-sub" data-i18n="help_desc">在任意界面按 F1 打开或关闭此帮助。</p>
+      <div class="help-list">
+        <div class="help-row"><kbd>Esc</kbd><span data-i18n="help_esc">Esc — 返回上一步</span></div>
+        <div class="help-row"><kbd>Enter</kbd><span data-i18n="help_enter">Enter — 下一步 / 确认</span></div>
+        <div class="help-row"><kbd>F1</kbd><span data-i18n="help_f1">F1 — 打开或关闭帮助</span></div>
+        <div class="help-row"><kbd>Shift</kbd><kbd>F10</kbd><span data-i18n="help_f10">Shift+F10 — 打开命令行</span></div>
+        <div class="help-row"><kbd>Ctrl</kbd><kbd>L</kbd><span data-i18n="help_log">Ctrl+L — 打开安装日志</span></div>
+      </div>
+    </div>
+    <div class="dialog__foot">
+      <div class="spacer"></div>
+      <button class="btn primary" id="helpClose" data-i18n="help_close">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== v8.0 特大更新：安装界面浮动工具（主题 / 帮助） ===== -->
+<div class="setup-fab" id="setupFab">
+  <button id="v8Theme" data-i18n-title="theme_toggle" title="切换安装程序主题">🌙</button>
+  <button id="v8Help" data-i18n-title="help_title" title="键盘快捷键">?</button>
+</div>
 
 <!-- ===== OOBE：设备命名 ===== -->
 <section class="screen oobe" id="s-device">
@@ -669,8 +827,8 @@
       <div class="switch-row" style="border-bottom:0;"><div class="txt"><b data-i18n="p_local">本地内容</b><span data-i18n="p_local_d">在搜索和提示中显示本地文件与应用内容</span></div><div class="switch on"></div></div>
     </div>
     <div class="oobe-foot">
-      <button class="link" data-go="custom" data-i18n="oobe_skip">跳过</button>
-      <div class="right"><button class="btn primary" data-go="custom" data-enter="1" data-i18n="btn_accept">接受</button></div>
+      <button class="link" data-go="access" data-i18n="oobe_skip">跳过</button>
+      <div class="right"><button class="btn primary" data-go="access" data-enter="1" data-i18n="btn_accept">接受</button></div>
     </div>
   </div>
 </section>
@@ -1043,7 +1201,7 @@
       <button data-jump="region">区域</button><button data-jump="keyboard">键盘</button>
       <button data-jump="keyboard2">第二键盘</button><button data-jump="network">网络</button>
       <button data-jump="limited" data-i18n="limited_title">受限设置</button><button data-jump="device">设备命名</button>
-      <button data-jump="acctype">账户类型</button><button data-jump="msaccount">微软账户</button>
+      <button data-jump="acctype" data-i18n="sum_account">账户类型</button><button data-jump="msaccount">微软账户</button>
       <button data-jump="local" data-i18n="set_account_type">本地账户</button><button data-jump="privacy">隐私选项</button>
       <button data-jump="custom">自定义体验</button><button data-jump="final">准备桌面</button>
     </div></div>
@@ -1058,7 +1216,7 @@
 <div class="lang-switch" id="langSwitch"></div>
 
 <!-- 外部依赖：语言包加载器 + 主逻辑（语言包为 locales/*.json，需通过本地服务器访问） -->
-<script src="scripts/i18n.js?v=7.0.0"></script>
-<script src="scripts/app.js?v=7.0.0"></script>
+<script src="scripts/i18n.js?v=8.0.0"></script>
+<script src="scripts/app.js?v=8.0.0"></script>
 </body>
 </html>
