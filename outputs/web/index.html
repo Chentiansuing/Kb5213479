@@ -6,8 +6,8 @@
 <title>Windows 11 安装程序</title>
 
 <!-- 外部依赖：样式（带版本号，避免更新后仍命中旧缓存） -->
-<link rel="stylesheet" href="styles/app.css?v=8.0.0">
-<link rel="stylesheet" href="styles/windows.css?v=8.0.0">
+<link rel="stylesheet" href="styles/app.css?v=9.0.0">
+<link rel="stylesheet" href="styles/windows.css?v=9.0.0">
 </head>
 <body>
 <body>
@@ -231,6 +231,7 @@
         <button class="link" id="btnExtend" data-i18n="disk_extend">扩展</button>
         <button class="link" id="btnGpt" data-i18n="disk_gpt_convert">转换成 GPT</button>
         <button class="link" id="btnDriver" data-i18n="disk_link5">加载驱动程序</button>
+        <button class="link" id="btnCleanup" data-i18n="cl_title">磁盘清理</button>
       </div>
       <div class="disk-info" id="diskInfo" data-i18n="disk_info_none">请选择一个分区。</div>
       <div class="disk-tip" data-i18n="disk_tip">提示：选择"主分区"后点击"下一步"即可开始安装；未分配的空间需要先点击"新建"。</div>
@@ -471,6 +472,7 @@
     </div>
     <div id="helloErr" class="oobe-warn" style="display:none;"></div>
     <div class="oobe-foot">
+      <button class="link" data-go="face" id="helloFace" data-i18n="face_title">使用面部识别</button>
       <button class="link" data-go="cloud" id="helloSkip" data-i18n="hello_skip_warn">跳过（不推荐）</button>
       <div class="right"><button class="btn primary" id="helloNext" data-enter="1" disabled data-i18n="hello_pin_next">确定</button></div>
     </div>
@@ -512,6 +514,7 @@
     </div>
     <div class="oobe-foot" style="justify-content:center; gap:10px;">
       <button class="btn" id="sumExport" data-i18n="sum_export">导出安装报告</button>
+      <button class="btn" id="doneWhatsNew" data-i18n="wn_open">查看新功能</button>
       <button class="btn primary" data-go="desktop" data-i18n="done_start">开始使用</button>
     </div>
   </div>
@@ -579,8 +582,8 @@
       </div>
     </div>
     <div class="oobe-foot">
-      <button class="link" data-go="custom" data-i18n="connect_skip">稍后再说</button>
-      <div class="right"><button class="btn primary" data-go="custom" data-i18n="btn_next">下一步</button></div>
+      <button class="link" data-go="bloat" data-i18n="connect_skip">稍后再说</button>
+      <div class="right"><button class="btn primary" data-go="bloat" data-i18n="btn_next">下一步</button></div>
     </div>
   </div>
 </section>
@@ -600,6 +603,304 @@
     </div>
   </div>
 </section>
+
+<!-- ===== v8.1：启动欢迎页（立即安装 / 修复计算机 / 导入配置） ===== -->
+<section class="screen dark" id="s-welcome">
+  <div class="welcome">
+    <div class="welcome__lang">
+      <span data-i18n="welcome_lang">安装语言</span>
+      <div class="welcome__langlist" id="welcomeLangs"></div>
+    </div>
+    <div class="welcome__center">
+      <svg class="welcome__logo" viewBox="0 0 64 64" aria-hidden="true">
+        <g fill="#ffffff"><rect x="2" y="2" width="27" height="27" rx="1.5"/><rect x="35" y="2" width="27" height="27" rx="1.5"/><rect x="2" y="35" width="27" height="27" rx="1.5"/><rect x="35" y="35" width="27" height="27" rx="1.5"/></g>
+      </svg>
+      <h1 data-i18n="welcome_title">Windows 11 安装程序</h1>
+      <p class="welcome__sub" data-i18n="welcome_sub">欢迎使用 Windows 11 安装程序。你可以立即开始安装，或先修复这台计算机。</p>
+      <button class="btn primary welcome__install" id="welcomeInstall" data-i18n="welcome_install">立即安装</button>
+      <div class="welcome__links">
+        <button class="link" id="welcomeRepair" data-i18n="welcome_repair">修复计算机</button>
+        <button class="link" id="welcomeUnattend" data-i18n="ua_title">无人值守安装</button>
+        <button class="link" id="welcomeImport" data-i18n="welcome_import">导入安装配置</button>
+        <button class="link" id="welcomeWhatsNew" data-i18n="wn9_title">9.0 有什么新功能？</button>
+      </div>
+    </div>
+    <div class="welcome__foot">
+      <span data-i18n="welcome_hint">提示：按 F1 可随时查看键盘快捷键。</span>
+      <span class="welcome__ver">v9.0</span>
+    </div>
+  </div>
+</section>
+
+<!-- ===== v8.1：系统还原点创建 ===== -->
+<section class="screen" id="s-restore">
+  <div class="dialog" style="max-width:520px;">
+    <div class="dialog__bar">
+      <div class="dialog__title" data-i18n="setup_title">Windows 11 安装程序</div>
+    </div>
+    <div class="dialog__body">
+      <h1 class="dlg-h" data-i18n="restore_title">创建系统还原点</h1>
+      <p class="dlg-sub" data-i18n="restore_desc">建议在安装前创建还原点。如果安装失败或系统出现问题，你可以将电脑还原到当前状态。</p>
+      <div class="switch-row" id="restoreToggleRow" style="margin-top:8px;">
+        <div class="txt"><b data-i18n="restore_toggle">安装前创建系统还原点（推荐）</b></div>
+        <div class="switch on" id="restoreToggle"></div>
+      </div>
+      <div id="restoreProg" style="margin-top:18px; display:none;">
+        <div class="restore-bar"><i id="restoreBar"></i></div>
+        <div class="restore-status" id="restoreStatus" data-i18n="restore_creating">正在创建还原点“安装前”...</div>
+      </div>
+    </div>
+    <div class="dialog__foot">
+      <button class="link" id="restoreSkip" data-i18n="restore_skip">跳过</button>
+      <div class="spacer"></div>
+      <button class="btn primary" id="restoreNext" data-enter="1" disabled data-i18n="restore_ok">开始安装</button>
+    </div>
+  </div>
+</section>
+
+<!-- ===== v8.1：设备加密（BitLocker） ===== -->
+<section class="screen oobe" id="s-encrypt">
+  <div class="oobe-card" style="max-width:620px;">
+    <h1 data-i18n="encrypt_title">设备加密</h1>
+    <p class="sub" data-i18n="encrypt_desc">BitLocker 设备加密可以帮助保护你的文件，防止他人在丢失或被盗的设备上访问你的数据。</p>
+    <div class="switch-row" data-access="bitlocker" style="margin-top:6px;">
+      <div class="txt"><b data-i18n="encrypt_toggle">为此设备启用 BitLocker 设备加密</b></div>
+      <div class="switch on" id="encryptToggle"></div>
+    </div>
+    <div class="encrypt-state" id="encryptState" data-i18n="encrypt_on">已开启 · 将使用 XTS-AES 128 位加密</div>
+    <button class="link" id="encryptMore" data-i18n="encrypt_more">了解更多</button>
+    <div class="encrypt-detail" id="encryptDetail" style="display:none;" data-i18n="encrypt_detail">设备加密使用受信任的平台模块（TPM）安全地保管恢复密钥。</div>
+    <div class="oobe-foot">
+      <button class="link" id="encryptBackup" data-i18n="encrypt_backup">备份恢复密钥到 Microsoft 账户</button>
+      <div class="right"><button class="btn primary" data-go="access" data-enter="1" data-i18n="btn_next">下一步</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== v8.1：8.1 新功能 ===== -->
+<section class="screen" id="s-whatsnew">
+  <div class="dialog dialog--wide">
+    <div class="dialog__bar">
+      <div class="dialog__title" data-i18n="setup_title">Windows 11 安装程序</div>
+      <span class="ver-tag" id="wnVerTag" data-i18n="version_v81">8.1</span>
+    </div>
+    <div class="dialog__body">
+      <h1 class="dlg-h" data-i18n="wn_title">8.1 有什么新功能</h1>
+      <p class="dlg-sub" data-i18n="wn_desc">以下是 8.1 与 8.0 版本的新增内容。</p>
+      <div class="wn-group" data-i18n="wn_v81">8.1 新增</div>
+      <div class="wn-item"><b data-i18n="wn_welcome">启动欢迎页：立即安装、修复计算机、导入安装配置</b><span data-i18n="wn_welcome_d">还原真实的 Windows 安装程序入口，可跳过检查直接安装，也提供修复工具入口。</span></div>
+      <div class="wn-item"><b data-i18n="wn_restore">系统还原点：安装前自动创建，可随时回滚</b><span data-i18n="wn_restore_d">在开始安装前创建还原点，安装失败也能回到当前状态。</span></div>
+      <div class="wn-item"><b data-i18n="wn_encrypt">设备加密：BitLocker / XTS-AES 询问与说明</b><span data-i18n="wn_encrypt_d">在 OOBE 阶段询问是否启用 BitLocker 设备加密，并提供恢复密钥备份说明。</span></div>
+      <div class="wn-item"><b data-i18n="wn_title_progress">标题栏安装进度：安装时标题实时显示百分比</b><span data-i18n="wn_title_progress_d">切换到其他标签页也能看到安装进度。</span></div>
+      <div class="wn-item"><b data-i18n="wn_notif">通知中心：版本更新与安装完成通知</b><span data-i18n="wn_notif_d">点击任务栏时钟即可查看最新通知。</span></div>
+      <div class="wn-group" data-i18n="wn_v80">8.0 新增</div>
+      <div class="wn-item"><b data-i18n="wn_scan">系统兼容性报告：8 项硬件检测与评分</b><span data-i18n="wn_scan_d">在检查系统要求页可查看 CPU、内存、显卡、磁盘、TPM 等详细信息。</span></div>
+      <div class="wn-item"><b data-i18n="wn_access">辅助功能：讲述人、放大镜、高对比度与更大文字</b><span data-i18n="wn_access_d">在 OOBE 阶段选择辅助功能，预览框实时显示效果。</span></div>
+      <div class="wn-item"><b data-i18n="wn_update">Windows 更新检查：5 项更新逐个安装</b><span data-i18n="wn_update_d">联网后自动检查累积更新、驱动与 Defender 定义。</span></div>
+      <div class="wn-item"><b data-i18n="wn_log">实时安装日志：过滤、暂停、导出到 Temp</b><span data-i18n="wn_log_d">安装过程中随时查看内部日志，便于排查问题。</span></div>
+      <div class="wn-item"><b data-i18n="wn_dark">深色模式：一键切换整套安装程序主题</b><span data-i18n="wn_dark_d">右上角月亮按钮切换浅色/深色，偏好自动记忆。</span></div>
+      <div class="wn-item"><b data-i18n="wn_speed">安装速度档位：标准 / 快速 / 演示</b><span data-i18n="wn_speed_d">演示模式 8 秒完成安装，适合录屏展示。</span></div>
+      <div class="wn-item"><b data-i18n="wn_summary">安装摘要：版本、设备、位置与耗时，可导出报告</b><span data-i18n="wn_summary_d">安装完成后一键导出完整安装报告到 Temp 目录。</span></div>
+      <div class="wn-group" data-i18n="wn_v9">9.0 新增</div>
+      <div class="wn-item"><b data-i18n="wn_ua">无人值守安装：应答文件一键装完</b><span data-i18n="wn_ua_d">开启后自动选择版本、分区并应答全部 OOBE 页面，带进度提示条。</span></div>
+      <div class="wn-item"><b data-i18n="wn_src">安装源选择：ISO / USB / 网络</b><span data-i18n="wn_src_d">不同来源记录不同日志，影响安装准备阶段的提示。</span></div>
+      <div class="wn-item"><b data-i18n="wn_cl">磁盘清理工具：安装前释放空间</b><span data-i18n="wn_cl_d">扫描 6 类可清理文件，勾选后即时释放空间。</span></div>
+      <div class="wn-item"><b data-i18n="wn_face">Windows Hello 面部识别</b><span data-i18n="wn_face_d">扫描动画模拟人脸录入，成功后进入 PIN 设置。</span></div>
+      <div class="wn-item"><b data-i18n="wn_m2">Microsoft 账户两步验证</b><span data-i18n="wn_m2_d">邮箱 → 密码 → 6 位验证码的完整登录链路（演示环境任意 6 位）。</span></div>
+      <div class="wn-item"><b data-i18n="wn_bl">软件推荐页：OEM 预装软件勾选</b><span data-i18n="wn_bl_d">5 个推荐软件可自由勾选或全部跳过。</span></div>
+      <div class="wn-item"><b data-i18n="wn_ba">首次开机动画</b><span data-i18n="wn_ba_d">安装完成后首次进入桌面播放全屏启动动画。</span></div>
+      <div class="wn-item"><b data-i18n="wn_snd">系统音效</b><span data-i18n="wn_snd_d">使用 Web Audio 合成点击、错误与完成提示音，可在快速设置中开关。</span></div>
+      <div class="wn-item"><b data-i18n="wn_wv">系统信息与更新历史</b><span data-i18n="wn_wv_d">运行 winver 查看版本信息，更新历史记录一键查看。</span></div>
+      <div class="wn-item"><b data-i18n="wn_bm">双系统启动菜单</b><span data-i18n="wn_bm_d">重启时概率出现“选择操作系统”菜单，含 Windows 10 条目。</span></div>
+      <div class="wn-item"><b data-i18n="wn_notif9">动态通知推送</b><span data-i18n="wn_notif9_d">安装完成与更新就绪会实时推送到通知中心。</span></div>
+    </div>
+    <div class="dialog__foot">
+      <div class="spacer"></div>
+      <button class="btn primary" id="wnClose" data-i18n="wn9_close">关闭</button>
+    </div>
+  </div>
+</section>
+
+<!-- ===== v9.0：安装源选择 ===== -->
+<section class="screen" id="s-source">
+  <div class="dialog" style="max-width:560px;">
+    <div class="dialog__bar">
+      <div class="dialog__title" data-i18n="setup_title">Windows 11 安装程序</div>
+      <span class="ver-tag" data-i18n="version_v9">9.0</span>
+    </div>
+    <div class="dialog__body">
+      <h1 class="dlg-h" data-i18n="src_title">选择安装源</h1>
+      <p class="dlg-sub" data-i18n="src_desc">选择本次安装使用的安装介质。不同来源会影响安装前的准备步骤。</p>
+      <div id="srcList" style="margin-top:14px;">
+        <div class="opt" data-src="iso">
+          <span class="radio"></span>
+          <div><div class="opt__t" data-i18n="src_iso">ISO 镜像文件</div><div class="opt__d" data-i18n="src_iso_d">从挂载的 Windows11.iso 安装，速度最快</div></div>
+        </div>
+        <div class="opt" data-src="usb">
+          <span class="radio"></span>
+          <div><div class="opt__t" data-i18n="src_usb">USB 闪存盘</div><div class="opt__d" data-i18n="src_usb_d">从 U 盘启动安装，适合全新设备</div></div>
+        </div>
+        <div class="opt" data-src="net">
+          <span class="radio"></span>
+          <div><div class="opt__t" data-i18n="src_net">网络安装</div><div class="opt__d" data-i18n="src_net_d">从 Windows 安装服务器下载镜像，需要稳定网络</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="dialog__foot">
+      <button class="link" data-go="welcome" data-i18n="btn_back">上一步</button>
+      <div class="spacer"></div>
+      <button class="btn primary" id="srcNext" data-enter="1" disabled data-i18n="src_next">下一步</button>
+    </div>
+  </div>
+</section>
+
+<!-- ===== v9.0：无人值守安装 ===== -->
+<section class="screen" id="s-unattend">
+  <div class="dialog" style="max-width:560px;">
+    <div class="dialog__bar">
+      <div class="dialog__title" data-i18n="setup_title">Windows 11 安装程序</div>
+      <span class="ver-tag" data-i18n="version_v9">9.0</span>
+    </div>
+    <div class="dialog__body">
+      <h1 class="dlg-h" data-i18n="ua_title">无人值守安装</h1>
+      <p class="dlg-sub" data-i18n="ua_desc">使用应答文件（unattend.xml）自动完成整个安装过程，无需逐步确认。</p>
+      <div class="ua-presets" id="uaPresets">
+        <div class="switch-row" data-ua="edition"><div class="txt"><b data-i18n="ua_edition">自动选择专业版</b><span data-i18n="ua_edition_d">跳过密钥与版本选择，直接使用 Windows 11 专业版</span></div><div class="switch on"></div></div>
+        <div class="switch-row" data-ua="key"><div class="txt"><b data-i18n="ua_key">跳过产品密钥</b><span data-i18n="ua_key_d">使用“我没有产品密钥”继续</span></div><div class="switch on"></div></div>
+        <div class="switch-row" data-ua="partition"><div class="txt"><b data-i18n="ua_partition">自动选择首个主分区</b><span data-i18n="ua_partition_d">跳过磁盘页面，直接安装到第一个主分区</span></div><div class="switch on"></div></div>
+        <div class="switch-row" data-ua="oobe"><div class="txt"><b data-i18n="ua_oobe">自动应答 OOBE</b><span data-i18n="ua_oobe_d">区域、账户、隐私等页面全部使用默认值</span></div><div class="switch on"></div></div>
+      </div>
+    </div>
+    <div class="dialog__foot">
+      <button class="link" data-go="welcome" data-i18n="btn_back">上一步</button>
+      <div class="spacer"></div>
+      <button class="btn primary" id="uaStart" data-enter="1" data-i18n="ua_start">开始无人值守安装</button>
+    </div>
+  </div>
+</section>
+
+<!-- ===== v9.0：磁盘清理 ===== -->
+<section class="screen" id="s-cleanup">
+  <div class="dialog" style="max-width:560px;">
+    <div class="dialog__bar">
+      <div class="dialog__title" data-i18n="setup_title">Windows 11 安装程序</div>
+      <span class="ver-tag" data-i18n="version_v9">9.0</span>
+    </div>
+    <div class="dialog__body">
+      <h1 class="dlg-h" data-i18n="cl_title">磁盘清理</h1>
+      <p class="dlg-sub" data-i18n="cl_desc">安装前可以清理不必要的文件以释放磁盘空间。</p>
+      <div id="clList" style="margin-top:14px;"></div>
+      <div class="cl-total" id="clTotal" style="display:none;">
+        <span data-i18n="cl_total">可释放空间合计</span>
+        <b id="clTotalSize">0 MB</b>
+      </div>
+    </div>
+    <div class="dialog__foot">
+      <button class="link" id="clSkip" data-i18n="cl_skip">暂不清理</button>
+      <div class="spacer"></div>
+      <button class="btn primary" id="clClean" disabled data-i18n="cl_clean">清理选中的文件</button>
+    </div>
+  </div>
+</section>
+
+<!-- ===== v9.0：Windows Hello 面部识别 ===== -->
+<section class="screen oobe" id="s-face">
+  <div class="oobe-card" style="max-width:480px; text-align:center;">
+    <h1 data-i18n="face_title">Windows Hello 面部识别</h1>
+    <p class="sub" data-i18n="face_desc">请正对摄像头，保持光线充足，系统将自动完成识别。</p>
+    <div class="face-stage" id="faceStage">
+      <div class="face-ring"><i></i><i></i><i></i></div>
+      <div class="face-avatar">👤</div>
+    </div>
+    <div class="face-status" id="faceStatus" data-i18n="face_hint">演示环境不会调用真实摄像头</div>
+    <div class="oobe-foot" style="justify-content:center; gap:10px;">
+      <button class="btn" id="facePin" data-i18n="face_pin">改用 PIN</button>
+      <button class="btn primary" id="faceScan" data-enter="1" data-i18n="face_scan">开始扫描</button>
+    </div>
+  </div>
+</section>
+
+<!-- ===== v9.0：Microsoft 账户两步验证 ===== -->
+<section class="screen oobe" id="s-msauth">
+  <div class="oobe-card" style="max-width:460px;">
+    <h1 data-i18n="m2_title">验证你的身份</h1>
+    <p class="sub" id="m2Desc">我们已向你的邮箱发送了一个验证码，请输入以继续。</p>
+    <div class="fld">
+      <label class="fld__label" for="m2Code" data-i18n="m2_code">验证码</label>
+      <input class="inp mono" id="m2Code" type="text" inputmode="numeric" maxlength="6" autocomplete="off" spellcheck="false" data-i18n-ph="m2_ph" placeholder="输入 6 位验证码">
+    </div>
+    <div id="m2Err" class="oobe-warn" style="display:none;"></div>
+    <div class="m2-hint" data-i18n="m2_hint">演示提示：任意输入 6 位数字即可通过</div>
+    <div class="oobe-foot">
+      <button class="link" data-go="msaccount" data-i18n="m2_back">返回</button>
+      <div class="spacer"></div>
+      <button class="link" id="m2Resend" data-i18n="m2_resend">重新发送</button>
+      <button class="btn primary" id="m2Verify" data-enter="1" disabled data-i18n="m2_verify">验证</button>
+    </div>
+  </div>
+</section>
+
+<!-- ===== v9.0：软件推荐 ===== -->
+<section class="screen oobe" id="s-bloat">
+  <div class="oobe-card" style="max-width:560px;">
+    <h1 data-i18n="bl_title">为你推荐的软件</h1>
+    <p class="sub" data-i18n="bl_desc">以下软件由设备制造商推荐安装。你可以取消勾选不需要的项目。</p>
+    <div id="blList">
+      <div class="switch-row" data-bl="1"><div class="txt"><b data-i18n="bl_mcafee">McAfee 防病毒软件</b><span data-i18n="bl_mcafee_d">30 天试用版</span></div><div class="switch on"></div></div>
+      <div class="switch-row" data-bl="2"><div class="txt"><b data-i18n="bl_adobe">Adobe Acrobat Reader</b><span data-i18n="bl_adobe_d">PDF 阅读器</span></div><div class="switch on"></div></div>
+      <div class="switch-row" data-bl="3"><div class="txt"><b data-i18n="bl_video">视频播放器会员版</b><span data-i18n="bl_video_d">含 7 天会员体验</span></div><div class="switch"></div></div>
+      <div class="switch-row" data-bl="4"><div class="txt"><b data-i18n="bl_office">Microsoft 365 试用</b><span data-i18n="bl_office_d">1 个月免费试用</span></div><div class="switch on"></div></div>
+      <div class="switch-row" data-bl="5" style="border-bottom:0;"><div class="txt"><b data-i18n="bl_game">游戏平台加速器</b><span data-i18n="bl_game_d">新用户赠 100 小时</span></div><div class="switch"></div></div>
+    </div>
+    <p class="bl-note" data-i18n="bl_note">取消勾选可跳过安装，稍后可在 Microsoft Store 中手动安装。</p>
+    <div class="oobe-foot">
+      <button class="link" id="blSkipAll" data-i18n="bl_skip_all">全部跳过</button>
+      <div class="spacer"></div>
+      <button class="btn primary" id="blNext" data-enter="1" data-i18n="bl_install">安装选中项（3）</button>
+    </div>
+  </div>
+</section>
+
+<!-- ===== v9.0：双系统启动菜单 ===== -->
+<section class="screen dark" id="s-bootmenu">
+  <div class="bootmenu">
+    <h1 data-i18n="bm_title">选择操作系统</h1>
+    <div class="bm-list" id="bmList">
+      <div class="bm-item on" data-os="win11">
+        <b data-i18n="bm_win11">Windows 11</b>
+        <span data-i18n="bm_win11_d">主操作系统</span>
+      </div>
+      <div class="bm-item" data-os="win10">
+        <b data-i18n="bm_win10">Windows 10</b>
+        <span data-i18n="bm_win10_d">次要操作系统（双系统）</span>
+      </div>
+    </div>
+    <p class="bm-timer" id="bmTimer">系统将在 10 秒后自动启动默认操作系统</p>
+    <p class="bm-note" data-i18n="bm_note">使用 ↑ ↓ 选择，Enter 确认</p>
+  </div>
+</section>
+
+<!-- ===== v9.0：首次开机动画 ===== -->
+<section class="screen dark" id="s-bootanim">
+  <div class="boot">
+    <svg class="boot__logo" viewBox="0 0 64 64" aria-hidden="true">
+      <g fill="#ffffff"><rect x="2" y="2" width="27" height="27" rx="1.5"/><rect x="35" y="2" width="27" height="27" rx="1.5"/><rect x="2" y="35" width="27" height="27" rx="1.5"/><rect x="35" y="35" width="27" height="27" rx="1.5"/></g>
+    </svg>
+    <div class="boot__spin"></div>
+    <div class="boot__msg" id="baMsg" data-i18n="ba_preparing">正在准备 Windows</div>
+    <div class="boot__hint" id="baHint" data-i18n="ba_hint">请不要关闭你的计算机</div>
+  </div>
+</section>
+
+<!-- ===== v9.0：无人值守安装状态条 ===== -->
+<div class="ua-strip" id="uaStrip">
+  <span class="ua-dot"></span>
+  <b data-i18n="ua_strip">无人值守安装中</b>
+  <span id="uaStep"></span>
+  <button class="link" id="uaPause" data-i18n="clock_pause">暂停</button>
+  <button class="link" id="uaStop" data-i18n="ua_skip_this">改为手动</button>
+</div>
+
 
 <!-- ===== v8.0 特大更新：系统兼容性详细报告 ===== -->
 <section class="screen" id="s-scan">
@@ -827,8 +1128,8 @@
       <div class="switch-row" style="border-bottom:0;"><div class="txt"><b data-i18n="p_local">本地内容</b><span data-i18n="p_local_d">在搜索和提示中显示本地文件与应用内容</span></div><div class="switch on"></div></div>
     </div>
     <div class="oobe-foot">
-      <button class="link" data-go="access" data-i18n="oobe_skip">跳过</button>
-      <div class="right"><button class="btn primary" data-go="access" data-enter="1" data-i18n="btn_accept">接受</button></div>
+      <button class="link" data-go="encrypt" data-i18n="oobe_skip">跳过</button>
+      <div class="right"><button class="btn primary" data-go="encrypt" data-enter="1" data-i18n="btn_accept">接受</button></div>
     </div>
   </div>
 </section>
@@ -990,6 +1291,7 @@
     </div>
     <div class="nc-body">
       <div class="nn-empty" data-i18n="cal_notif_empty">没有新通知</div>
+      <div class="nc-notif"><div class="nn-icon">★</div><div><div class="nn-title" data-i18n="notif_v9_title">Windows 11 安装模拟器 9.0</div><div class="nn-body" data-i18n="notif_v9_body">新增无人值守安装、安装源选择、磁盘清理、人脸识别、两步验证等 12 项功能。</div></div></div>
       <div class="nc-notif"><div class="nn-icon">i</div><div><div class="nn-title" data-i18n="notif_v60_title">Windows 11 安装模拟器 6.0</div><div class="nn-body" data-i18n="notif_v60_body">新增多桌面、任务视图、贴靠布局、全局搜索、小组件、画图、时钟与媒体播放器</div></div></div>
     </div>
   </div>
@@ -1012,6 +1314,10 @@
       <button class="qp-tile" data-qc="night">
         <svg viewBox="0 0 16 16" fill="none"><path d="M11.5 9a4.5 4.5 0 0 1-4-4.5A5 5 0 1 0 11.5 9Z" fill="currentColor"/></svg>
         <span data-i18n="qs_night">夜间模式</span>
+      </button>
+      <button class="qp-tile" data-qc="sound">
+        <svg viewBox="0 0 16 16" fill="none"><path d="M3 6.5 7 3v10L3 9.5H1.5v-3H3Z" fill="currentColor"/><path d="M9.5 5.5a3.5 3.5 0 0 1 0 5M11.6 3.6a6 6 0 0 1 0 8.8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+        <span data-i18n="snd_name">系统音效</span>
       </button>
     </div>
     <button class="qp-wide" id="qsFull">
@@ -1190,8 +1496,8 @@
     <div class="demo__title">演示导航 <span data-i18n="demo_hint">按 D 键切换 · 点击直接跳到该阶段</span></div>
     <div class="demo__group"><b data-i18n="demo_g_setup">安装程序</b><div class="demo__btns">
       <button data-jump="lang">语言与区域</button><button data-jump="key" data-i18n="lbl_key">产品密钥</button>
-      <button data-jump="edition">选择版本</button><button data-jump="license">许可条款</button>
-      <button data-jump="type">安装类型</button><button data-jump="disk">磁盘分区</button>
+      <button data-jump="edition">选择版本</button><button data-jump="license" data-i18n="ua_step_license">许可条款</button>
+      <button data-jump="type" data-i18n="ua_step_type">安装类型</button><button data-jump="disk">磁盘分区</button>
     </div></div>
     <div class="demo__group"><b data-i18n="demo_g_proc">安装过程</b><div class="demo__btns">
       <button data-jump="install">复制文件与进度</button><button data-jump="restart">重启提示</button>
@@ -1216,7 +1522,7 @@
 <div class="lang-switch" id="langSwitch"></div>
 
 <!-- 外部依赖：语言包加载器 + 主逻辑（语言包为 locales/*.json，需通过本地服务器访问） -->
-<script src="scripts/i18n.js?v=8.0.0"></script>
-<script src="scripts/app.js?v=8.0.0"></script>
+<script src="scripts/i18n.js?v=9.0.0"></script>
+<script src="scripts/app.js?v=9.0.0"></script>
 </body>
 </html>

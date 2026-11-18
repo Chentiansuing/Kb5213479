@@ -91,8 +91,8 @@
       <div class="switch-row" style="border-bottom:0;"><div class="txt"><b>本地内容</b><span>在搜索和提示中显示本地文件与应用内容</span></div><div class="switch on"></div></div>
     </div>
     <div class="oobe-foot">
-      <button class="link" data-go="access">跳过</button>
-      <div class="right"><button class="btn primary" data-go="access" data-enter="1">接受</button></div>
+      <button class="link" data-go="encrypt">跳过</button>
+      <div class="right"><button class="btn primary" data-go="encrypt" data-enter="1">接受</button></div>
     </div>
   </div>
 </section>
@@ -254,6 +254,7 @@
     </div>
     <div class="nc-body">
       <div class="nn-empty" data-i18n="cal_notif_empty">没有新通知</div>
+      <div class="nc-notif"><div class="nn-icon">★</div><div><div class="nn-title" data-i18n="notif_v9_title">Windows 11 安装模拟器 9.0</div><div class="nn-body" data-i18n="notif_v9_body">新增无人值守安装、安装源选择、磁盘清理、人脸识别、两步验证等 12 项功能。</div></div></div>
       <div class="nc-notif"><div class="nn-icon">i</div><div><div class="nn-title" data-i18n="notif_v60_title">Windows 11 安装模拟器 6.0</div><div class="nn-body" data-i18n="notif_v60_body">新增多桌面、任务视图、贴靠布局、全局搜索、小组件、画图、时钟与媒体播放器</div></div></div>
     </div>
   </div>
@@ -276,6 +277,10 @@
       <button class="qp-tile" data-qc="night">
         <svg viewBox="0 0 16 16" fill="none"><path d="M11.5 9a4.5 4.5 0 0 1-4-4.5A5 5 0 1 0 11.5 9Z" fill="currentColor"/></svg>
         <span data-i18n="qs_night">夜间模式</span>
+      </button>
+      <button class="qp-tile" data-qc="sound">
+        <svg viewBox="0 0 16 16" fill="none"><path d="M3 6.5 7 3v10L3 9.5H1.5v-3H3Z" fill="currentColor"/><path d="M9.5 5.5a3.5 3.5 0 0 1 0 5M11.6 3.6a6 6 0 0 1 0 8.8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+        <span data-i18n="snd_name">系统音效</span>
       </button>
     </div>
     <button class="qp-wide" id="qsFull">

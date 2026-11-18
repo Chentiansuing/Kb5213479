@@ -45,9 +45,21 @@
     v8: {
       speed: 'standard',
       access: { narrator: false, magnifier: false, contrast: false, bigtext: false },
+      encrypt: true,
       dark: false,
       log: [], logSeq: 0, logPaused: false,
       instStartAt: 0, instEndAt: 0
+    },
+    // v9.0：无人值守、安装源、清理、人脸、音效等
+    v9: {
+      source: '',
+      unattend: { on: false, edition: true, key: true, partition: true, oobe: true },
+      unattendRunning: false, unattendPaused: false, unattendStep: '',
+      faceDone: false, m2Done: false,
+      sound: false,
+      bootMenuUsed: false, firstBoot: true,
+      bloat: { 1: true, 2: true, 3: false, 4: true, 5: false },
+      cleaned: 0
     }
   };
 
@@ -108,7 +120,7 @@
   function updateVersionBadge() {
     var badge = $('#versionBadge');
     if (!badge) return;
-    badge.textContent = 'v8.0';
+    badge.textContent = 'v9.0';
   }
 
   /* ============================================================
@@ -260,7 +272,9 @@
   }
   function syncQuickPanel() {
     $$('#quickPanel .qp-tile').forEach(function (b) {
-      b.classList.toggle('on', !!state.quickTiles[b.dataset.qc]);
+      // v9.0：音效磁贴状态来自 state.v9.sound
+      var on = b.dataset.qc === 'sound' ? state.v9.sound : !!state.quickTiles[b.dataset.qc];
+      b.classList.toggle('on', on);
     });
     var st = $('#qsStatus');
     if (st) st.textContent = state.quickTiles.wifi ? _t('qs_connected') : _t('qs_disconnected');
@@ -1082,6 +1096,8 @@
             list.forEach(function (l) { log(l, 'term-help'); });
           },
           ver: function () { log('Microsoft Windows [版本 10.0.22631.3672]'); },
+          winver: function () { v9ShowWinver(); log('winver: 已打开“关于 Windows”对话框'); },
+          updatehistory: function () { v9ShowUpdateHistory(); log('updatehistory: 已打开更新历史记录'); },
           cls: function () { out.innerHTML = ''; },
           dir: function () {
             log(' 驱动器 C 中的卷没有标签。');
@@ -2509,9 +2525,11 @@
     state.installFrozen = 0;
     state.v8.instStartAt = Date.now();
     state.v8.instEndAt = 0;
+    // v8.1：标题栏实时显示安装进度
+    state._origTitle = document.title;
     // v8.0：重置并开始记录安装日志
     state.v8.log = []; state.v8.logSeq = 0;
-    v8Log('Windows Setup 8.0 — build 26100.1742');
+    v8Log('Windows Setup 8.1 — build 26100.1742');
     v8Log('Install type: custom (clean install)');
     v8Log('Target: ' + instTargetName);
     v8Log('Simulation speed: ' + state.v8.speed);
@@ -2555,6 +2573,7 @@
       var t = Math.min(1, elapsed / dur);
       var v = Math.round((1 - Math.pow(1 - t, 1.7)) * 100);
       bar.style.width = v + '%'; pct.textContent = String(v);
+      document.title = v + '% · ' + (state._origTitle || 'Windows 11 安装程序');
 
       var idx = 0;
       for (var j = INST_STAGES_PCT.length - 1; j >= 0; j--) { if (v >= INST_STAGES_PCT[j]) { idx = j; break; } }
@@ -2574,6 +2593,7 @@
         state._lastError = err;
         v8Log('FATAL: installation failed with error ' + err.code, 'err');
         v8Log('See CBS.log / setupact.log for details', 'warn');
+        document.title = state._origTitle || document.title;
         clearTimers();
         setTimeout(function () { go('installerr'); }, 600);
         return;
@@ -2588,6 +2608,7 @@
         state.v8.instEndAt = Date.now();
         v8Log('Installation completed successfully');
         v8Log('Image applied on ' + instTargetName + ' — rebooting');
+        document.title = state._origTitle || document.title;
         if (pauseBtn) pauseBtn.disabled = true;
         if (cancelBtn) cancelBtn.disabled = true;
         later(function () { go('restart'); }, 1800);
@@ -2702,6 +2723,341 @@
   }
 
   /* ============================================================
+   * v9.0 大型更新：音效 / 动态通知 / 无人值守 / 清理 / 人脸 / 2FA / 启动菜单
+   * ============================================================ */
+  var _v9Audio = null;
+  function v9Sfx(type) {
+    if (!state.v9.sound) return;
+    try {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      if (!_v9Audio) _v9Audio = new AC();
+      if (_v9Audio.state === 'suspended') _v9Audio.resume();
+      var t0 = _v9Audio.currentTime;
+      var notes = {
+        click: [{ f: 880, d: 0.05, g: 0.05 }],
+        error: [{ f: 320, d: 0.12, g: 0.08 }, { f: 240, d: 0.16, g: 0.08 }],
+        done:  [{ f: 523, d: 0.12, g: 0.06 }, { f: 659, d: 0.12, g: 0.06 }, { f: 784, d: 0.22, g: 0.06 }],
+        boot:  [{ f: 392, d: 0.3, g: 0.05 }, { f: 587, d: 0.4, g: 0.05 }]
+      }[type] || [{ f: 880, d: 0.05, g: 0.05 }];
+      var at = t0;
+      notes.forEach(function (n) {
+        var osc = _v9Audio.createOscillator(), gain = _v9Audio.createGain();
+        osc.type = 'sine'; osc.frequency.value = n.f;
+        gain.gain.setValueAtTime(0.0001, at);
+        gain.gain.exponentialRampToValueAtTime(n.g, at + 0.012);
+        gain.gain.exponentialRampToValueAtTime(0.0001, at + n.d);
+        osc.connect(gain); gain.connect(_v9Audio.destination);
+        osc.start(at); osc.stop(at + n.d + 0.02);
+        at += n.d * 0.85;
+      });
+    } catch (e) { /* 音频不可用时静默 */ }
+  }
+  // 全局点击音效
+  document.addEventListener('click', function (e) {
+    var el = e.target.closest('button, .opt, .switch, .chip, .wifi, .dicon, .qp-tile');
+    if (el) v9Sfx('click');
+  });
+
+  // v9.0：动态通知推送（插入通知中心顶部）
+  function v9PushNotif(titleKey, bodyKey, icon) {
+    var body = document.querySelector('#notifCenter .nc-body');
+    if (!body) return;
+    var empty = body.querySelector('.nn-empty');
+    if (empty) empty.style.display = 'none';
+    var item = document.createElement('div');
+    item.className = 'nc-notif v9-new';
+    item.innerHTML = '<div class="nn-icon">' + (icon || '★') + '</div><div><div class="nn-title">' +
+      _t(titleKey) + '</div><div class="nn-body">' + _t(bodyKey) + '</div></div>';
+    body.insertBefore(item, body.firstChild);
+  }
+
+  // v9.0：winver / 更新历史 模态框
+  function v9ShowWinver() {
+    openModal({
+      title: _t('wv_title'),
+      body: '<div class="wv-box">' +
+        '<svg width="44" height="44" viewBox="0 0 64 64"><g fill="#0067c0"><rect x="2" y="2" width="27" height="27" rx="1.5"/><rect x="35" y="2" width="27" height="27" rx="1.5"/><rect x="2" y="35" width="27" height="27" rx="1.5"/><rect x="35" y="35" width="27" height="27" rx="1.5"/></g></svg>' +
+        '<div class="wv-rows">' +
+        '<div><span>' + _t('wv_os') + '</span><b>' + _t('wv_os_v') + '</b></div>' +
+        '<div><span>' + _t('wv_version') + '</span><b>' + _t('wv_version_v') + '</b></div>' +
+        '<div><span>' + _t('wv_build') + '</span><b>' + _t('wv_build_v') + '</b></div>' +
+        '</div>' +
+        '<p class="wv-sim">' + _t('wv_sim') + '</p>' +
+        '</div>',
+      ok: _t('wv_ok'), cancel: null, onOk: function () { return true; }
+    });
+  }
+  function v9ShowUpdateHistory() {
+    openModal({
+      title: _t('uh_title'),
+      body: '<div class="uh-list">' +
+        '<div class="uh-item"><span class="uh-ic">✓</span><b>' + _t('uh_1') + '</b><i>2026/11/10</i></div>' +
+        '<div class="uh-item"><span class="uh-ic">✓</span><b>' + _t('uh_2') + '</b><i>2026/11/08</i></div>' +
+        '<div class="uh-item"><span class="uh-ic">✓</span><b>' + _t('uh_3') + '</b><i>2026/11/05</i></div>' +
+        '<div class="uh-item"><span class="uh-ic">✓</span><b>' + _t('uh_4') + '</b><i>2026/11/02</i></div>' +
+        '</div>',
+      ok: _t('uh_ok'), cancel: null, onOk: function () { return true; }
+    });
+  }
+
+  // v9.0：磁盘清理
+  var CL_CATS = [
+    { k: 'cl_cat_temp', size: 1240 }, { k: 'cl_cat_old', size: 5320 },
+    { k: 'cl_cat_bin', size: 860 }, { k: 'cl_cat_thumb', size: 240 },
+    { k: 'cl_cat_logs', size: 180 }, { k: 'cl_cat_cache', size: 2960 }
+  ];
+  function v9RenderCleanup(scanned) {
+    var host = $('#clList'); if (!host) return;
+    if (!scanned) {
+      host.innerHTML = '<div class="cl-empty">' +
+        '<div class="cl-scan-ic">🔍</div>' +
+        '<button class="btn primary" id="clScan">' + _t('cl_scan') + '</button></div>';
+      var b = $('#clScan');
+      if (b) b.addEventListener('click', function () { v9DoScan(); });
+      var tot = $('#clTotal'); if (tot) tot.style.display = 'none';
+      var cb = $('#clClean'); if (cb) cb.disabled = true;
+      return;
+    }
+    var html = '';
+    CL_CATS.forEach(function (c, i) {
+      html += '<div class="switch-row cl-row" data-cl="' + i + '">' +
+        '<div class="txt"><b>' + _t(c.k) + '</b><span>' + (c.size >= 1024 ? (c.size / 1024).toFixed(1) + ' GB' : c.size + ' MB') + '</span></div>' +
+        '<div class="switch on"></div></div>';
+    });
+    host.innerHTML = html;
+    var total = CL_CATS.reduce(function (a, c) { return a + c.size; }, 0);
+    var tot = $('#clTotal'); if (tot) tot.style.display = '';
+    var ts = $('#clTotalSize');
+    if (ts) ts.textContent = total >= 1024 ? (total / 1024).toFixed(1) + ' GB' : total + ' MB';
+    var cb = $('#clClean'); if (cb) { cb.disabled = false; cb.textContent = _t('cl_clean'); }
+  }
+  function v9DoScan() {
+    var host = $('#clList'); if (!host) return;
+    host.innerHTML = '<div class="cl-scanning"><div class="cl-scan-bar"><i id="clScanBar"></i></div>' +
+      '<span>' + _t('cl_scanning') + '</span></div>';
+    var p = 0;
+    var timer = setInterval(function () {
+      p += 8 + Math.random() * 14;
+      var bar = $('#clScanBar');
+      if (bar) bar.style.width = Math.min(100, p) + '%';
+      if (p >= 100) {
+        clearInterval(timer);
+        v9RenderCleanup(true);
+        v8Log('Disk cleanup scan complete: ' + CL_CATS.length + ' categories found');
+      }
+    }, 110);
+    timers.push(timer);
+  }
+
+  // v9.0：人脸识别
+  var _v9FaceTimer = 0;
+  function v9FaceScan() {
+    var stage = $('#faceStage'), status = $('#faceStatus'), btn = $('#faceScan');
+    if (!stage) return;
+    stage.classList.add('scanning');
+    if (status) status.textContent = _t('face_scanning');
+    if (btn) { btn.disabled = true; btn.textContent = _t('face_scanning'); }
+    v8Log('Windows Hello: scanning facial features...');
+    var p = 0;
+    if (_v9FaceTimer) clearInterval(_v9FaceTimer);
+    _v9FaceTimer = setInterval(function () {
+      p += 5 + Math.random() * 8;
+      if (p >= 100) {
+        clearInterval(_v9FaceTimer); _v9FaceTimer = 0;
+        // 85% 概率识别成功
+        if (Math.random() < 0.85) {
+          stage.classList.remove('scanning');
+          stage.classList.add('ok');
+          if (status) { status.textContent = '✓ ' + _t('face_success'); status.classList.add('ok'); }
+          if (btn) { btn.disabled = false; btn.textContent = _t('face_ok'); btn.onclick = function () { go('hello'); }; }
+          state.v9.faceDone = true;
+          v9Sfx('done');
+          v8Log('Windows Hello: face recognition succeeded');
+        } else {
+          stage.classList.remove('scanning');
+          if (status) { status.textContent = _t('face_fail'); status.classList.add('fail'); }
+          if (btn) { btn.disabled = false; btn.textContent = _t('face_retry'); }
+          v9Sfx('error');
+          v8Log('Windows Hello: no face detected', 'warn');
+        }
+      }
+    }, 120);
+  }
+
+  // v9.0：无人值守安装引擎（按屏幕就绪驱动，避免与自动跳转竞争）
+  var _v9UaQueue = [], _v9UaI = 0, _v9UaPoll = 0, _v9UaWait = 0;
+  function v9UaStart() {
+    state.v9.unattend.on = true;
+    state.v9.unattendRunning = true;
+    state.v9.unattendPaused = false;
+    var strip = $('#uaStrip');
+    if (strip) strip.classList.add('show');
+    v9Sfx('boot');
+    v8Log('Unattended setup started (answer file: unattend.xml)');
+    _v9UaI = 0;
+    _v9UaQueue = [
+      { id: 'unattend', t: 'boot_check', fn: function () { go('bootcheck'); } },
+      { id: 'bootcheck', t: 'boot_check', fn: function () {
+          // 无人值守默认使用“快速”速度档
+          var chip = $('#speedChips .chip[data-speed="fast"]');
+          if (chip) chip.click(); else state.v8.speed = 'fast';
+        } },
+      { id: 'lang', t: 'ua_step_lang', fn: function () { var b = $('#s-lang .btn.primary'); if (b) b.click(); } },
+      { id: 'key', t: 'ua_step_key', fn: function () { var b = $('#btnNoKey'); if (b) b.click(); } },
+      { id: 'edition', t: 'ua_edition', fn: function () {
+          var ed = document.querySelector('#editionList .opt[data-edition="pro"]') || document.querySelector('#editionList .opt');
+          if (ed) ed.click();
+          var nx = $('#editionNext');
+          if (nx && !nx.disabled) nx.click();
+        } },
+      { id: 'license', t: 'ua_step_license', fn: function () {
+          var lc = $('#licenseCheck'); if (lc && !lc.checked) lc.click();
+          var ln = $('#licenseNext'); if (ln && !ln.disabled) ln.click();
+        } },
+      { id: 'type', t: 'ua_step_type', fn: function () {
+          var ct = document.querySelector('#typeList .opt[data-type="custom"]');
+          if (ct) ct.click();
+          var tn = $('#typeNext'); if (tn && !tn.disabled) tn.click();
+        } },
+      { id: 'disk', t: 'title_disk', fn: function () {
+          // 自动选择第一个主分区
+          var rows = $$('#diskRows .disk-row');
+          for (var i = 0; i < rows.length; i++) {
+            var p = state.disk.filter(function (x) { return x.id === rows[i].dataset.id; })[0];
+            if (p && p.kind === 'primary') { selectPartition(p.id); break; }
+          }
+          var nx = $('#diskNext'); if (nx && !nx.disabled) nx.click();
+        } },
+      { id: 'restore', t: 'restore_title', fn: function () { var sk = $('#restoreSkip'); if (sk) sk.click(); } },
+      { id: 'install', t: 'inst_stage_prep', fn: function () { /* 等待安装完成自动跳转 */ } },
+      { id: 'restart', t: 'rst_title', fn: function () { var rb = $('#btnRestartNow'); if (rb) rb.click(); } },
+      { id: 'region', t: 'ua_step_region', fn: function () { var b = $('#s-region .btn.primary'); if (b) b.click(); } },
+      { id: 'keyboard', t: 'ua_step_keyboard', fn: function () {
+          var b = $('#s-keyboard .btn.primary'); if (b) b.click();
+          later(function () { var b2 = $('#s-keyboard2 .btn.primary'); if (b2) b2.click(); }, 400);
+        } },
+      { id: 'keyboard2', t: 'ua_step_keyboard', fn: function () {
+          var b = $('#s-keyboard2 .btn.primary'); if (b) b.click();
+        } },
+      { id: 'hello', t: 'hello_pin_create', fn: function () { var sk = $('#helloSkip'); if (sk) sk.click(); } },
+      { id: 'cloud', t: 'cloud_title', fn: function () { var sk = $('#s-cloud .link'); if (sk) sk.click(); } },
+      { id: 'updatesetup', t: 'upd_title', fn: function () { var sk = $('#updSkip'); if (sk) sk.click(); } },
+      { id: 'privacy', t: 'privacy_title', fn: function () { var b = $('#s-privacy .btn.primary'); if (b) b.click(); } },
+      { id: 'encrypt', t: 'encrypt_title', fn: function () { var b = $('#s-encrypt .btn.primary'); if (b) b.click(); } },
+      { id: 'access', t: 'access_title', fn: function () { var b = $('#s-access .btn.primary'); if (b) b.click(); } },
+      { id: 'connect', t: 'connect_title', fn: function () { var b = $('#s-connect .btn.primary'); if (b) b.click(); } },
+      { id: 'bloat', t: 'bl_title', fn: function () { var sa = $('#blSkipAll'); if (sa) sa.click(); } },
+      { id: 'custom', t: 'custom_title', fn: function () { var b = $('#s-custom .btn.primary'); if (b) b.click(); } },
+      { id: 'done', t: 'done_title', fn: function () { var st = $('#s-done .btn.primary'); if (st) st.click(); } }
+    ];
+    v9UaRun();
+  }
+  function v9UaSetStep(text) {
+    state.v9.unattendStep = text;
+    var el = $('#uaStep');
+    if (el) el.textContent = _t('ua_running', { n: _t(text) || text });
+  }
+  function v9UaRun() {
+    if (_v9UaPoll) { clearTimeout(_v9UaPoll); _v9UaPoll = 0; }
+    if (!state.v9.unattendRunning) return;
+    if (_v9UaI >= _v9UaQueue.length) { v9UaFinish(); return; }
+    var step = _v9UaQueue[_v9UaI];
+    var cur = (location.hash || '').replace('#', '');
+    if (cur !== step.id) {
+      // 若当前屏幕对应队列中更后面的步骤（如专业版自动跳过许可/类型页），直接前进到该步
+      for (var j = _v9UaI + 1; j < _v9UaQueue.length; j++) {
+        if (_v9UaQueue[j].id === cur) { _v9UaI = j; _v9UaWait = 0; v9UaRun(); return; }
+      }
+      _v9UaWait++;
+      // 超时 60 秒自动跳过该步，避免卡死
+      if (_v9UaWait > 240) { _v9UaWait = 0; _v9UaI++; v9UaRun(); return; }
+      _v9UaPoll = setTimeout(v9UaRun, 250);
+      return;
+    }
+    _v9UaWait = 0;
+    v9UaSetStep(step.t);
+    try { step.fn(); } catch (e) { }
+    _v9UaI++;
+    _v9UaPoll = setTimeout(v9UaRun, 500);
+  }
+  function v9UaFinish() {
+    state.v9.unattendRunning = false;
+    state.v9.unattend.on = false;
+    var strip = $('#uaStrip');
+    if (strip) strip.classList.remove('show');
+    v9Sfx('done');
+    v8Log('Unattended setup completed');
+    toast(_t('ua_finished'));
+    v9PushNotif('done_title', 'done_desc', '✓');
+  }
+  function v9UaStop() {
+    state.v9.unattendRunning = false;
+    if (_v9UaPoll) { clearTimeout(_v9UaPoll); _v9UaPoll = 0; }
+    var strip = $('#uaStrip');
+    if (strip) strip.classList.remove('show');
+    v8Log('Unattended setup cancelled by user', 'warn');
+    toast(_t('ua_skip_this'));
+  }
+
+  // v9.0：双系统启动菜单
+  var _v9BmTimer = 0;
+  function v9StartBootMenu() {
+    var items = $$('#bmList .bm-item');
+    var sel = 0;
+    items.forEach(function (x, i) { x.classList.toggle('on', i === 0); });
+    var n = 10;
+    var timerEl = $('#bmTimer');
+    if (timerEl) timerEl.textContent = _t('bm_timer', { s: n });
+    if (_v9BmTimer) clearInterval(_v9BmTimer);
+    _v9BmTimer = setInterval(function () {
+      n--;
+      if (timerEl) timerEl.textContent = _t('bm_timer', { s: Math.max(n, 0) });
+      if (n <= 0) { clearInterval(_v9BmTimer); go('prepare1'); }
+    }, 1000);
+    timers.push(_v9BmTimer);
+    function pick() {
+      clearInterval(_v9BmTimer);
+      var os = items[sel].dataset.os;
+      v8Log('Boot manager: ' + (os === 'win10' ? 'Windows 10' : 'Windows 11') + ' selected');
+      go('prepare1');
+    }
+    items.forEach(function (x, i) {
+      x.onclick = function () { sel = i; items.forEach(function (y, j) { y.classList.toggle('on', j === i); }); };
+      x.ondblclick = pick;
+    });
+    var keyHandler = function (e) {
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        sel = (sel + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length;
+        items.forEach(function (y, j) { y.classList.toggle('on', j === sel); });
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        document.removeEventListener('keydown', keyHandler, true);
+        pick();
+      }
+    };
+    document.addEventListener('keydown', keyHandler, true);
+  }
+
+  // v9.0：首次开机动画
+  function v9PlayBootAnim() {
+    var msg = $('#baMsg'), hint = $('#baHint');
+    if (msg) msg.textContent = _t('ba_preparing');
+    if (hint) hint.textContent = _t('ba_hint');
+    v9Sfx('boot');
+    later(function () {
+      if (msg) msg.textContent = _t('ba_welcome');
+      if (hint) hint.textContent = '';
+    }, 2200);
+    later(function () {
+      state.v9.firstBoot = false;
+      go('desktop');
+      v9PushNotif('done_title', 'done_desc', '✓');
+    }, 3400);
+  }
+
+  /* ============================================================
    * v8.0 特大更新：日志引擎 / 深色模式 / 辅助功能 / 更新检查 / 导航历史
    * ============================================================ */
   function v8Log(text, level) {
@@ -2781,6 +3137,18 @@
       pv.classList.toggle('bigtext', !!a.bigtext);
       pv.classList.toggle('contrast', !!a.contrast);
     }
+  }
+
+  // v8.1：设备加密开关同步
+  function v8SyncEncrypt() {
+    var tgl = $('#encryptToggle'), st = $('#encryptState');
+    if (!tgl) return;
+    var on = tgl.classList.contains('on');
+    if (st) {
+      st.textContent = on ? _t('encrypt_on') : _t('encrypt_off');
+      st.classList.toggle('off', !on);
+    }
+    state.v8.encrypt = on;
   }
 
   var v8UpdTimer = 0;
@@ -2864,18 +3232,73 @@
     boot: function () {
       _apply();
       updateVersionBadge('boot');
-      // v7.0 特大更新：如果有安装配置，显示 hist 导入页；否则走正常流程
-      var savedHist = (function () {
-        try { return JSON.parse(localStorage.getItem('win11_hist') || 'null'); } catch(e) { return null; }
-      })();
+      v8Log('Boot loader started — Windows Setup 8.1');
+      // v8.1：启动动画后进入欢迎页（不再直接进检查页）
       later(function () {
-        if (savedHist && savedHist.length > 0 && !state._histSeen) {
-          state._histSeen = true;
-          go('hist');
-        } else {
-          go('bootcheck');
-        }
+        v8Log('Boot loader finished, showing welcome screen');
+        go('welcome');
       }, 2200);
+    },
+    welcome: function () {
+      _apply();
+      // v8.1：渲染欢迎页语言快捷切换
+      var host = $('#welcomeLangs');
+      if (host) {
+        var langs = (window.__i18n && window.__i18n.supported) || [];
+        var cur = window.__i18n ? window.__i18n.current : '';
+        host.innerHTML = '';
+        langs.forEach(function (code, i) {
+          if (i) host.appendChild(document.createElement('span')).className = 'wsep';
+          var b = document.createElement('button');
+          b.type = 'button'; b.dataset.setlang = code; b.textContent = code;
+          b.className = code === cur ? 'on' : '';
+          host.appendChild(b);
+        });
+      }
+      v8Log('Welcome screen: install now / repair / import settings');
+    },
+    restore: function () {
+      _apply();
+      var tgl = $('#restoreToggle'), prog = $('#restoreProg'), bar = $('#restoreBar'),
+          status = $('#restoreStatus'), next = $('#restoreNext'), skip = $('#restoreSkip');
+      if (!tgl) return;
+      var on = tgl.classList.contains('on');
+      if (prog) prog.style.display = 'none';
+      if (next) { next.disabled = !on; next.textContent = _t('restore_ok'); }
+      if (skip) skip.style.display = '';
+      if (on) {
+        if (next) next.disabled = true;
+        if (prog) prog.style.display = '';
+        v8Log('Creating system restore point "before setup"');
+        var p = 0;
+        var steps = [_t('restore_scan'), _t('restore_creating'), _t('restore_write')];
+        var si = 0;
+        if (status) status.textContent = steps[0];
+        var timer = setInterval(function () {
+          p += 6 + Math.random() * 10;
+          if (si < 2 && p > (si + 1) * 33) { si++; if (status) status.textContent = steps[si]; }
+          if (p >= 100) {
+            p = 100; clearInterval(timer);
+            if (status) status.textContent = _t('restore_done');
+            v8Log('Restore point created successfully');
+            if (next) next.disabled = false;
+            return;
+          }
+          if (bar) bar.style.width = p + '%';
+        }, 130);
+        timers.push(timer);
+      } else {
+        v8Log('Restore point creation skipped');
+      }
+    },
+    encrypt: function () {
+      _apply();
+      v8SyncEncrypt();
+    },
+    whatsnew: function () {
+      _apply();
+      var tag = $('#wnVerTag');
+      if (tag) tag.textContent = 'v' + (_t('version_v81') || '8.1');
     },
     hist: function () {
       _apply();
@@ -2941,6 +3364,57 @@
     compare: function () {
       _apply();
     },
+    source: function () {
+      _apply();
+      $$('#srcList .opt').forEach(function (o) { o.classList.remove('sel'); });
+      $('#srcNext').disabled = true;
+    },
+    unattend: function () {
+      _apply();
+      $$('#uaPresets [data-ua]').forEach(function (row) {
+        var sw = row.querySelector('.switch');
+        if (sw) sw.classList.toggle('on', !!state.v9.unattend[row.dataset.ua]);
+      });
+    },
+    cleanup: function () {
+      _apply();
+      v9RenderCleanup(false);
+    },
+    face: function () {
+      _apply();
+      var stage = $('#faceStage'), status = $('#faceStatus'), btn = $('#faceScan');
+      if (stage) { stage.classList.remove('scanning', 'ok'); }
+      if (status) { status.classList.remove('ok', 'fail'); status.textContent = _t('face_hint'); }
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = state.v9.faceDone ? _t('face_ok') : _t('face_scan');
+        btn.onclick = function () {
+          if (state.v9.faceDone) { go('hello'); return; }
+          v9FaceScan();
+        };
+      }
+    },
+    msauth: function () {
+      _apply();
+      var d = $('#m2Desc');
+      if (d) d.textContent = _t('m2_desc', { e: $('#msEmail') && $('#msEmail').value.trim() || 'you@example.com' });
+      var c = $('#m2Code'); if (c) c.value = '';
+      var v = $('#m2Verify'); if (v) v.disabled = true;
+      var e2 = $('#m2Err'); if (e2) e2.style.display = 'none';
+      v8Log('Microsoft account: 2FA code sent to ' + (($('#msEmail') && $('#msEmail').value.trim()) || 'inbox'));
+    },
+    bloat: function () {
+      _apply();
+      v9SyncBloat();
+    },
+    bootmenu: function () {
+      _apply();
+      v9StartBootMenu();
+    },
+    bootanim: function () {
+      _apply();
+      v9PlayBootAnim();
+    },
     scan: function () {
       _apply();
       var score = 96 + Math.floor(Math.random() * 5);
@@ -2974,7 +3448,17 @@
     disk: function () { _apply(); renderDisk(); },
     install: function () { _apply(); startInstall(); },
     installerr: function () { _apply(); renderInstallError(); },
-    restart: function () { _apply(); startRestart(); },
+    restart: function () {
+      _apply();
+      // v9.0：首次安装后 35% 概率出现双系统启动菜单
+      if (!state.v9.bootMenuUsed && Math.random() < 0.35) {
+        state.v9.bootMenuUsed = true;
+        v8Log('Boot manager appeared (dual-boot detected)');
+        later(function () { go('bootmenu'); }, 400);
+        return;
+      }
+      startRestart();
+    },
     prepare1: function () { _apply(); later(function () { go('region'); }, 2800); },
     region: function () { _apply(); },
     keyboard: function () { _apply(); },
@@ -3058,7 +3542,11 @@
     msaccount: function () { _apply(); },
     local: function () { _apply(); },
     custom: function () { _apply(); },
-    desktop: function () { _apply(); enterDesktop(); }
+    desktop: function () {
+      // v9.0：安装完成后首次进入桌面先播放开机动画
+      if (state.v9.firstBoot) { go('bootanim'); return; }
+      _apply(); enterDesktop();
+    }
   };
 
   document.addEventListener('langchange', function () {
@@ -3223,7 +3711,7 @@
     };
     modalOpen = true; $('#modal').classList.add('open');
   });
-  $('#diskNext').addEventListener('click', function () { go('install'); });
+  $('#diskNext').addEventListener('click', function () { go('restore'); });
 
   /* 重启 */
   $('#btnRestartNow').addEventListener('click', function () { go('prepare1'); });
@@ -3324,7 +3812,202 @@
     }
   });
 
-  /* ============ v8.0 事件绑定 ============ */
+  /* ============ v9.0 事件绑定 ============ */
+  // 欢迎页：立即安装 → 先选安装源
+  if ($('#welcomeInstall')) $('#welcomeInstall').addEventListener('click', function () { go('source'); });
+  if ($('#welcomeUnattend')) $('#welcomeUnattend').addEventListener('click', function () { go('unattend'); });
+
+  // 安装源
+  if ($('#srcList')) $('#srcList').addEventListener('click', function (e) {
+    var opt = e.target.closest('.opt'); if (!opt) return;
+    $$('#srcList .opt').forEach(function (o) { o.classList.remove('sel'); });
+    opt.classList.add('sel');
+    state.v9.source = opt.dataset.src;
+    $('#srcNext').disabled = false;
+    v8Log('Installation source selected: ' + (_t('src_' + opt.dataset.src) || opt.dataset.src));
+  });
+  if ($('#srcNext')) $('#srcNext').addEventListener('click', function () {
+    if (state.v9.source) toast(_t('src_selected', { n: _t('src_' + state.v9.source) }));
+    go('bootcheck');
+  });
+
+  // 无人值守
+  if ($('#uaPresets')) $('#uaPresets').addEventListener('click', function (e) {
+    var row = e.target.closest('[data-ua]'); if (!row) return;
+    var sw = row.querySelector('.switch'); if (!sw) return;
+    sw.classList.toggle('on');
+    state.v9.unattend[row.dataset.ua] = sw.classList.contains('on');
+  });
+  if ($('#uaStart')) $('#uaStart').addEventListener('click', function () { v9UaStart(); });
+  if ($('#uaStop')) $('#uaStop').addEventListener('click', v9UaStop);
+  if ($('#uaPause')) $('#uaPause').addEventListener('click', function () {
+    state.v9.unattendPaused = !state.v9.unattendPaused;
+    this.textContent = state.v9.unattendPaused ? _t('ua_continue') : _t('inst_pause');
+  });
+
+  // 磁盘清理
+  if ($('#btnCleanup')) $('#btnCleanup').addEventListener('click', function () { go('cleanup'); });
+  if ($('#clSkip')) $('#clSkip').addEventListener('click', function () { go('disk'); });
+  if ($('#clClean')) $('#clClean').addEventListener('click', function () {
+    var btn = this;
+    btn.disabled = true; btn.textContent = _t('cl_cleaning');
+    var freed = 0;
+    var rows = $$('#clList .cl-row');
+    rows.forEach(function (r) {
+      if (r.querySelector('.switch').classList.contains('on')) {
+        freed += CL_CATS[Number(r.dataset.cl)].size;
+        r.style.opacity = '.45';
+      }
+    });
+    state.v9.cleaned = freed;
+    v8Log('Disk cleanup: freed ' + freed + ' MB');
+    later(function () {
+      toast(_t('cl_done', { s: freed >= 1024 ? (freed / 1024).toFixed(1) + ' GB' : freed + ' MB' }));
+      go('disk');
+    }, 900);
+  });
+
+  // 人脸识别
+  if ($('#facePin')) $('#facePin').addEventListener('click', function () { go('hello'); });
+
+  // 两步验证
+  var m2Code = $('#m2Code'), m2Verify = $('#m2Verify'), m2Err = $('#m2Err');
+  if (m2Code) m2Code.addEventListener('input', function () {
+    this.value = this.value.replace(/\D/g, '').slice(0, 6);
+    if (m2Verify) m2Verify.disabled = this.value.length !== 6;
+    if (m2Err) m2Err.style.display = 'none';
+  });
+  if (m2Verify) m2Verify.addEventListener('click', function () {
+    var v = m2Code ? m2Code.value.trim() : '';
+    if (v.length !== 6) { if (m2Err) { m2Err.textContent = _t('m2_wrong'); m2Err.style.display = ''; } return; }
+    state.v9.m2Done = true;
+    v9Sfx('done');
+    v8Log('Microsoft account: 2FA verification passed');
+    go('privacy');
+  });
+  if ($('#m2Resend')) $('#m2Resend').addEventListener('click', function () {
+    toast(_t('m2_sent'));
+    v8Log('Microsoft account: verification code resent');
+  });
+
+  // 软件推荐
+  function v9SyncBloat() {
+    var n = 0;
+    $$('#blList [data-bl]').forEach(function (row) {
+      var on = !!state.v9.bloat[row.dataset.bl];
+      var sw = row.querySelector('.switch');
+      if (sw) sw.classList.toggle('on', on);
+      if (on) n++;
+    });
+    var btn = $('#blNext');
+    if (btn) btn.textContent = n ? _t('bl_install', { n: n }) : _t('connect_skip');
+  }
+  if ($('#blList')) $('#blList').addEventListener('click', function (e) {
+    var row = e.target.closest('[data-bl]'); if (!row) return;
+    var sw = row.querySelector('.switch'); if (!sw) return;
+    sw.classList.toggle('on');
+    state.v9.bloat[row.dataset.bl] = sw.classList.contains('on');
+    v9SyncBloat();
+  });
+  if ($('#blSkipAll')) $('#blSkipAll').addEventListener('click', function () {
+    Object.keys(state.v9.bloat).forEach(function (k) { state.v9.bloat[k] = false; });
+    v9SyncBloat();
+    v8Log('Recommended software: all skipped');
+    go('custom');
+  });
+  if ($('#blNext')) $('#blNext').addEventListener('click', function () {
+    var n = 0;
+    Object.keys(state.v9.bloat).forEach(function (k) { if (state.v9.bloat[k]) n++; });
+    if (n) {
+      toast(_t('bl_done'));
+      v8Log('Recommended software: ' + n + ' item(s) installed');
+    }
+    go('custom');
+  });
+
+  // 快速设置：音效开关（独立监听，避免与快捷开关逻辑耦合）
+  var qpGrid = $('#quickPanel .qp-grid');
+  if (qpGrid) qpGrid.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-qc="sound"]'); if (!b) return;
+    state.v9.sound = !state.v9.sound;
+    b.classList.toggle('on', state.v9.sound);
+    try { localStorage.setItem('win11_v9_sound', state.v9.sound ? '1' : '0'); } catch (err) {}
+    if (state.v9.sound) v9Sfx('click');
+    toast(_t('snd_name') + '：' + (state.v9.sound ? _t('snd_on') : _t('snd_off')));
+  });
+
+  /* ============ v8.1 事件绑定 ============ */
+  // 欢迎页
+  if ($('#welcomeWhatsNew')) $('#welcomeWhatsNew').addEventListener('click', function () { go('whatsnew'); });
+  if ($('#welcomeImport')) $('#welcomeImport').addEventListener('click', function () {
+    var list = [];
+    try { list = JSON.parse(localStorage.getItem('win11_hist') || '[]'); } catch (e) {}
+    if (list.length) { go('hist'); }
+    else { toast(_t('welcome_no_config')); }
+  });
+  if ($('#welcomeRepair')) $('#welcomeRepair').addEventListener('click', function () {
+    openModal({
+      title: _t('repair_title'),
+      body: '<p>' + _t('repair_desc') + '</p>' +
+        '<div class="repair-list">' +
+        '<div class="repair-item" data-rp="startup"><b>' + _t('repair_startup') + '</b><span>' + _t('repair_startup_d') + '</span></div>' +
+        '<div class="repair-item" data-rp="restore"><b>' + _t('repair_restore') + '</b><span>' + _t('repair_restore_d') + '</span></div>' +
+        '<div class="repair-item" data-rp="cmd"><b>' + _t('repair_cmd') + '</b><span>' + _t('repair_cmd_d') + '</span></div>' +
+        '<div class="repair-item" data-rp="uninstall"><b>' + _t('repair_uninstall') + '</b><span>' + _t('repair_uninstall_d') + '</span></div>' +
+        '</div>',
+      ok: _t('repair_exit'),
+      cancel: null,
+      onOk: function () { return true; },
+      after: function () {
+        $$('#modal .repair-item').forEach(function (el) {
+          el.addEventListener('click', function () {
+            var key = el.dataset.rp;
+            var name = _t('repair_' + key);
+            toast(_t('repair_running', { n: name }));
+            v8Log('Repair tool: ' + name);
+            later(function () {
+              var doneKey = 'repair_' + key + '_ok';
+              toast(_t(doneKey));
+              v8Log('Repair finished: ' + _t(doneKey));
+            }, 1400);
+          });
+        });
+      }
+    });
+  });
+
+  // 系统还原点
+  if ($('#restoreToggle')) $('#restoreToggle').addEventListener('click', function () {
+    this.classList.toggle('on');
+    hooks.restore();
+  });
+  if ($('#restoreSkip')) $('#restoreSkip').addEventListener('click', function () {
+    v8Log('Restore point skipped — proceeding to install');
+    go('install');
+  });
+  if ($('#restoreNext')) $('#restoreNext').addEventListener('click', function () { go('install'); });
+
+  // 设备加密
+  if ($('#encryptToggle')) $('#encryptToggle').addEventListener('click', function () {
+    this.classList.toggle('on');
+    v8SyncEncrypt();
+    v8Log('Device encryption ' + (this.classList.contains('on') ? 'enabled' : 'disabled'));
+  });
+  if ($('#encryptMore')) $('#encryptMore').addEventListener('click', function () {
+    var d = $('#encryptDetail'); if (!d) return;
+    var open = d.style.display === 'none' || !d.style.display;
+    d.style.display = open ? '' : 'none';
+    this.textContent = open ? _t('encrypt_less') : _t('encrypt_more');
+  });
+  if ($('#encryptBackup')) $('#encryptBackup').addEventListener('click', function () {
+    toast(_t('encrypt_backup') + ' ✓');
+  });
+
+  // 新功能页
+  if ($('#wnClose')) $('#wnClose').addEventListener('click', function () { v8Back(); });
+  if ($('#doneWhatsNew')) $('#doneWhatsNew').addEventListener('click', function () { go('whatsnew'); });
+
+  /* v8.0 事件绑定 ============ */
   if ($('#scanOpen')) $('#scanOpen').addEventListener('click', function () { go('scan'); });
 
   if ($('#speedChips')) $('#speedChips').addEventListener('click', function (e) {
@@ -3415,12 +4098,15 @@
     }
   });
 
-  /* v8.0 初始化深色模式偏好 */
+  /* v8.0 初始化深色模式偏好 / v9.0 初始化音效偏好 */
   (function initV8Prefs() {
     try {
       if (localStorage.getItem('win11_v8_dark') === '1') state.v8.dark = true;
+      if (localStorage.getItem('win11_v9_sound') === '1') state.v9.sound = true;
     } catch (e) {}
     v8ApplyDark();
+    var sTile = $('#quickPanel [data-qc="sound"]');
+    if (sTile) sTile.classList.toggle('on', state.v9.sound);
   })();
 
   /* 桌面图标 */
@@ -3665,6 +4351,8 @@
     quickPanel.querySelector('.qp-grid').addEventListener('click', function (e) {
       var b = e.target.closest('[data-qc]'); if (!b) return;
       var k = b.dataset.qc;
+      // v9.0：音效磁贴由独立处理器管理（state.v9.sound），不纳入快捷开关状态
+      if (k === 'sound') return;
       state.quickTiles[k] = !state.quickTiles[k];
       if (k === 'airplane' && state.quickTiles.airplane) {
         state.quickTiles.wifi = false; state.quickTiles.bt = false;
