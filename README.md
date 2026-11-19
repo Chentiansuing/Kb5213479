@@ -48,3 +48,4 @@ README is not a part of the project.
 Any new features was in work\extra_v*.py
 Warning:10.0 have chance to display project part name,as is"Sub_*".
 Any problems please commit in pull ruquest/discussion.
+Web Version is in https://37kok9y0d66t5qa9dp5.traesite.cn/
