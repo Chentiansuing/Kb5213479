@@ -121,7 +121,7 @@
   function updateVersionBadge() {
     var badge = $('#versionBadge');
     if (!badge) return;
-    badge.textContent = 'v9.0';
+    badge.textContent = 'v10.0';
   }
 
   /* ============================================================
@@ -2793,6 +2793,7 @@
     openModal({
       title: _t('uh_title'),
       body: '<div class="uh-list">' +
+        '<div class="uh-item"><span class="uh-ic">★</span><b>' + _t('uh_v10_t') + '</b><i>2026/11/19</i></div>' +
         '<div class="uh-item"><span class="uh-ic">✓</span><b>' + _t('uh_1') + '</b><i>2026/11/10</i></div>' +
         '<div class="uh-item"><span class="uh-ic">✓</span><b>' + _t('uh_2') + '</b><i>2026/11/08</i></div>' +
         '<div class="uh-item"><span class="uh-ic">✓</span><b>' + _t('uh_3') + '</b><i>2026/11/05</i></div>' +
@@ -3299,7 +3300,7 @@
     whatsnew: function () {
       _apply();
       var tag = $('#wnVerTag');
-      if (tag) tag.textContent = 'v' + (_t('version_v81') || '8.1');
+      if (tag) tag.textContent = 'v' + (_t('version_v10') || '10.0');
     },
     hist: function () {
       _apply();
@@ -3730,13 +3731,9 @@
   /* Wi-Fi */
   $('#wifiList').addEventListener('click', function (e) {
     var w = e.target.closest('.wifi'); if (!w) return;
-    $$('#wifiList .wifi').forEach(function (x) { x.classList.remove('on'); });
-    w.classList.add('on'); $('#wifiStatus').textContent = _t('toast_wifi_connecting', { ssid: w.dataset.ssid });
-    $('#netNext').disabled = true;
-    later(function () {
-      $('#wifiStatus').textContent = _t('toast_wifi_connected', { ssid: w.dataset.ssid });
-      $('#netNext').disabled = false;
-    }, 1500);
+    // v10.0：加密网络先要求输入安全密钥
+    if (w.dataset.lock === '1') { v10AskWifi(w); return; }
+    v10WifiConnect(w);
   });
 
   /* v7.0：Windows Hello PIN */
@@ -4888,6 +4885,504 @@
   document.addEventListener('keyup', function (e) {
     if (e.key === 'Control' && altOpen) commitAltTab();
   });
+
+  /* ============================================================
+   * v10.0 大型更新
+   * 安装助手 / 性能监视器 / Wi-Fi 扫描 / 配置导入导出 /
+   * 成就系统 / 安装时间线 / 故障诊断中心 / 分区布局图
+   * ============================================================ */
+  state.v10 = {
+    ach: {}, timeline: [], prev: null,
+    diagSym: 0, diagDone: false
+  };
+  var ACH_KEY = 'win11_v10_ach', TL_KEY = 'win11_v10_timeline';
+  var V10_ACH_ICONS = { 1: '🚀', 2: '⚡', 3: '🤖', 4: '🙂', 5: '💽', 6: '🩺', 7: '⏱️', 8: '🧩' };
+
+  (function v10LoadAch() {
+    try {
+      var raw = localStorage.getItem(ACH_KEY);
+      if (raw) {
+        var o = JSON.parse(raw);
+        if (o && typeof o === 'object') state.v10.ach = o;
+      }
+      var tlr = localStorage.getItem(TL_KEY);
+      if (tlr) {
+        var arr = JSON.parse(tlr);
+        if (Array.isArray(arr)) state.v10.timeline = arr;
+      }
+    } catch (e) { /* 忽略损坏数据 */ }
+  })();
+
+  function v10SaveAch() {
+    try { localStorage.setItem(ACH_KEY, JSON.stringify(state.v10.ach)); } catch (e) { }
+  }
+  function v10AchCount() {
+    var n = 0;
+    Object.keys(V10_ACH_ICONS).forEach(function (k) { if (state.v10.ach[k]) n++; });
+    return n;
+  }
+  function v10Unlock(id) {
+    if (state.v10.ach[id]) return;
+    state.v10.ach[id] = Date.now();
+    v10SaveAch();
+    var name = _t('ach_n' + id);
+    toast(_t('ach_toast', { n: name }));
+    v8Log('Achievement unlocked: ' + name);
+    v9Sfx('done');
+    v10RenderAch();
+  }
+  function v10RenderAch() {
+    var host = $('#achGrid');
+    if (!host) return;
+    var html = '';
+    Object.keys(V10_ACH_ICONS).forEach(function (k) {
+      var on = !!state.v10.ach[k];
+      html += '<div class="ach-card' + (on ? ' on' : '') + '">' +
+        '<span class="ac-ic">' + V10_ACH_ICONS[k] + '</span>' +
+        '<div><b>' + _t('ach_n' + k) + '</b><span>' + _t('ach_d' + k) + '</span></div></div>';
+    });
+    host.innerHTML = html;
+    var prog = $('#achProg');
+    if (prog) prog.textContent = _t('ach_progress', { a: v10AchCount(), b: 8 });
+  }
+  function v10OpenAch() {
+    v10RenderAch();
+    var el = $('#achOverlay'); if (el) el.classList.add('open');
+  }
+
+  /* ---- 安装助手 ---- */
+  function v10CopilotUpdate(id) {
+    var cur = id || (location.hash || '').replace('#', '') || 'boot';
+    var nameEl = $('#cpScreen'), hintEl = $('#cpHint');
+    if (!nameEl) return;
+    var host = document.getElementById('s-' + cur);
+    var h = host ? (host.querySelector('h1') || host.querySelector('.dialog__title')) : null;
+    nameEl.textContent = h ? h.textContent.trim() : cur;
+    var key = 'cp_hint_' + cur, txt = _t(key);
+    if (!txt || txt === key) txt = _t('cp_hint_default');
+    if (hintEl) hintEl.textContent = txt;
+  }
+  function v10CopilotToggle(force) {
+    var p = $('#copilotPanel'); if (!p) return;
+    var open = typeof force === 'boolean' ? force : !p.classList.contains('open');
+    p.classList.toggle('open', open);
+    var b = $('#v10Copilot'); if (b) b.classList.toggle('on', open);
+    if (open) v10CopilotUpdate();
+  }
+
+  /* ---- 安装时间线 ---- */
+  function v10Note(id) {
+    var tl = state.v10.timeline, now = Date.now();
+    if (state.v10.prev) state.v10.prev.dur = now - state.v10.prev.at;
+    var host = document.getElementById('s-' + id);
+    var h = host ? (host.querySelector('h1') || host.querySelector('.dialog__title')) : null;
+    var item = { id: id, name: h ? h.textContent.trim() : id, at: now, dur: 0 };
+    tl.push(item);
+    if (tl.length > 60) tl.shift();
+    state.v10.prev = item;
+    try { localStorage.setItem(TL_KEY, JSON.stringify(tl)); } catch (e) { }
+    v10CopilotUpdate(id);
+    // 成就触发点
+    if (id === 'desktop') {
+      v10Unlock(1);
+      if (state.v8.speed === 'demo') v10Unlock(2);
+      if (state.v9.unattend.on) v10Unlock(3);
+    }
+    if (id === 'bootmenu') v10Unlock(5);
+    if (id !== 'face' && state.v9.faceDone) v10Unlock(4);
+  }
+  function v10RenderTimeline() {
+    var host = $('#tlList'), tot = $('#tlTotal');
+    if (!host) return;
+    var tl = state.v10.timeline.filter(function (x) { return x.id !== 'boot'; });
+    if (!tl.length) {
+      host.innerHTML = '<div class="tl-empty">' + _t('tl_empty') + '</div>';
+      if (tot) tot.textContent = '—';
+      return;
+    }
+    var html = '', total = 0;
+    tl.forEach(function (item) {
+      total += item.dur || 0;
+      html += '<div class="tl-item"><span class="tl-dot"></span><b>' + (item.name || item.id) + '</b>' +
+        '<i>' + (item.dur ? Math.round(item.dur / 1000) + 's' : '—') + '</i></div>';
+    });
+    host.innerHTML = html;
+    if (tot) tot.textContent = _t('tl_total', { t: Math.round(total / 1000) + 's' });
+  }
+  function v10OpenTimeline() {
+    v10RenderTimeline();
+    var el = $('#timeOverlay'); if (el) el.classList.add('open');
+  }
+  function v10ReplayTimeline() {
+    var items = $$('#tlList .tl-item');
+    if (!items.length) { toast(_t('tl_empty')); return; }
+    items.forEach(function (el) { el.classList.remove('playing'); });
+    toast(_t('tl_replaying'));
+    v8Log('Timeline replay started (' + items.length + ' steps)');
+    var i = 0;
+    (function step() {
+      if (i >= items.length) { v10Unlock(7); toast(_t('tl_done')); return; }
+      items[i].classList.add('playing');
+      try { items[i].scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch (e) { }
+      i++;
+      later(step, 420);
+    })();
+  }
+
+  /* ---- 性能监视器 ---- */
+  var PERF_MAX = 40, perfTimer = 0;
+  var perfData = { cpu: [], disk: [], net: [] };
+  function v10PerfWalk(arr, base, amp) {
+    var last = arr.length ? arr[arr.length - 1] : base;
+    var v = Math.max(3, Math.min(99, last + (Math.random() - 0.5) * amp));
+    arr.push(v);
+    if (arr.length > PERF_MAX) arr.shift();
+  }
+  function v10PerfPush() {
+    v10PerfWalk(perfData.cpu, 58, 26);
+    v10PerfWalk(perfData.disk, 72, 34);
+    v10PerfWalk(perfData.net, 32, 22);
+    v10PerfDraw();
+  }
+  function v10PerfDraw() {
+    var svg = $('#perfChart'); if (!svg) return;
+    var colors = { cpu: '#0067c0', disk: '#0f7b3f', net: '#c07a00' };
+    var html = '';
+    ['cpu', 'disk', 'net'].forEach(function (key) {
+      var arr = perfData[key]; if (arr.length < 2) return;
+      var pts = arr.map(function (v, i) {
+        var x = (i / (PERF_MAX - 1)) * 320;
+        var y = 88 - (v / 100) * 82;
+        return x.toFixed(1) + ',' + y.toFixed(1);
+      }).join(' ');
+      html += '<polyline fill="none" stroke="' + colors[key] + '" stroke-width="1.6" stroke-linejoin="round" points="' + pts + '"/>';
+    });
+    svg.innerHTML = html;
+  }
+  function v10PerfStart() {
+    if (perfTimer) clearInterval(perfTimer);
+    perfData = { cpu: [], disk: [], net: [] };
+    for (var i = 0; i < 14; i++) {
+      v10PerfWalk(perfData.cpu, 58, 26);
+      v10PerfWalk(perfData.disk, 72, 34);
+      v10PerfWalk(perfData.net, 32, 22);
+    }
+    v10PerfDraw();
+    perfTimer = setInterval(v10PerfPush, 700);
+    timers.push(perfTimer);
+  }
+
+  /* ---- 分区布局图 ---- */
+  function v10RenderDiskMap() {
+    var host = $('#diskMap'); if (!host) return;
+    var total = 0;
+    state.disk.forEach(function (p) { total += p.total; });
+    if (!total) { host.innerHTML = ''; return; }
+    var colors = ['#0067c0', '#2f9bf0', '#0f7b3f', '#c07a00', '#7a3fbf', '#c42b1c'];
+    var html = '';
+    state.disk.forEach(function (p, i) {
+      var w = Math.max(5, (p.total / total) * 100);
+      var isFree = p.kind === 'unallocated' || p.unallocated;
+      var cls = 'diskmap__seg' + (isFree ? ' free' : '') + (state.selected === p.id ? ' sel' : '');
+      var label = isFree ? _t('diskmap_free') : diskName(p);
+      var bg = isFree ? '' : 'background:' + colors[i % colors.length] + ';';
+      html += '<div class="' + cls + '" data-id="' + p.id + '" style="width:' + w.toFixed(2) + '%;' + bg + '" title="' + label + '">' + label + '</div>';
+    });
+    host.innerHTML = html;
+  }
+  var v10OrigRenderDisk = renderDisk;
+  renderDisk = function () {
+    var r = v10OrigRenderDisk.apply(null, arguments);
+    v10RenderDiskMap();
+    return r;
+  };
+
+  /* ---- Wi-Fi ---- */
+  function v10WifiConnect(w) {
+    $$('#wifiList .wifi').forEach(function (x) { x.classList.remove('on'); });
+    w.classList.add('on');
+    var s = $('#wifiStatus');
+    if (s) s.textContent = _t('toast_wifi_connecting', { ssid: w.dataset.ssid });
+    var nx = $('#netNext'); if (nx) nx.disabled = true;
+    v8Log('Wi-Fi: connecting to ' + w.dataset.ssid);
+    later(function () {
+      if (s) s.textContent = _t('wifi_connected', { n: w.dataset.ssid });
+      if (nx) nx.disabled = false;
+    }, 1400);
+  }
+  function v10AskWifi(w) {
+    var ssid = w.dataset.ssid;
+    openModal({
+      title: _t('wifi_pwd_title'),
+      body: '<p>' + _t('wifi_pwd_desc', { n: ssid }) + '</p>' +
+        '<input class="inp" id="wifiPwd" type="password" autocomplete="off" placeholder="' + _t('wifi_pwd_ph') + '" style="margin-top:10px;">' +
+        '<div class="cfg-hint err" id="wifiPwdErr" style="display:none;">' + _t('wifi_pwd_short') + '</div>',
+      ok: _t('wifi_connect'),
+      cancel: _t('modal_default_cancel'),
+      onOk: function () {
+        var el = document.getElementById('wifiPwd');
+        var v = el ? el.value : '';
+        if (v.length < 8) {
+          var er = document.getElementById('wifiPwdErr');
+          if (er) er.style.display = '';
+          return false;
+        }
+        v10WifiConnect(w);
+        return true;
+      }
+    });
+  }
+
+  /* ---- 配置导出 / 导入 ---- */
+  function v10ConfigSnapshot() {
+    var p = null;
+    for (var i = 0; i < state.disk.length; i++) if (state.disk[i].id === state.selected) p = state.disk[i];
+    var ed = document.querySelector('#editionList .opt.sel .opt__t');
+    return {
+      app: 'Windows 11 Setup Simulator',
+      version: '10.0',
+      edition: ed ? ed.textContent.trim() : (state.edition || ''),
+      deviceName: state.deviceName,
+      userName: state.userName,
+      partition: p ? { id: p.id, size: p.total } : null,
+      source: state.v9.source || '',
+      speed: state.v8.speed,
+      unattend: state.v9.unattend,
+      bloat: state.v9.bloat,
+      dark: !!state.v8.dark,
+      sound: !!state.v9.sound
+    };
+  }
+  function v10OpenCfg() {
+    var ta = $('#cfgText'), hint = $('#cfgHint');
+    if (!ta) return;
+    try { ta.value = JSON.stringify(v10ConfigSnapshot(), null, 2); } catch (e) { }
+    if (hint) { hint.textContent = ''; hint.className = 'cfg-hint'; }
+    var el = $('#cfgOverlay'); if (el) el.classList.add('open');
+  }
+  function v10ApplyCfg() {
+    var ta = $('#cfgText'), hint = $('#cfgHint');
+    if (!ta) return;
+    var obj;
+    try { obj = JSON.parse(ta.value); } catch (e) { obj = null; }
+    if (!obj || typeof obj !== 'object') {
+      if (hint) { hint.textContent = _t('cfg_invalid'); hint.className = 'cfg-hint err'; }
+      return;
+    }
+    if (typeof obj.deviceName === 'string' && obj.deviceName.trim()) {
+      state.deviceName = obj.deviceName.trim();
+      if ($('#deviceInput')) $('#deviceInput').value = state.deviceName;
+    }
+    if (typeof obj.userName === 'string' && obj.userName.trim()) state.userName = obj.userName.trim();
+    if (obj.source) state.v9.source = obj.source;
+    if (obj.speed) state.v8.speed = obj.speed;
+    if (obj.unattend && typeof obj.unattend === 'object') {
+      Object.keys(state.v9.unattend).forEach(function (k) {
+        if (k in obj.unattend) state.v9.unattend[k] = !!obj.unattend[k];
+      });
+    }
+    if (obj.bloat && typeof obj.bloat === 'object') {
+      Object.keys(state.v9.bloat).forEach(function (k) {
+        if (k in obj.bloat) state.v9.bloat[k] = !!obj.bloat[k];
+      });
+    }
+    if (typeof obj.sound === 'boolean') {
+      state.v9.sound = obj.sound;
+      var tile = $('#quickPanel [data-qc="sound"]');
+      if (tile) tile.classList.toggle('on', obj.sound);
+    }
+    if (typeof obj.dark === 'boolean') { state.v8.dark = obj.dark; v8ApplyDark(); }
+    if (hint) { hint.textContent = _t('cfg_applied'); hint.className = 'cfg-hint ok'; }
+    v8Log('Configuration imported from JSON');
+  }
+
+  /* ---- 故障诊断 ---- */
+  function v10DiagEnter() {
+    state.v10.diagSym = 0;
+    state.v10.diagDone = false;
+    var steps = $('#diagSteps'); if (steps) steps.innerHTML = '';
+    var res = $('#diagResult'); if (res) res.style.display = 'none';
+    var fix = $('#diagFix'); if (fix) fix.style.display = 'none';
+    var run = $('#diagRun'); if (run) { run.disabled = false; run.textContent = _t('diag_run'); }
+    $$('#diagSyms .opt').forEach(function (o) { o.classList.remove('sel'); });
+  }
+  function v10DiagRun() {
+    if (!state.v10.diagSym) { toast(_t('diag_none')); return; }
+    var steps = $('#diagSteps'); if (!steps) return;
+    var keys = ['diag_step1', 'diag_step2', 'diag_step3'];
+    steps.innerHTML = keys.map(function (k) {
+      return '<div class="diag-step"><span class="ds-ic"></span><span>' + _t(k) + '</span></div>';
+    }).join('');
+    var els = $$('#diagSteps .diag-step');
+    var run = $('#diagRun'); if (run) { run.disabled = true; run.textContent = _t('diag_running'); }
+    els.forEach(function (el, i) {
+      later(function () { el.classList.add('run'); }, i * 900);
+    });
+    later(function () {
+      els.forEach(function (el) { el.classList.remove('run'); el.classList.add('done'); });
+    }, 2900);
+    later(function () {
+      var res = $('#diagResult'), txt = $('#diagResultText');
+      if (res) res.style.display = '';
+      if (txt) txt.textContent = _t('diag_r' + state.v10.diagSym);
+      var fix = $('#diagFix'); if (fix) fix.style.display = '';
+      if (run) { run.disabled = false; run.textContent = _t('diag_run'); }
+      v8Log('Diagnostics: symptom #' + state.v10.diagSym + ' analyzed');
+    }, 3200);
+  }
+
+  /* ---- 事件绑定 ---- */
+  if ($('#v10Copilot')) $('#v10Copilot').addEventListener('click', function () { v10CopilotToggle(); });
+  if ($('#cpClose')) $('#cpClose').addEventListener('click', function () { v10CopilotToggle(false); });
+  if ($('#copilotPanel')) $('#copilotPanel').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-cp]'); if (!b) return;
+    var act = b.dataset.cp;
+    if (act === 'log') v8OpenLog();
+    else if (act === 'help') { var ov = $('#helpOverlay'); if (ov) ov.classList.toggle('open'); }
+    else if (act === 'ach') v10OpenAch();
+    else if (act === 'time') v10OpenTimeline();
+  });
+
+  if ($('#instPerfToggle')) $('#instPerfToggle').addEventListener('click', function () {
+    var box = $('#instPerf'); if (!box) return;
+    var open = box.style.display === 'none';
+    box.style.display = open ? '' : 'none';
+    this.textContent = open ? _t('perf_hide') : _t('perf_show');
+    if (open) { v10PerfStart(); v10PerfDraw(); }
+  });
+
+  if ($('#instDiag')) $('#instDiag').addEventListener('click', function () { go('diag'); });
+  if ($('#diagSyms')) $('#diagSyms').addEventListener('click', function (e) {
+    var opt = e.target.closest('.opt'); if (!opt) return;
+    $$('#diagSyms .opt').forEach(function (o) { o.classList.remove('sel'); });
+    opt.classList.add('sel');
+    state.v10.diagSym = Number(opt.dataset.sym) || 0;
+  });
+  if ($('#diagRun')) $('#diagRun').addEventListener('click', v10DiagRun);
+  if ($('#diagFix')) $('#diagFix').addEventListener('click', function () {
+    state.v10.diagDone = true;
+    this.style.display = 'none';
+    toast(_t('diag_fixed'));
+    v8Log('Diagnostic fix applied');
+    v9Sfx('done');
+    v10Unlock(6);
+  });
+
+  if ($('#wifiScan')) $('#wifiScan').addEventListener('click', function () {
+    var st = $('#wifiStatus'), btn = this;
+    if (st) st.textContent = _t('wifi_scanning');
+    btn.disabled = true;
+    later(function () {
+      var list = $('#wifiList');
+      var pool = ['Xiaomi_AX6000', 'CMCC-5G-9A2F', 'Linksys-2.4G'];
+      if (list) {
+        var exist = $$('#wifiList .wifi').map(function (x) { return x.dataset.ssid; });
+        var ssid = null;
+        for (var i = 0; i < pool.length; i++) {
+          if (exist.indexOf(pool[i]) < 0) { ssid = pool[i]; break; }
+        }
+        if (ssid) {
+          var div = document.createElement('div');
+          div.className = 'wifi new';
+          div.dataset.ssid = ssid;
+          div.innerHTML = '<div class="wifi__l"><span class="wifi__bars"><i></i><i></i><i></i></span>' +
+            '<div><div>' + ssid + '<span class="wifi__flag">' + _t('wifi_new') + '</span></div>' +
+            '<div class="wifi__meta">' + _t('net_sec') + '</div></div></div>' +
+            '<span class="wifi__meta">' + _t('net_good') + '</span>';
+          list.appendChild(div);
+          v8Log('Wi-Fi scan: found new network ' + ssid);
+        }
+      }
+      var n = $$('#wifiList .wifi').length;
+      if (st) st.textContent = _t('wifi_scan_done', { n: n });
+      btn.disabled = false;
+    }, 1600);
+  });
+
+  if ($('#cfgExport')) $('#cfgExport').addEventListener('click', function () {
+    v10OpenCfg();
+    var txt = '';
+    var ta = $('#cfgText'); if (ta) txt = ta.value;
+    fsSave('install-config.json', txt, null);
+    toast(_t('cfg_saved'));
+    v8Log('Configuration exported to Temp/install-config.json');
+    v10Unlock(8);
+  });
+  if ($('#cfgCopy')) $('#cfgCopy').addEventListener('click', function () {
+    var ta = $('#cfgText'), hint = $('#cfgHint');
+    if (!ta) return;
+    function done() {
+      if (hint) { hint.textContent = _t('cfg_copied'); hint.className = 'cfg-hint ok'; }
+    }
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(ta.value).then(done, function () { ta.select(); done(); });
+      } else { ta.select(); document.execCommand('copy'); done(); }
+    } catch (e) { ta.select(); done(); }
+  });
+  if ($('#cfgApply')) $('#cfgApply').addEventListener('click', v10ApplyCfg);
+  if ($('#cfgClose')) $('#cfgClose').addEventListener('click', function () { $('#cfgOverlay').classList.remove('open'); });
+
+  if ($('#achClose')) $('#achClose').addEventListener('click', function () { $('#achOverlay').classList.remove('open'); });
+  if ($('#achReset')) $('#achReset').addEventListener('click', function () {
+    state.v10.ach = {};
+    v10SaveAch();
+    v10RenderAch();
+    toast(_t('ach_reset_ok'));
+  });
+
+  if ($('#timelineOpen')) $('#timelineOpen').addEventListener('click', v10OpenTimeline);
+  if ($('#tlClose')) $('#tlClose').addEventListener('click', function () { $('#timeOverlay').classList.remove('open'); });
+  if ($('#tlReplay')) $('#tlReplay').addEventListener('click', v10ReplayTimeline);
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape') return;
+    var ids = ['cfgOverlay', 'timeOverlay', 'achOverlay'];
+    for (var i = 0; i < ids.length; i++) {
+      var el = document.getElementById(ids[i]);
+      if (el && el.classList.contains('open')) {
+        el.classList.remove('open');
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        return;
+      }
+    }
+    var cp = $('#copilotPanel');
+    if (cp && cp.classList.contains('open')) {
+      v10CopilotToggle(false);
+      e.preventDefault();
+      e.stopImmediatePropagation();
+    }
+  }, true);
+
+  document.addEventListener('langchange', function () {
+    v10CopilotUpdate();
+    if ($('#achOverlay') && $('#achOverlay').classList.contains('open')) v10RenderAch();
+  });
+
+  // 安装开始时启动性能曲线；进入磁盘页时重绘布局图
+  var v10OrigInstallHook = hooks.install;
+  hooks.install = function () {
+    v10OrigInstallHook();
+    v10PerfStart();
+    var box = $('#instPerf');
+    if (box && box.style.display === 'none') { box.style.display = ''; }
+    var tg = $('#instPerfToggle'); if (tg) tg.textContent = _t('perf_hide');
+  };
+  hooks.diag = function () { _apply(); v10DiagEnter(); };
+  var v10OrigDiskHook = hooks.disk;
+  hooks.disk = function () { v10OrigDiskHook(); v10RenderDiskMap(); };
+
+  // 记录页面进入时间线（在 v8 导航包装之上再包一层）
+  var v10OrigGo = go;
+  go = function (id) {
+    var r = v10OrigGo.apply(null, arguments);
+    if (document.getElementById('s-' + id)) v10Note(id);
+    return r;
+  };
+
+  v10CopilotUpdate();
+  v10RenderAch();
 
   /* ============================================================
    * 启动

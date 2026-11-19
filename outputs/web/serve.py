@@ -1,4 +1,4 @@
-r"""Windows 11 Setup Simulator 9.0.0 — 本地服务器。
+r"""Windows 11 Setup Simulator 10.0.0 — 本地服务器。
 
 除了静态文件，还提供三个只在本机运行的 Temp 文件接口：
   POST /api/save   {"name": "notes.txt", "content": "..."}  → %TEMP%\windows11-sim\notes.txt
@@ -114,7 +114,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
 with socketserver.TCPServer(("127.0.0.1", PORT), Handler) as httpd:
     url = f"http://127.0.0.1:{PORT}/index.html"
-    print(f"Windows 11 Setup Simulator 9.0.0 已启动：{url}")
+    print(f"Windows 11 Setup Simulator 10.0.0 已启动：{url}")
     print(f"Temp 目录：{STORE}")
     print("按 Ctrl+C 停止服务")
     if os.environ.get("W11SIM_NO_BROWSER") != "1":

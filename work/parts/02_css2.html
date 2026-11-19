@@ -895,6 +895,125 @@ body.v8-dark .uh-item{background:rgba(255,255,255,.05); border-color:rgba(255,25
 body.v8-dark .uh-item b{color:#eef3fb;}
 body.v8-dark .m2-hint{background:rgba(0,103,192,.16); border-color:rgba(120,180,255,.35); color:#9fc4f0;}
 
+/* ============================================================
+   v10.0 大型更新
+   ============================================================ */
+
+/* 分区布局图 */
+.diskmap{margin-bottom:14px; padding:10px 12px; border-radius:7px; background:rgba(0,103,192,.05); border:1px solid rgba(0,103,192,.14);}
+.diskmap__head{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px;}
+.diskmap__head b{font-size:12.5px; color:var(--ink-2);}
+.diskmap__head span{font-size:11px; color:var(--ink-3);}
+.diskmap__bar{display:flex; height:26px; border-radius:5px; overflow:hidden; background:#dfe6ee;}
+.diskmap__seg{
+  position:relative; height:100%; display:flex; align-items:center; justify-content:center;
+  font-size:10px; color:#fff; cursor:pointer; overflow:hidden; white-space:nowrap;
+  border-right:1px solid rgba(255,255,255,.6); transition:filter .15s, box-shadow .15s;
+}
+.diskmap__seg:last-child{border-right:0;}
+.diskmap__seg:hover{filter:brightness(1.08);}
+.diskmap__seg.sel{box-shadow:inset 0 0 0 2px #fff, inset 0 0 0 3px rgba(0,0,0,.25);}
+.diskmap__seg.free{background:repeating-linear-gradient(45deg,#e6ecf3,#e6ecf3 6px,#dbe4ee 6px,#dbe4ee 12px); color:#7c8794;}
+
+/* 性能监视器 */
+.perf{margin-top:12px; padding:10px 12px; border-radius:7px; background:rgba(12,20,34,.045); border:1px solid rgba(0,0,0,.07);}
+.perf__head{display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;}
+.perf__head b{font-size:12px; color:var(--ink-2);}
+.perf__legend{display:flex; align-items:center; gap:5px; font-size:10.5px; color:var(--ink-3);}
+.perf__legend i{width:12px; height:3px; border-radius:2px; display:inline-block; margin-left:6px;}
+.perf__legend i.pl-cpu{background:#0067c0;}
+.perf__legend i.pl-disk{background:#0f7b3f;}
+.perf__legend i.pl-net{background:#c07a00;}
+.perf__chart{width:100%; height:90px; display:block; background:rgba(255,255,255,.55); border-radius:5px;}
+.perf__note{font-size:10.5px; color:var(--ink-3); margin-top:6px; text-align:center;}
+
+/* Wi-Fi 扫描 */
+.wifi-scan-row{display:flex; justify-content:flex-end; margin-top:6px;}
+.wifi-scan-row .link{border:0; background:none; cursor:pointer; color:var(--accent); font-size:12px; text-decoration:underline; text-underline-offset:3px;}
+.wifi.new{animation:wifiNew .45s ease;}
+.wifi.new .wifi__meta.flag::after{content:"";}
+@keyframes wifiNew{from{opacity:0; transform:translateY(-8px);} to{opacity:1; transform:none;}}
+.wifi__flag{margin-left:6px; padding:1px 6px; border-radius:8px; background:rgba(0,103,192,.12); color:var(--accent); font-size:10px;}
+
+/* 故障诊断 */
+.diag-steps{margin-top:14px; display:flex; flex-direction:column; gap:6px;}
+.diag-step{display:flex; align-items:center; gap:9px; padding:7px 11px; border-radius:6px; background:rgba(0,0,0,.035); font-size:12px; color:var(--ink-3);}
+.diag-step .ds-ic{width:16px; height:16px; border-radius:50%; border:2px solid #c7d1dc; display:inline-block; flex:none;}
+.diag-step.run{color:var(--ink-2);}
+.diag-step.run .ds-ic{border-color:var(--accent); border-top-color:transparent; animation:diagSpin .7s linear infinite;}
+.diag-step.done{color:#0f7b3f;}
+.diag-step.done .ds-ic{border-color:#0f7b3f; background:#0f7b3f; position:relative;}
+.diag-step.done .ds-ic::after{content:""; position:absolute; left:4px; top:1px; width:4px; height:8px; border:solid #fff; border-width:0 2px 2px 0; transform:rotate(45deg);}
+@keyframes diagSpin{to{transform:rotate(360deg);}}
+.diag-result{margin-top:14px; padding:11px 13px; border-radius:7px; background:rgba(192,122,0,.09); border:1px solid rgba(192,122,0,.24); font-size:12.5px; color:var(--ink-2);}
+.diag-result b{display:block; margin-bottom:4px; color:#a26500;}
+.diag-result p{margin:0; line-height:1.7;}
+
+/* 成就 */
+.ach-prog{font-size:11.5px; color:var(--ink-3); padding-right:6px;}
+.ach-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:8px; margin-top:12px;}
+.ach-card{display:flex; gap:9px; align-items:flex-start; padding:9px 11px; border-radius:7px; background:#fff; border:1px solid rgba(0,0,0,.08);}
+.ach-card .ac-ic{font-size:19px; filter:grayscale(1); opacity:.45;}
+.ach-card.on{border-color:rgba(0,103,192,.35); background:rgba(0,103,192,.06);}
+.ach-card.on .ac-ic{filter:none; opacity:1;}
+.ach-card b{display:block; font-size:12px; color:var(--ink-1);}
+.ach-card span{display:block; font-size:10.5px; color:var(--ink-3); line-height:1.5; margin-top:2px;}
+
+/* 时间线 */
+.tl-list{max-height:320px; overflow:auto; margin-top:12px; display:flex; flex-direction:column; gap:6px;}
+.tl-item{display:flex; align-items:center; gap:9px; padding:7px 10px; border-radius:6px; background:rgba(0,0,0,.035); font-size:12px;}
+.tl-item .tl-dot{width:7px; height:7px; border-radius:50%; background:var(--accent); flex:none;}
+.tl-item b{flex:1; font-weight:500; color:var(--ink-2);}
+.tl-item i{font-style:normal; font-size:10.5px; color:var(--ink-3);}
+.tl-item.playing{background:rgba(0,103,192,.1);}
+.tl-empty{padding:24px 0; text-align:center; color:var(--ink-3); font-size:12.5px;}
+
+/* 配置 JSON */
+.cfg-text{width:100%; height:210px; resize:vertical; padding:10px 12px; border-radius:6px;
+  border:1px solid rgba(0,0,0,.14); background:#fbfcfe; color:#243040;
+  font-family:Consolas,"Courier New",monospace; font-size:11.5px; line-height:1.65; outline:none;}
+.cfg-text:focus{border-color:var(--accent); box-shadow:0 0 0 2px rgba(0,103,192,.14);}
+.cfg-hint{margin-top:8px; font-size:11.5px; color:var(--ink-3); min-height:16px;}
+.cfg-hint.ok{color:#0f7b3f;}
+.cfg-hint.err{color:#c42b1c;}
+
+/* 安装助手 */
+.setup-fab #v10Copilot{background:linear-gradient(150deg,#0067c0,#2f9bf0); color:#fff;}
+.setup-fab #v10Copilot.on{box-shadow:0 0 0 3px rgba(0,103,192,.28);}
+.copilot{
+  position:fixed; right:18px; bottom:132px; width:300px; z-index:970;
+  background:rgba(252,253,255,.98); border-radius:10px; overflow:hidden;
+  box-shadow:0 18px 46px rgba(0,0,0,.28); border:1px solid rgba(0,0,0,.08);
+  transform:translateY(14px) scale(.97); opacity:0; pointer-events:none;
+  transition:transform .22s ease, opacity .22s ease;
+}
+.copilot.open{transform:none; opacity:1; pointer-events:auto;}
+.copilot__head{display:flex; justify-content:space-between; align-items:center; padding:9px 12px; background:linear-gradient(120deg,#0067c0,#2f9bf0); color:#fff;}
+.copilot__head b{font-size:12.5px;}
+.copilot__x{border:0; background:none; color:#fff; font-size:16px; cursor:pointer; line-height:1; padding:0 2px;}
+.copilot__now{display:flex; justify-content:space-between; align-items:baseline; padding:8px 12px 0; font-size:11px; color:var(--ink-3);}
+.copilot__now b{font-size:12px; color:var(--ink-1);}
+.copilot__hint{margin:6px 12px 10px; font-size:11.5px; line-height:1.72; color:var(--ink-2); min-height:52px;}
+.copilot__acts{display:grid; grid-template-columns:repeat(2,1fr); gap:1px; background:rgba(0,0,0,.07); border-top:1px solid rgba(0,0,0,.07);}
+.copilot__acts button{border:0; background:#fff; padding:9px 4px; font-size:11.5px; color:var(--ink-2); cursor:pointer;}
+.copilot__acts button:hover{background:rgba(0,103,192,.08); color:var(--accent);}
+
+/* 深色模式适配 */
+body.v8-dark .diskmap{background:rgba(0,103,192,.14); border-color:rgba(120,180,255,.28);}
+body.v8-dark .diskmap__bar{background:rgba(255,255,255,.1);}
+body.v8-dark .diskmap__seg.free{background:repeating-linear-gradient(45deg,rgba(255,255,255,.07),rgba(255,255,255,.07) 6px,rgba(255,255,255,.12) 6px,rgba(255,255,255,.12) 12px); color:#9fb0c4;}
+body.v8-dark .perf{background:rgba(255,255,255,.05); border-color:rgba(255,255,255,.12);}
+body.v8-dark .perf__chart{background:rgba(255,255,255,.05);}
+body.v8-dark .diag-step{background:rgba(255,255,255,.06);}
+body.v8-dark .ach-card{background:rgba(255,255,255,.05); border-color:rgba(255,255,255,.12);}
+body.v8-dark .ach-card b{color:#eef3fb;}
+body.v8-dark .tl-item{background:rgba(255,255,255,.06);}
+body.v8-dark .cfg-text{background:rgba(255,255,255,.06); color:#e6eef9; border-color:rgba(255,255,255,.16);}
+body.v8-dark .copilot{background:rgba(24,32,46,.98); border-color:rgba(255,255,255,.14);}
+body.v8-dark .copilot__acts button{background:#1e2a3c; color:#cfdcec;}
+body.v8-dark .copilot__hint{color:#b9c7d8;}
+body.v8-dark .copilot__now b{color:#eef3fb;}
+
 /* ============ 窗口管理 ============ */
 .win-layer{position:absolute; inset:0; pointer-events:none; z-index:5;}
 .setup-win-layer{position:fixed;z-index:40;}
