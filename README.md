@@ -3,6 +3,10 @@ This is using AI to create project！
 
 
 This program use MIT License!
+
+
+-------------------------
+
 MIT License
 
 Copyright (c) 2026 Chentiansuing
@@ -24,3 +28,23 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+---------------------------------
+
+How to Use:
+
+1.click \Kb5213479\2026-11-15\windows-installer-sim\outputs .
+2.click \Kb5213479\2026-11-15\windows-installer-sim\outputs\web .
+3.click StartSimu(NeedLocalhost).bat
+4.Enjoy
+
+
+---------------------------------------
+No link and copyright to Windows,Microsoft,and all of others.
+Using AI To create.No obfuscate.
+Any resemblance to actual persons or events is purely coincidental. 
+
+(c) 2026 Chentiansuing.All rights reserved.
+README is not a part of the project.
+Any new features was in work\extra_v*.py
+Warning:10.0 have chance to display project part name,as is"Sub_*".
+Any problems please commit in pull ruquest/discussion.
