@@ -6,8 +6,8 @@
 <title>Windows 11 安装程序</title>
 
 <!-- 外部依赖：样式（带版本号，避免更新后仍命中旧缓存） -->
-<link rel="stylesheet" href="styles/app.css?v=10.0.0">
-<link rel="stylesheet" href="styles/windows.css?v=10.0.0">
+<link rel="stylesheet" href="styles/app.css?v=11.0.0">
+<link rel="stylesheet" href="styles/windows.css?v=11.0.0">
 </head>
 <body>
 <body>
@@ -452,6 +452,7 @@
       <button class="btn" id="instCancel" style="min-width:96px;" disabled data-i18n="inst_cancel">取消</button>
       <button class="link" id="instOpenLog" data-i18n="inst_open_log">查看安装日志</button>
       <button class="link" id="instDiag" data-i18n="diag_title">故障诊断中心</button>
+      <button class="link" id="instInject" data-i18n="bsod_inject">故障注入（蓝屏演示）</button>
     </div>
   </div>
 </section>
@@ -540,7 +541,9 @@
         <div><span data-i18n="sum_duration">总耗时</span><b id="sumDuration">—</b></div>
       </div>
     </div>
+    <div class="bench" id="benchBox"></div>
     <div class="oobe-foot" style="justify-content:center; gap:10px;">
+      <button class="btn" id="sysinfoOpen" data-i18n="sys_title">系统信息</button>
       <button class="btn" id="sumExport" data-i18n="sum_export">导出安装报告</button>
       <button class="btn" id="cfgExport" data-i18n="cfg_export">导出安装配置</button>
       <button class="btn" id="timelineOpen" data-i18n="tl_open">查看时间线</button>
@@ -715,8 +718,18 @@
       <span class="ver-tag" id="wnVerTag" data-i18n="version_v81">8.1</span>
     </div>
     <div class="dialog__body">
-      <h1 class="dlg-h" data-i18n="wn10_title">10.0 有什么新功能</h1>
-      <p class="dlg-sub" data-i18n="wn_desc10">以下是 10.0 与 9.0 版本的新增内容。</p>
+      <h1 class="dlg-h" data-i18n="wn11_title">11.0 有什么新功能</h1>
+      <p class="dlg-sub" data-i18n="wn_desc11">以下是 11.0 与 10.0 版本的新增内容。</p>
+      <div class="wn-group" data-i18n="wn_v11">11.0 新增</div>
+      <div class="wn-item"><b data-i18n="wn_image">安装镜像选择</b><span data-i18n="wn_image_d">在三个 Windows 镜像中选择，卡片展示内部版本、大小与发布日期。</span></div>
+      <div class="wn-item"><b data-i18n="wn_preflight">安装前检查清单</b><span data-i18n="wn_preflight_d">TPM、安全启动、处理器、内存等 7 项逐条检查并显示结果。</span></div>
+      <div class="wn-item"><b data-i18n="wn_driver">加载驱动程序</b><span data-i18n="wn_driver_d">磁盘页可加载 Intel RST / NVMe / USB 驱动，加载后出现新的分区。</span></div>
+      <div class="wn-item"><b data-i18n="wn_cmd">命令面板 Ctrl+K</b><span data-i18n="wn_cmd_d">键盘搜索并执行任意页面跳转、面板开关与导出操作。</span></div>
+      <div class="wn-item"><b data-i18n="wn_map">步骤地图</b><span data-i18n="wn_map_d">一屏列出所有页面，点击即可直接跳转，演示更方便。</span></div>
+      <div class="wn-item"><b data-i18n="wn_bench">安装耗时对比</b><span data-i18n="wn_bench_d">完成页对比本次安装与标准、演示档位的耗时差异。</span></div>
+      <div class="wn-item"><b data-i18n="wn_bsod">蓝屏模拟与故障注入</b><span data-i18n="wn_bsod_d">开启故障注入后，安装到 47% 会触发蓝屏并自动恢复。</span></div>
+      <div class="wn-item"><b data-i18n="wn_sysinfo">系统信息面板</b><span data-i18n="wn_sysinfo_d">查看模拟硬件规格、安装源、镜像与本次安装耗时。</span></div>
+      <div class="wn-item"><b data-i18n="wn_logexport">安装日志导出</b><span data-i18n="wn_logexport_d">把本次安装的完整日志导出为文本文件。</span></div>
       <div class="wn-group" data-i18n="wn_v10">10.0 新增</div>
       <div class="wn-item"><b data-i18n="wn_cp">安装助手：随步骤变化的智能建议</b><span data-i18n="wn_cp_d">右下角助手按钮会根据当前页面给出操作提示，并提供常用工具入口。</span></div>
       <div class="wn-item"><b data-i18n="wn_perf">性能监视器：CPU / 磁盘 / 网络实时曲线</b><span data-i18n="wn_perf_d">安装页可展开性能面板，观察安装期间三类资源的占用变化。</span></div>
@@ -789,6 +802,68 @@
       <button class="link" data-go="welcome" data-i18n="btn_back">上一步</button>
       <div class="spacer"></div>
       <button class="btn primary" id="srcNext" data-enter="1" disabled data-i18n="src_next">下一步</button>
+    </div>
+  </div>
+</section>
+
+<!-- ===== v11.0：镜像选择 ===== -->
+<section class="screen" id="s-image">
+  <div class="dialog" style="max-width:600px;">
+    <div class="dialog__bar">
+      <div class="dialog__title" data-i18n="setup_title">Windows 11 安装程序</div>
+      <span class="ver-tag" data-i18n="version_v11">11.0</span>
+    </div>
+    <div class="dialog__body">
+      <h1 class="dlg-h" data-i18n="img_title">选择要安装的镜像</h1>
+      <p class="dlg-sub" data-i18n="img_desc">安装源中有多个 Windows 镜像。选择其中一个，安装程序会校验其版本与体系结构。</p>
+      <div id="imgList" style="margin-top:14px;">
+        <div class="opt" data-img="23h2">
+          <span class="radio"></span>
+          <div><div class="opt__t" data-i18n="img_23h2">Windows 11 23H2</div><div class="opt__d" data-i18n="img_23h2_d">内部版本 22631 · 64 位 · 5.4 GB · 2023 年 10 月</div></div>
+        </div>
+        <div class="opt" data-img="24h2">
+          <span class="radio"></span>
+          <div><div class="opt__t" data-i18n="img_24h2">Windows 11 24H2</div><div class="opt__d" data-i18n="img_24h2_d">内部版本 26100 · 64 位 · 6.1 GB · 2024 年 10 月</div></div>
+        </div>
+        <div class="opt" data-img="25h2">
+          <span class="radio"></span>
+          <div><div class="opt__t" data-i18n="img_25h2">Windows 11 25H2</div><div class="opt__d" data-i18n="img_25h2_d">内部版本 26200 · 64 位 · 6.4 GB · 2026 年 9 月</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="dialog__foot">
+      <button class="link" data-go="source" data-i18n="btn_back">上一步</button>
+      <div class="spacer"></div>
+      <button class="btn primary" id="imgNext" data-enter="1" disabled data-i18n="img_next">下一步</button>
+    </div>
+  </div>
+</section>
+
+<!-- ===== v11.0：安装前检查 ===== -->
+<section class="screen" id="s-preflight">
+  <div class="dialog" style="max-width:540px;">
+    <div class="dialog__bar">
+      <div class="dialog__title" data-i18n="setup_title">Windows 11 安装程序</div>
+      <span class="ver-tag" data-i18n="version_v11">11.0</span>
+    </div>
+    <div class="dialog__body">
+      <h1 class="dlg-h" data-i18n="pf_title">安装前检查</h1>
+      <p class="dlg-sub" data-i18n="pf_desc">安装程序会逐项检查这台电脑是否满足安装条件。</p>
+      <div class="pf-list" id="pfList">
+        <div class="pf-row" data-pf="tpm"><span class="pf-ic"></span><span class="pf-name" data-i18n="pf_tpm">受信任的平台模块 2.0</span><span class="pf-val" data-i18n="pf_checking">检查中…</span></div>
+        <div class="pf-row" data-pf="secureboot"><span class="pf-ic"></span><span class="pf-name" data-i18n="pf_secureboot">安全启动</span><span class="pf-val" data-i18n="pf_checking">检查中…</span></div>
+        <div class="pf-row" data-pf="cpu"><span class="pf-ic"></span><span class="pf-name" data-i18n="pf_cpu">处理器与指令集</span><span class="pf-val" data-i18n="pf_checking">检查中…</span></div>
+        <div class="pf-row" data-pf="ram"><span class="pf-ic"></span><span class="pf-name" data-i18n="pf_ram">物理内存</span><span class="pf-val" data-i18n="pf_checking">检查中…</span></div>
+        <div class="pf-row" data-pf="disk"><span class="pf-ic"></span><span class="pf-name" data-i18n="pf_disk">可用磁盘空间</span><span class="pf-val" data-i18n="pf_checking">检查中…</span></div>
+        <div class="pf-row" data-pf="power"><span class="pf-ic"></span><span class="pf-name" data-i18n="pf_power">电源与电池</span><span class="pf-val" data-i18n="pf_checking">检查中…</span></div>
+        <div class="pf-row" data-pf="net"><span class="pf-ic"></span><span class="pf-name" data-i18n="pf_net">网络连接</span><span class="pf-val" data-i18n="pf_checking">检查中…</span></div>
+      </div>
+      <p class="pf-done" id="pfDone" style="display:none;" data-i18n="pf_done">全部检查已完成</p>
+    </div>
+    <div class="dialog__foot">
+      <button class="link" data-go="bootcheck" data-i18n="pf_skip">跳过检查</button>
+      <div class="spacer"></div>
+      <button class="btn primary" id="pfNext" data-enter="1" disabled data-i18n="pf_continue">继续安装</button>
     </div>
   </div>
 </section>
@@ -1022,6 +1097,20 @@
   </div>
 </section>
 
+<!-- ===== v11.0：蓝屏模拟 ===== -->
+<section class="screen" id="s-bsod">
+  <div class="bsod__wrap">
+    <div class="bsod__face">:(</div>
+    <h2 data-i18n="bsod_title">你的设备遇到问题，需要重新启动。</h2>
+    <p data-i18n="bsod_desc">我们只收集某些错误信息，然后为你重新启动。</p>
+    <p class="bsod__code"><span data-i18n="bsod_code">停止代码：</span><b id="bsodCode">CRITICAL_PROCESS_DIED</b></p>
+    <div class="bsod__bar"><i id="bsodBar"></i></div>
+    <p class="bsod__pct" id="bsodPct">0%</p>
+    <p class="bsod__restart" id="bsodRestart" data-i18n="bsod_restart">正在重新启动…</p>
+    <p class="bsod__hint" data-i18n="bsod_hint">这是模拟蓝屏，仅用于演示，不会影响你的设备。</p>
+  </div>
+</section>
+
 <!-- ===== v10.0：故障诊断中心 ===== -->
 <section class="screen" id="s-diag">
   <div class="dialog" style="max-width:600px;">
@@ -1168,6 +1257,79 @@
   </div>
 </div>
 
+<!-- ===== v11.0：驱动程序加载 ===== -->
+<div class="v8-overlay" id="drvOverlay">
+  <div class="dialog" style="max-width:560px;">
+    <div class="dialog__bar">
+      <div class="dialog__title" data-i18n="drv_title">加载驱动程序</div>
+    </div>
+    <div class="dialog__body">
+      <p class="dlg-sub" data-i18n="drv_desc">如果磁盘列表中看不到设备，请从安装介质加载存储控制器驱动程序。</p>
+      <div class="drv-list" id="drvList">
+        <div class="drv-row" data-drv="intel">
+          <div><b data-i18n="drv_intel">Intel RST VMD 控制器</b><span data-i18n="drv_intel_d">版本 19.5.0.1037 · 存储控制器</span></div>
+          <button class="btn" data-drvbtn="intel" data-i18n="drv_load">加载</button>
+        </div>
+        <div class="drv-row" data-drv="nvme">
+          <div><b data-i18n="drv_nvme">标准 NVMe 控制器</b><span data-i18n="drv_nvme_d">版本 10.0.26100 · 存储控制器</span></div>
+          <button class="btn" data-drvbtn="nvme" data-i18n="drv_load">加载</button>
+        </div>
+        <div class="drv-row" data-drv="usb">
+          <div><b data-i18n="drv_usb">USB 3.x 主机控制器</b><span data-i18n="drv_usb_d">版本 10.0.26100 · 系统设备</span></div>
+          <button class="btn" data-drvbtn="usb" data-i18n="drv_load">加载</button>
+        </div>
+      </div>
+    </div>
+    <div class="dialog__foot">
+      <div class="spacer"></div>
+      <button class="btn primary" id="drvClose" data-i18n="drv_ok">完成</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== v11.0：步骤地图 ===== -->
+<div class="v8-overlay" id="mapOverlay">
+  <div class="dialog" style="max-width:640px;">
+    <div class="dialog__bar">
+      <div class="dialog__title" data-i18n="map_title">步骤地图</div>
+    </div>
+    <div class="dialog__body">
+      <p class="dlg-sub" data-i18n="map_desc">点击任意页面即可直接跳转，适合演示时快速定位。</p>
+      <div class="map-grid" id="mapGrid"></div>
+    </div>
+    <div class="dialog__foot">
+      <div class="spacer"></div>
+      <button class="btn primary" id="mapClose" data-i18n="wn10_close">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== v11.0：系统信息 ===== -->
+<div class="v8-overlay" id="sysinfoOverlay">
+  <div class="dialog" style="max-width:560px;">
+    <div class="dialog__bar">
+      <div class="dialog__title" data-i18n="sys_title">系统信息</div>
+    </div>
+    <div class="dialog__body">
+      <p class="dlg-sub" data-i18n="sys_desc">这台电脑的模拟硬件规格与本次安装信息。</p>
+      <div class="sys-rows" id="sysRows"></div>
+    </div>
+    <div class="dialog__foot">
+      <div class="spacer"></div>
+      <button class="btn primary" id="sysClose" data-i18n="wn10_close">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== v11.0：命令面板 ===== -->
+<div class="cmd" id="cmdPalette">
+  <div class="cmd__box">
+    <input class="cmd__input" id="cmdInput" data-i18n-ph="cmd_ph" placeholder="输入命令或页面名称…" autocomplete="off" spellcheck="false">
+    <div class="cmd__list" id="cmdList"></div>
+    <div class="cmd__hint" data-i18n="cmd_hint">↑↓ 选择 · Enter 执行 · Esc 关闭</div>
+  </div>
+</div>
+
 <!-- ===== v10.0：安装助手面板 ===== -->
 <div class="copilot" id="copilotPanel">
   <div class="copilot__head">
@@ -1181,11 +1343,14 @@
     <button data-cp="help" data-i18n="cp_action_help">快捷键</button>
     <button data-cp="ach" data-i18n="cp_action_ach">成就</button>
     <button data-cp="time" data-i18n="cp_action_time">时间线</button>
+    <button data-cp="map" data-i18n="cmd_map">步骤地图</button>
+    <button data-cp="exportlog" data-i18n="log_export">导出日志</button>
   </div>
 </div>
 
 <!-- ===== v8.0 特大更新：安装界面浮动工具（主题 / 帮助） ===== -->
 <div class="setup-fab" id="setupFab">
+  <button id="v11Cmd" data-i18n-title="cmd_title" title="命令面板 Ctrl+K">⌘</button>
   <button id="v10Copilot" data-i18n-title="cp_title" title="安装助手">🤖</button>
   <button id="v8Theme" data-i18n-title="theme_toggle" title="切换安装程序主题">🌙</button>
   <button id="v8Help" data-i18n-title="help_title" title="键盘快捷键">?</button>
@@ -1374,7 +1539,7 @@
     </div>
     <div class="sm-allapps" id="allAppsList" hidden></div>
     <div class="sm-empty" id="startNoResults" data-i18n="start_no_results" hidden>没有找到匹配的应用</div>
-    <div class="sm-row"><b>推荐</b><span>更多 &gt;</span></div>
+    <div class="sm-row"><b data-i18n="img_recommend">推荐</b><span>更多 &gt;</span></div>
     <div style="font-size:11.5px;color:#7a7a7a;padding:6px 2px;" data-i18n="start_recent_hint">安装完成后，你最近使用的应用和文件会显示在这里。</div>
     <div class="sm-foot">
       <div class="sm-user"><span class="sm-avatar" id="smAvatar">A</span><span id="smUser">Administrator</span></div>
@@ -1447,6 +1612,7 @@
     </div>
     <div class="nc-body">
       <div class="nn-empty" data-i18n="cal_notif_empty">没有新通知</div>
+      <div class="nc-notif"><div class="nn-icon">★</div><div><div class="nn-title" data-i18n="notif_v11_title">Windows 11 安装模拟器 11.0</div><div class="nn-body" data-i18n="notif_v11_body">新增镜像选择、预检清单、驱动加载、命令面板、步骤地图等 9 项功能。</div></div></div>
       <div class="nc-notif"><div class="nn-icon">★</div><div><div class="nn-title" data-i18n="notif_v10_title">Windows 11 安装模拟器 10.0</div><div class="nn-body" data-i18n="notif_v10_body">新增安装助手、性能监视器、故障诊断、成就系统等 10 项功能。</div></div></div>
       <div class="nc-notif"><div class="nn-icon">★</div><div><div class="nn-title" data-i18n="notif_v9_title">Windows 11 安装模拟器 9.0</div><div class="nn-body" data-i18n="notif_v9_body">新增无人值守安装、安装源选择、磁盘清理、人脸识别、两步验证等 12 项功能。</div></div></div>
       <div class="nc-notif"><div class="nn-icon">i</div><div><div class="nn-title" data-i18n="notif_v60_title">Windows 11 安装模拟器 6.0</div><div class="nn-body" data-i18n="notif_v60_body">新增多桌面、任务视图、贴靠布局、全局搜索、小组件、画图、时钟与媒体播放器</div></div></div>
@@ -1679,7 +1845,7 @@
 <div class="lang-switch" id="langSwitch"></div>
 
 <!-- 外部依赖：语言包加载器 + 主逻辑（语言包为 locales/*.json，需通过本地服务器访问） -->
-<script src="scripts/i18n.js?v=10.0.0"></script>
-<script src="scripts/app.js?v=10.0.0"></script>
+<script src="scripts/i18n.js?v=11.0.0"></script>
+<script src="scripts/app.js?v=11.0.0"></script>
 </body>
 </html>

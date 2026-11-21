@@ -21,7 +21,7 @@ import json, pathlib, re, sys
 ROOT = pathlib.Path(r"c:\Users\Administrator\Documents\Kb5213479\2026-11-15\windows-installer-sim")
 PARTS = ROOT / "work" / "parts"
 OUT = ROOT / "outputs" / "web"
-VERSION = "10.0.0"
+VERSION = "11.0.0"
 
 sys.path.insert(0, str(ROOT / "work"))
 from locales_data import LANG_JSON, LANG_CSS, LANG_LABELS, LANG_ORDER  # noqa: E402
@@ -34,6 +34,7 @@ from extra_v8 import EXTRA_V8  # noqa: E402
 from extra_v81 import EXTRA_V81  # noqa: E402
 from extra_v9 import EXTRA_V9  # noqa: E402
 from extra_v10 import EXTRA_V10  # noqa: E402
+from extra_v11 import EXTRA_V11  # noqa: E402
 
 for _code in LANG_ORDER:
     LANG_JSON[_code].update(EXTRA_V3[_code])
@@ -45,6 +46,7 @@ for _code in LANG_ORDER:
     LANG_JSON[_code].update(EXTRA_V81[_code])
     LANG_JSON[_code].update(EXTRA_V9[_code])
     LANG_JSON[_code].update(EXTRA_V10[_code])
+    LANG_JSON[_code].update(EXTRA_V11[_code])
 assert all(len(v) == len(LANG_JSON[LANG_ORDER[0]]) for v in LANG_JSON.values()), "语言包键数不一致"
 
 # ---------- 1. 切 CSS ----------

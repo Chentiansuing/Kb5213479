@@ -1014,6 +1014,99 @@ body.v8-dark .copilot__acts button{background:#1e2a3c; color:#cfdcec;}
 body.v8-dark .copilot__hint{color:#b9c7d8;}
 body.v8-dark .copilot__now b{color:#eef3fb;}
 
+/* ============================================================
+   v11.0 大型更新
+   ============================================================ */
+
+/* 安装前检查 */
+.pf-list{margin-top:14px; display:flex; flex-direction:column; gap:6px;}
+.pf-row{display:flex; align-items:center; gap:10px; padding:8px 12px; border-radius:6px; background:rgba(0,0,0,.035); font-size:12.5px; color:var(--ink-2); transition:background .2s;}
+.pf-row .pf-ic{width:16px; height:16px; border-radius:50%; border:2px solid #c7d1dc; flex:none; position:relative;}
+.pf-row .pf-name{flex:1;}
+.pf-row .pf-val{font-size:11.5px; color:var(--ink-3);}
+.pf-row.run .pf-ic{border-color:var(--accent); border-top-color:transparent; animation:diagSpin .7s linear infinite;}
+.pf-row.run .pf-val{color:var(--accent);}
+.pf-row.ok{background:rgba(15,123,63,.08);}
+.pf-row.ok .pf-ic{border-color:#0f7b3f; background:#0f7b3f;}
+.pf-row.ok .pf-ic::after{content:""; position:absolute; left:4px; top:1px; width:4px; height:8px; border:solid #fff; border-width:0 2px 2px 0; transform:rotate(45deg);}
+.pf-row.ok .pf-val{color:#0f7b3f;}
+.pf-row.warn{background:rgba(192,122,0,.08);}
+.pf-row.warn .pf-ic{border-color:#c07a00; background:#c07a00;}
+.pf-row.warn .pf-ic::after{content:"!"; position:absolute; left:5px; top:-2px; color:#fff; font-size:11px; font-weight:700;}
+.pf-row.warn .pf-val{color:#a26500;}
+.pf-done{margin-top:12px; text-align:center; font-size:12.5px; color:#0f7b3f;}
+
+/* 蓝屏 */
+.screen.bsod,#s-bsod{background:#0a4ea8 !important;}
+.bsod__wrap{max-width:760px; padding:48px 42px; color:#fff;}
+.bsod__face{font-size:84px; font-weight:200; line-height:1; margin-bottom:22px;}
+.bsod__wrap h2{font-size:24px; font-weight:400; margin:0 0 10px; color:#fff;}
+.bsod__wrap p{font-size:13.5px; line-height:1.7; color:#dbe8ff; margin:0 0 6px;}
+.bsod__code{margin-top:18px !important; font-size:12.5px !important;}
+.bsod__code b{font-family:Consolas,monospace;}
+.bsod__bar{width:220px; height:5px; margin-top:18px; background:rgba(255,255,255,.25); border-radius:3px; overflow:hidden;}
+.bsod__bar i{display:block; height:100%; width:0; background:#fff; border-radius:3px;}
+.bsod__pct{font-size:12px !important; margin-top:7px !important;}
+.bsod__restart{margin-top:16px !important; font-size:13px !important;}
+.bsod__hint{margin-top:26px !important; font-size:11.5px !important; color:#9dc0f0 !important;}
+
+/* 驱动加载 */
+.drv-list{margin-top:12px; display:flex; flex-direction:column; gap:8px;}
+.drv-row{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:9px 12px; border-radius:7px; background:#fff; border:1px solid rgba(0,0,0,.08);}
+.drv-row b{display:block; font-size:12.5px; color:var(--ink-1);}
+.drv-row span{display:block; font-size:10.5px; color:var(--ink-3); margin-top:2px;}
+.drv-row.done{border-color:rgba(15,123,63,.35); background:rgba(15,123,63,.06);}
+.drv-row.done button{opacity:.5; pointer-events:none;}
+
+/* 步骤地图 */
+.map-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:7px; margin-top:12px; max-height:340px; overflow:auto;}
+.map-item{padding:9px 8px; border-radius:6px; border:1px solid rgba(0,0,0,.09); background:#fff; font-size:11.5px; color:var(--ink-2); cursor:pointer; text-align:left; line-height:1.4;}
+.map-item:hover{border-color:var(--accent); color:var(--accent); background:rgba(0,103,192,.06);}
+.map-item.cur{background:rgba(0,103,192,.12); border-color:var(--accent); color:var(--accent); font-weight:600;}
+
+/* 系统信息 */
+.sys-rows{margin-top:12px; display:flex; flex-direction:column; gap:0;}
+.sys-row{display:flex; justify-content:space-between; gap:16px; padding:8px 4px; border-bottom:1px solid rgba(0,0,0,.06); font-size:12.5px;}
+.sys-row span{color:var(--ink-3);}
+.sys-row b{color:var(--ink-1); font-weight:500; text-align:right;}
+
+/* 耗时对比 */
+.bench{margin-top:14px; padding:12px 14px; border-radius:8px; background:rgba(0,103,192,.05); border:1px solid rgba(0,103,192,.14); text-align:left;}
+.bench__head{font-size:12px; color:var(--ink-2); margin-bottom:8px; font-weight:600;}
+.bench__row{display:flex; align-items:center; gap:9px; margin-top:6px; font-size:11.5px; color:var(--ink-3);}
+.bench__row span{width:86px; flex:none;}
+.bench__row i{flex:1; height:8px; border-radius:4px; background:rgba(0,0,0,.07); overflow:hidden;}
+.bench__row i b{display:block; height:100%; border-radius:4px; background:var(--accent);}
+.bench__row em{width:44px; text-align:right; font-style:normal;}
+.bench__row.me span,.bench__row.me em{color:var(--ink-1); font-weight:600;}
+.bench__row.me i b{background:linear-gradient(90deg,#0067c0,#2f9bf0);}
+.bench__note{margin-top:8px; font-size:11px; color:var(--ink-3);}
+
+/* 命令面板 */
+.cmd{position:fixed; inset:0; z-index:1200; display:none; align-items:flex-start; justify-content:center; background:rgba(8,14,24,.42); backdrop-filter:blur(2px); padding-top:14vh;}
+.cmd.open{display:flex;}
+.cmd__box{width:min(600px,92vw); background:#fdfefe; border-radius:10px; overflow:hidden; box-shadow:0 26px 70px rgba(0,0,0,.36); border:1px solid rgba(0,0,0,.1);}
+.cmd__input{width:100%; border:0; outline:none; padding:14px 18px; font-size:14px; color:var(--ink-1); background:transparent; border-bottom:1px solid rgba(0,0,0,.08);}
+.cmd__list{max-height:320px; overflow:auto;}
+.cmd__item{display:flex; align-items:center; gap:10px; padding:9px 16px; font-size:12.5px; color:var(--ink-2); cursor:pointer;}
+.cmd__item .ci-ic{width:22px; height:22px; border-radius:5px; background:rgba(0,103,192,.1); color:var(--accent); display:flex; align-items:center; justify-content:center; font-size:11px; flex:none;}
+.cmd__item.sel{background:rgba(0,103,192,.1); color:var(--accent);}
+.cmd__empty{padding:22px 16px; text-align:center; color:var(--ink-3); font-size:12px;}
+.cmd__hint{padding:8px 16px; font-size:10.5px; color:var(--ink-3); border-top:1px solid rgba(0,0,0,.06);}
+
+/* 深色适配 */
+body.v8-dark .pf-row{background:rgba(255,255,255,.06);}
+body.v8-dark .drv-row{background:rgba(255,255,255,.05); border-color:rgba(255,255,255,.12);}
+body.v8-dark .drv-row b{color:#eef3fb;}
+body.v8-dark .map-item{background:rgba(255,255,255,.05); border-color:rgba(255,255,255,.12); color:#c9d7e8;}
+body.v8-dark .sys-row{border-color:rgba(255,255,255,.1);}
+body.v8-dark .sys-row b{color:#eef3fb;}
+body.v8-dark .bench{background:rgba(0,103,192,.16); border-color:rgba(120,180,255,.28);}
+body.v8-dark .bench__row i{background:rgba(255,255,255,.12);}
+body.v8-dark .cmd__box{background:#1c2636; border-color:rgba(255,255,255,.14);}
+body.v8-dark .cmd__input{color:#eef3fb; border-color:rgba(255,255,255,.12);}
+body.v8-dark .cmd__item{color:#c9d7e8;}
+
 /* ============ 窗口管理 ============ */
 .win-layer{position:absolute; inset:0; pointer-events:none; z-index:5;}
 .setup-win-layer{position:fixed;z-index:40;}

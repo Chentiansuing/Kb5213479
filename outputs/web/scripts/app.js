@@ -120,7 +120,7 @@
   function updateVersionBadge() {
     var badge = $('#versionBadge');
     if (!badge) return;
-    badge.textContent = 'v10.0';
+    badge.textContent = 'v11.0';
   }
 
   /* ============================================================
@@ -2587,6 +2587,17 @@
       var remain = (dur - elapsed) * (1 - v / 100);
       $('#instRemain').textContent = fmtTime(remain);
 
+      // v11.0：故障注入 → 蓝屏（安装到 47% 时触发一次）
+      if (state.v11 && state.v11.inject && !state.v11.bsodShown && v >= 47) {
+        state.v11.bsodShown = true;
+        v8Log('FATAL: CRITICAL_PROCESS_DIED at ' + v + '% (injected)', 'err');
+        clearTimers();
+        state._raf = 0;
+        document.title = state._origTitle || document.title;
+        setTimeout(function () { go('bsod'); }, 500);
+        return;
+      }
+
       // v7.0：模拟错误（小概率）
       if (willError && t > errorAt && v > 15) {
         var err = INST_ERRORS[Math.floor(Math.random() * INST_ERRORS.length)];
@@ -2792,6 +2803,7 @@
     openModal({
       title: _t('uh_title'),
       body: '<div class="uh-list">' +
+        '<div class="uh-item"><span class="uh-ic">★</span><b>' + _t('uh_v11_t') + '</b><i>2026/11/21</i></div>' +
         '<div class="uh-item"><span class="uh-ic">★</span><b>' + _t('uh_v10_t') + '</b><i>2026/11/19</i></div>' +
         '<div class="uh-item"><span class="uh-ic">✓</span><b>' + _t('uh_1') + '</b><i>2026/11/10</i></div>' +
         '<div class="uh-item"><span class="uh-ic">✓</span><b>' + _t('uh_2') + '</b><i>2026/11/08</i></div>' +
@@ -3299,7 +3311,7 @@
     whatsnew: function () {
       _apply();
       var tag = $('#wnVerTag');
-      if (tag) tag.textContent = 'v' + (_t('version_v10') || '10.0');
+      if (tag) tag.textContent = 'v' + (_t('version_v11') || '11.0');
     },
     hist: function () {
       _apply();
@@ -3687,7 +3699,7 @@
     okHandler = function () { p.free = p.total; renderDisk(); toast(_t('toast_formatted', { size: fmtSize(p.total) })); };
     modalOpen = true; $('#modal').classList.add('open');
   });
-  $('#btnDriver').addEventListener('click', function () { toast(_t('toast_no_driver')); });
+  $('#btnDriver').addEventListener('click', function () { v11OpenDrv(); });
   // v7.0 特大更新：GPT 转换 + 扩展分区
   $('#btnGpt').addEventListener('click', function () {
     $('#mTitle').textContent = _t('disk_gpt_convert');
@@ -3825,7 +3837,7 @@
   });
   if ($('#srcNext')) $('#srcNext').addEventListener('click', function () {
     if (state.v9.source) toast(_t('src_selected', { n: _t('src_' + state.v9.source) }));
-    go('bootcheck');
+    go('image');
   });
 
   // 无人值守
@@ -5382,6 +5394,298 @@
 
   v10CopilotUpdate();
   v10RenderAch();
+
+  /* ============================================================
+   * v11.0 大型更新
+   * 镜像选择 / 预检清单 / 驱动加载 / 命令面板 / 步骤地图 /
+   * 系统信息 / 耗时对比 / 蓝屏模拟 / 日志导出
+   * ============================================================ */
+  state.v11 = { image: '', inject: false, bsodShown: false, drvLoaded: false };
+
+  /* ---- 镜像选择 ---- */
+  if ($('#imgList')) $('#imgList').addEventListener('click', function (e) {
+    var opt = e.target.closest('.opt'); if (!opt) return;
+    $$('#imgList .opt').forEach(function (o) { o.classList.remove('sel'); });
+    opt.classList.add('sel');
+    state.v11.image = opt.dataset.img;
+    var nx = $('#imgNext'); if (nx) nx.disabled = false;
+    toast(_t('img_selected', { n: _t('img_' + state.v11.image) }));
+    v8Log('Installation image selected: ' + _t('img_' + state.v11.image));
+  });
+  if ($('#imgNext')) $('#imgNext').addEventListener('click', function () {
+    if (state.v11.image) go('preflight');
+  });
+
+  /* ---- 安装前检查 ---- */
+  function v11PreflightRun() {
+    var rows = $$('#pfList .pf-row');
+    var done = $('#pfDone'); if (done) done.style.display = 'none';
+    var nx = $('#pfNext'); if (nx) nx.disabled = true;
+    rows.forEach(function (r) {
+      r.className = 'pf-row';
+      var v = r.querySelector('.pf-val'); if (v) v.textContent = _t('pf_checking');
+    });
+    var i = 0;
+    (function step() {
+      if (i >= rows.length) {
+        if (done) done.style.display = '';
+        if (nx) nx.disabled = false;
+        v8Log('Preflight checks completed: ' + rows.length + '/' + rows.length + ' passed');
+        return;
+      }
+      var r = rows[i];
+      r.classList.add('run');
+      var v = r.querySelector('.pf-val'); if (v) v.textContent = _t('pf_checking');
+      later(function () {
+        r.classList.remove('run');
+        var warn = r.dataset.pf === 'net' && state.v9.source === 'net' && !navigator.onLine;
+        r.classList.add(warn ? 'warn' : 'ok');
+        if (v) v.textContent = _t(warn ? 'pf_warn' : 'pf_pass');
+        i++; step();
+      }, 520);
+    })();
+  }
+  hooks.preflight = function () { _apply(); v11PreflightRun(); };
+
+  /* ---- 驱动加载 ---- */
+  function v11OpenDrv() {
+    var el = $('#drvOverlay'); if (el) el.classList.add('open');
+  }
+  if ($('#drvList')) $('#drvList').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-drvbtn]'); if (!b) return;
+    var row = b.closest('.drv-row');
+    if (row && row.classList.contains('done')) return;
+    var key = b.dataset.drvbtn;
+    if (row) row.classList.add('done');
+    b.disabled = true; b.textContent = '✓';
+    toast(_t('drv_loaded', { n: _t('drv_' + key) }));
+    v8Log('Driver loaded: ' + _t('drv_' + key));
+    if (!state.v11.drvLoaded) {
+      state.v11.drvLoaded = true;
+      var un = state.disk.filter(function (x) { return x.unallocated; })[0];
+      if (un) {
+        un.unallocated = false;
+        un.kind = 'primary';
+        un.fs = 'NTFS';
+        un.nameKey = '';
+        un.name = '新加卷';
+      } else {
+        state.disk.push({ id: 'd' + Date.now(), name: '新加卷', total: 20, free: 20, kind: 'primary' });
+      }
+      renderDisk();
+      v8Log('Storage controller detected, partition table refreshed');
+    }
+  });
+  if ($('#drvClose')) $('#drvClose').addEventListener('click', function () { $('#drvOverlay').classList.remove('open'); });
+
+  /* ---- 命令面板 ---- */
+  var v11CmdSel = 0, v11CmdFiltered = [];
+  function v11CmdDefs() {
+    var defs = [
+      { k: 'cmd_go_desktop', ic: '🖥', run: function () { v11CloseCmd(); go('desktop'); } },
+      { k: 'cmd_go_install', ic: '⚙', run: function () { v11CloseCmd(); go('install'); } },
+      { k: 'cmd_log', ic: '📜', run: function () { v11CloseCmd(); v8OpenLog(); } },
+      { k: 'cmd_help', ic: '⌨', run: function () { v11CloseCmd(); var o = $('#helpOverlay'); if (o) o.classList.add('open'); } },
+      { k: 'cmd_ach', ic: '🏆', run: function () { v11CloseCmd(); v10OpenAch(); } },
+      { k: 'cmd_time', ic: '⏱', run: function () { v11CloseCmd(); v10OpenTimeline(); } },
+      { k: 'cmd_map', ic: '🗺', run: function () { v11CloseCmd(); v11OpenMap(); } },
+      { k: 'cmd_diag', ic: '🩺', run: function () { v11CloseCmd(); go('diag'); } },
+      { k: 'cmd_dark', ic: '🌙', run: function () { v11CloseCmd(); var b = $('#v8Theme'); if (b) b.click(); } },
+      { k: 'cmd_sound', ic: '🔊', run: function () { v11CloseCmd(); var t = $('#quickPanel [data-qc="sound"]'); if (t) t.click(); } },
+      { k: 'cmd_exportlog', ic: '⤓', run: function () { v11CloseCmd(); v11ExportLog(); } },
+      { k: 'cmd_sysinfo', ic: 'ℹ', run: function () { v11CloseCmd(); v11OpenSysinfo(); } },
+      { k: 'cmd_cfg', ic: '{}', run: function () { v11CloseCmd(); v10OpenCfg(); } }
+    ];
+    defs.forEach(function (c) { c.name = _t(c.k); });
+    return defs;
+  }
+  function v11RenderCmd() {
+    var inp = $('#cmdInput');
+    var q = (inp ? inp.value : '').trim().toLowerCase();
+    var all = v11CmdDefs();
+    v11CmdFiltered = q ? all.filter(function (c) { return c.name.toLowerCase().indexOf(q) >= 0; }) : all;
+    if (v11CmdSel >= v11CmdFiltered.length) v11CmdSel = Math.max(0, v11CmdFiltered.length - 1);
+    var host = $('#cmdList'); if (!host) return;
+    if (!v11CmdFiltered.length) {
+      host.innerHTML = '<div class="cmd__empty">' + _t('cmd_empty') + '</div>';
+      return;
+    }
+    host.innerHTML = v11CmdFiltered.map(function (c, i) {
+      return '<div class="cmd__item' + (i === v11CmdSel ? ' sel' : '') + '" data-i="' + i + '">' +
+        '<span class="ci-ic">' + c.ic + '</span><span>' + c.name + '</span></div>';
+    }).join('');
+  }
+  function v11OpenCmd() {
+    var el = $('#cmdPalette'); if (!el) return;
+    el.classList.add('open');
+    v11CmdSel = 0;
+    var inp = $('#cmdInput'); if (inp) inp.value = '';
+    v11RenderCmd();
+    setTimeout(function () { if (inp) inp.focus(); }, 30);
+  }
+  function v11CloseCmd() { var el = $('#cmdPalette'); if (el) el.classList.remove('open'); }
+
+  if ($('#v11Cmd')) $('#v11Cmd').addEventListener('click', v11OpenCmd);
+  if ($('#cmdInput')) $('#cmdInput').addEventListener('input', function () { v11CmdSel = 0; v11RenderCmd(); });
+  if ($('#cmdList')) $('#cmdList').addEventListener('click', function (e) {
+    var item = e.target.closest('.cmd__item'); if (!item) return;
+    var c = v11CmdFiltered[Number(item.dataset.i)];
+    if (c) c.run();
+  });
+  if ($('#cmdPalette')) $('#cmdPalette').addEventListener('click', function (e) {
+    if (e.target === this) v11CloseCmd();
+  });
+  document.addEventListener('keydown', function (e) {
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) {
+      e.preventDefault(); e.stopImmediatePropagation();
+      v11OpenCmd();
+      return;
+    }
+    var el = $('#cmdPalette');
+    if (!el || !el.classList.contains('open')) return;
+    if (e.key === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); v11CloseCmd(); }
+    else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      v11CmdSel = Math.min(v11CmdSel + 1, v11CmdFiltered.length - 1);
+      v11RenderCmd();
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      v11CmdSel = Math.max(v11CmdSel - 1, 0);
+      v11RenderCmd();
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      var c = v11CmdFiltered[v11CmdSel];
+      if (c) c.run();
+    }
+  }, true);
+
+  /* ---- 步骤地图 ---- */
+  function v11OpenMap() {
+    var host = $('#mapGrid'); if (!host) return;
+    var cur = (location.hash || '').replace('#', '');
+    host.innerHTML = screens.map(function (s) {
+      var id = s.id.replace(/^s-/, '');
+      var h = s.querySelector('h1') || s.querySelector('.dialog__title');
+      var name = h ? h.textContent.trim() : id;
+      return '<button class="map-item' + (id === cur ? ' cur' : '') + '" data-map="' + id + '">' + name + '</button>';
+    }).join('');
+    var el = $('#mapOverlay'); if (el) el.classList.add('open');
+  }
+  if ($('#mapGrid')) $('#mapGrid').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-map]'); if (!b) return;
+    var id = b.dataset.map;
+    $('#mapOverlay').classList.remove('open');
+    go(id);
+  });
+  if ($('#mapClose')) $('#mapClose').addEventListener('click', function () { $('#mapOverlay').classList.remove('open'); });
+  if ($('#copilotPanel')) $('#copilotPanel').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-cp]'); if (!b) return;
+    if (b.dataset.cp === 'map') v11OpenMap();
+    else if (b.dataset.cp === 'exportlog') v11ExportLog();
+  });
+
+  /* ---- 系统信息 ---- */
+  function v11ElapsedMs() {
+    if (state.v8.instStartAt && state.v8.instEndAt) return state.v8.instEndAt - state.v8.instStartAt;
+    var total = 0;
+    (state.v10.timeline || []).forEach(function (x) { total += x.dur || 0; });
+    return total;
+  }
+  function v11OpenSysinfo() {
+    var host = $('#sysRows'); if (!host) return;
+    var ms = v11ElapsedMs();
+    var rows = [
+      ['sys_device', state.deviceName || 'DESKTOP-7F3K9Q'],
+      ['sys_edition', state.edition || 'Windows 11 专业版'],
+      ['sys_build', '26200.1742'],
+      ['sys_cpu', 'Intel Core i7-13700H · 14 核 20 线程'],
+      ['sys_ram', '16 GB DDR5-4800'],
+      ['sys_disk', 'NVMe SSD 512 GB'],
+      ['sys_gpu', 'Intel Iris Xe Graphics'],
+      ['sys_source', state.v9.source ? _t('src_' + state.v9.source) : '—'],
+      ['sys_image', state.v11.image ? _t('img_' + state.v11.image) : '—'],
+      ['sys_elapsed', ms ? (ms / 1000).toFixed(1) + 's' : '—']
+    ];
+    host.innerHTML = rows.map(function (r) {
+      return '<div class="sys-row"><span>' + _t(r[0]) + '</span><b>' + r[1] + '</b></div>';
+    }).join('');
+    var el = $('#sysinfoOverlay'); if (el) el.classList.add('open');
+  }
+  if ($('#sysinfoOpen')) $('#sysinfoOpen').addEventListener('click', v11OpenSysinfo);
+  if ($('#sysClose')) $('#sysClose').addEventListener('click', function () { $('#sysinfoOverlay').classList.remove('open'); });
+
+  /* ---- 耗时对比 ---- */
+  function v11RenderBench() {
+    var host = $('#benchBox'); if (!host) return;
+    var actual = v11ElapsedMs();
+    if (!actual) actual = 60000;
+    var std = 60000, demo = 8000;
+    var max = Math.max(actual, std, demo);
+    function row(cls, label, ms) {
+      var pct = Math.max(3, Math.round(ms / max * 100));
+      return '<div class="bench__row ' + cls + '"><span>' + label + '</span>' +
+        '<i><b style="width:' + pct + '%"></b></i><em>' + (ms / 1000).toFixed(1) + 's</em></div>';
+    }
+    host.innerHTML = '<div class="bench__head">' + _t('bench_title') + '</div>' +
+      row('me', _t('bench_this'), actual) +
+      row('', _t('bench_standard'), std) +
+      row('', _t('bench_demo'), demo) +
+      (actual < std ? '<div class="bench__note">' + _t('bench_faster', { n: Math.round(std / Math.max(actual, 1)) }) + '</div>' : '');
+  }
+  var v11OrigDoneHook = hooks.done;
+  hooks.done = function () { if (v11OrigDoneHook) v11OrigDoneHook(); v11RenderBench(); };
+
+  /* ---- 蓝屏模拟 ---- */
+  function v11StartBsod() {
+    var bar = $('#bsodBar'), pct = $('#bsodPct');
+    var codes = ['CRITICAL_PROCESS_DIED', 'IRQL_NOT_LESS_OR_EQUAL', 'KERNEL_SECURITY_CHECK_FAILURE'];
+    if ($('#bsodCode')) $('#bsodCode').textContent = codes[Math.floor(Math.random() * codes.length)];
+    if (bar) bar.style.width = '0%';
+    if (pct) pct.textContent = _t('bsod_progress', { n: 0 });
+    var n = 0;
+    (function tick() {
+      n += Math.ceil(Math.random() * 14);
+      if (n > 100) n = 100;
+      if (bar) bar.style.width = n + '%';
+      if (pct) pct.textContent = _t('bsod_progress', { n: n });
+      if (n >= 100) {
+        later(function () {
+          state.v11.inject = false;
+          state.v11.bsodShown = false;
+          go('install');
+        }, 1200);
+        return;
+      }
+      later(tick, 320);
+    })();
+  }
+  hooks.bsod = function () { _apply(); v11StartBsod(); };
+
+  if ($('#instInject')) $('#instInject').addEventListener('click', function () {
+    state.v11.inject = !state.v11.inject;
+    this.classList.toggle('on', state.v11.inject);
+    toast(_t(state.v11.inject ? 'bsod_on' : 'bsod_off'));
+    v8Log('Fault injection ' + (state.v11.inject ? 'enabled' : 'disabled'));
+  });
+
+  /* ---- 日志导出 ---- */
+  function v11ExportLog() {
+    var txt = '';
+    try { txt = v8LogText() || ''; } catch (e) { txt = ''; }
+    if (!txt) txt = 'Windows 11 Setup Simulator 11.0\n(no log entries)';
+    try {
+      var blob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'windows11-setup-log.txt';
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(function () { URL.revokeObjectURL(a.href); if (a.parentNode) a.parentNode.removeChild(a); }, 1200);
+    } catch (e) { }
+    fsSave('setup-log.txt', txt, null);
+    toast(_t('log_exported'));
+    v8Log('Setup log exported to setup-log.txt');
+  }
 
   /* ============================================================
    * 启动
