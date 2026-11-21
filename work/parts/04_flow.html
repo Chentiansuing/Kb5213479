@@ -289,9 +289,9 @@
     <h1 data-i18n="cloud_title">让你的文件、设置和 Microsoft Store 应用在所有设备上跟随你</h1>
     <p class="sub" data-i18n="cloud_desc">登录 Microsoft 账户以启用 OneDrive 和云同步。</p>
     <div class="cloud-box">
-      <div class="cloud-item"><div class="cloud-ic">📁</div><div><b data-i18n="cloud_files">自动保存文件到 OneDrive</b></div></div>
-      <div class="cloud-item"><div class="cloud-ic">⚙️</div><div><b data-i18n="cloud_settings">跨设备同步设置</b></div></div>
-      <div class="cloud-item"><div class="cloud-ic">📦</div><div><b data-i18n="cloud_apps">自动还原 Microsoft Store 应用</b></div></div>
+      <div class="cloud-item"><div class="cloud-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#v14-folder"/></svg></div><div><b data-i18n="cloud_files">自动保存文件到 OneDrive</b></div></div>
+      <div class="cloud-item"><div class="cloud-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#v14-settings"/></svg></div><div><b data-i18n="cloud_settings">跨设备同步设置</b></div></div>
+      <div class="cloud-item"><div class="cloud-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#v14-store"/></svg></div><div><b data-i18n="cloud_apps">自动还原 Microsoft Store 应用</b></div></div>
     </div>
     <div class="oobe-foot">
       <button class="link" data-go="updatesetup" data-i18n="hello_skip">跳过</button>
@@ -303,7 +303,7 @@
 <!-- ===== v7.0：安装完成庆祝页（v8.0 增加安装摘要） ===== -->
 <section class="screen oobe" id="s-done">
   <div class="oobe-card" style="text-align:center;">
-    <div style="width:72px; height:72px; margin:0 auto 12px; border-radius:50%; background:#e8f5e9; color:#2e7d32; font-size:36px; display:flex; align-items:center; justify-content:center;">✓</div>
+    <div class="done-badge"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#v14-check"/></svg></div>
     <h1 data-i18n="done_title">一切就绪</h1>
     <p class="sub" data-i18n="done_desc">Windows 11 已成功安装并准备好使用。</p>
     <div style="margin-top:12px; font-size:14px; color:#4a5568;"><span id="doneName">Administrator</span> · <span data-i18n="done_hint">建议先查看“开始”菜单，或者打开 Microsoft Store 安装喜欢的应用。</span></div>
@@ -477,11 +477,19 @@
   <div class="dialog dialog--wide">
     <div class="dialog__bar">
       <div class="dialog__title">Windows 11 安装程序</div>
-      <span class="ver-tag" id="wnVerTag">8.1</span>
+      <span class="ver-tag" id="wnVerTag">14.0</span>
     </div>
     <div class="dialog__body">
-      <h1 class="dlg-h" data-i18n="wn11_title">11.0 有什么新功能</h1>
-      <p class="dlg-sub" data-i18n="wn_desc11">以下是 11.0 与 10.0 版本的新增内容。</p>
+      <h1 class="dlg-h" data-i18n="wn14_title">14.0 有什么新功能</h1>
+      <p class="dlg-sub" data-i18n="wn_desc14">14.0 重写了大部分界面与动效，并重做了整套图标。</p>
+      <div class="wn-group" data-i18n="wn_v14">14.0 新增</div>
+      <div class="wn-item"><b data-i18n="wn_rewrite">界面全面重写</b><span data-i18n="wn_rewrite_d">对话框、表单、安装页与 OOBE 页面采用全新的层次、圆角与光影体系。</span></div>
+      <div class="wn-item"><b data-i18n="wn_motion">全新动效系统</b><span data-i18n="wn_motion_d">弹簧缓动、交错入场、窗口缩放展开与页面交叉淡入，全部只使用 transform 与 opacity。</span></div>
+      <div class="wn-item"><b data-i18n="wn_icons">Fluent 图标包</b><span data-i18n="wn_icons_d">统一的双色调圆角图标，替换桌面、开始菜单、任务栏与窗口标题栏。</span></div>
+      <div class="wn-item"><b data-i18n="wn_perf">渲染性能优化</b><span data-i18n="wn_perf_d">降低毛玻璃模糊半径、限制重绘区域、事件节流并延后非关键任务，动画更稳定。</span></div>
+      <div class="wn-item"><b data-i18n="wn_dock">悬浮任务栏与悬停放大</b><span data-i18n="wn_dock_d">任务栏改为悬浮胶囊造型，指针靠近时图标会像 Dock 一样放大。</span></div>
+      <div class="wn-item"><b data-i18n="wn_wall">极光壁纸与指针视差</b><span data-i18n="wn_wall_d">多层极光缓慢流动，并随鼠标位置产生轻微视差与跟随光斑。</span></div>
+      <div class="wn-item"><b data-i18n="wn_still">精简动效选项</b><span data-i18n="wn_still_d">在“设置 &gt; 个性化”中可切换完整或精简动效，系统级减少动态效果同样生效。</span></div>
       <div class="wn-group" data-i18n="wn_v11">11.0 新增</div>
       <div class="wn-item"><b data-i18n="wn_image">安装镜像选择</b><span data-i18n="wn_image_d">在三个 Windows 镜像中选择，卡片展示内部版本、大小与发布日期。</span></div>
       <div class="wn-item"><b data-i18n="wn_preflight">安装前检查清单</b><span data-i18n="wn_preflight_d">TPM、安全启动、处理器、内存等 7 项逐条检查并显示结果。</span></div>

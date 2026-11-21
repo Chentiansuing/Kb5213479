@@ -121,7 +121,7 @@
   function updateVersionBadge() {
     var badge = $('#versionBadge');
     if (!badge) return;
-    badge.textContent = 'v13.0';
+    badge.textContent = 'v14.0';
   }
 
   /* ============================================================
@@ -1576,6 +1576,11 @@
             '<div class="set-walls">' + walls.map(function (w) {
               return '<button class="set-wall' + (Number(state.theme.wall) === w[0] ? ' on' : '') + '" data-wall="' + w[0] + '" title="' + _t(w[1]) + '"></button>';
             }).join('') + '</div></div>' +
+          '<div class="set-block"><b>' + _t('set_anim') + '</b><i>' + _t('set_anim_desc') + '</i>' +
+            '<div class="set-seg">' +
+              '<button data-anim="full" class="' + (v14IsStill() ? '' : 'on') + '">' + _t('set_anim_full') + '</button>' +
+              '<button data-anim="reduced" class="' + (v14IsStill() ? 'on' : '') + '">' + _t('set_anim_reduced') + '</button>' +
+            '</div></div>' +
           '<div class="settings__row clickable" data-page="time"><div class="sr-left"><div><div class="sr-title">' + _t('set_lang') + '</div><div class="sr-desc">' + _t('set_time_desc') + '</div></div></div><span>›</span></div>';
       } else if (page === 'time') {
         var i18nLib = window.__i18n || {};
@@ -1627,7 +1632,7 @@
           '<h2>' + _t('about_title') + '</h2>' +
           '<div class="about-hero">' +
             '<div class="about-logo"><svg viewBox="0 0 64 64"><g fill="#fff"><rect x="2" y="2" width="27" height="27"/><rect x="35" y="2" width="27" height="27"/><rect x="2" y="35" width="27" height="27"/><rect x="35" y="35" width="27" height="27"/></g></svg></div>' +
-            '<div><div class="about-name">Windows 11</div><div class="about-ver">' + _t('about_version') + ' 6.0.0 · ' + _t('about_edition') + ': ' + (state.edition || 'Pro') + '</div></div>' +
+            '<div><div class="about-name">Windows 11</div><div class="about-ver">' + _t('about_version') + ' 14.0.0 · ' + _t('about_edition') + ': ' + (state.edition || 'Pro') + '</div></div>' +
           '</div>' +
           '<div class="about-rows">' +
             '<div class="about-row"><b>' + _t('about_os') + '</b><span>25H2</span></div>' +
