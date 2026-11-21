@@ -224,27 +224,10 @@
       <div><b data-i18n="inst_remain">剩余时间</b> <span id="instRemain">—</span></div>
     </div>
     <!-- v10.0：性能监视器 -->
-    <div style="margin-top:12px; text-align:center;">
-      <button class="link" id="instPerfToggle" data-i18n="perf_show">显示性能曲线</button>
-    </div>
-    <div class="perf" id="instPerf" style="display:none;">
-      <div class="perf__head">
-        <b data-i18n="perf_title">性能监视器</b>
-        <span class="perf__legend">
-          <i class="pl-cpu"></i><span data-i18n="perf_cpu">CPU</span>
-          <i class="pl-disk"></i><span data-i18n="perf_disk">磁盘</span>
-          <i class="pl-net"></i><span data-i18n="perf_net">网络</span>
-        </span>
-      </div>
-      <svg class="perf__chart" id="perfChart" viewBox="0 0 320 90" preserveAspectRatio="none" aria-hidden="true"></svg>
-      <div class="perf__note" data-i18n="perf_note">曲线为模拟数据，用于演示安装期间的资源占用变化。</div>
-    </div>
+    <div class="perf" id="instPerf" style="display:none;"></div>
     <div style="margin-top:14px; display:flex; gap:10px; justify-content:center; align-items:center;">
       <button class="btn" id="instPause" style="min-width:96px;" disabled data-i18n="inst_pause">暂停</button>
       <button class="btn" id="instCancel" style="min-width:96px;" disabled data-i18n="inst_cancel">取消</button>
-      <button class="link" id="instOpenLog" data-i18n="inst_open_log">查看安装日志</button>
-      <button class="link" id="instDiag" data-i18n="diag_title">故障诊断中心</button>
-      <button class="link" id="instInject" data-i18n="bsod_inject">故障注入（蓝屏演示）</button>
     </div>
   </div>
 </section>
@@ -333,13 +316,7 @@
         <div><span data-i18n="sum_duration">总耗时</span><b id="sumDuration">—</b></div>
       </div>
     </div>
-    <div class="bench" id="benchBox"></div>
     <div class="oobe-foot" style="justify-content:center; gap:10px;">
-      <button class="btn" id="sysinfoOpen" data-i18n="sys_title">系统信息</button>
-      <button class="btn" id="sumExport" data-i18n="sum_export">导出安装报告</button>
-      <button class="btn" id="cfgExport" data-i18n="cfg_export">导出安装配置</button>
-      <button class="btn" id="timelineOpen" data-i18n="tl_open">查看时间线</button>
-      <button class="btn" id="doneWhatsNew" data-i18n="wn_open">查看新功能</button>
       <button class="btn primary" data-go="desktop" data-i18n="done_start">开始使用</button>
     </div>
   </div>
@@ -432,10 +409,6 @@
 <!-- ===== v8.1：启动欢迎页（立即安装 / 修复计算机 / 导入配置） ===== -->
 <section class="screen dark" id="s-welcome">
   <div class="welcome">
-    <div class="welcome__lang">
-      <span data-i18n="welcome_lang">安装语言</span>
-      <div class="welcome__langlist" id="welcomeLangs"></div>
-    </div>
     <div class="welcome__center">
       <svg class="welcome__logo" viewBox="0 0 64 64" aria-hidden="true">
         <g fill="#ffffff"><rect x="2" y="2" width="27" height="27" rx="1.5"/><rect x="35" y="2" width="27" height="27" rx="1.5"/><rect x="2" y="35" width="27" height="27" rx="1.5"/><rect x="35" y="35" width="27" height="27" rx="1.5"/></g>
@@ -445,14 +418,11 @@
       <button class="btn primary welcome__install" id="welcomeInstall" data-i18n="welcome_install">立即安装</button>
       <div class="welcome__links">
         <button class="link" id="welcomeRepair" data-i18n="welcome_repair">修复计算机</button>
-        <button class="link" id="welcomeUnattend" data-i18n="ua_title">无人值守安装</button>
-        <button class="link" id="welcomeImport" data-i18n="welcome_import">导入安装配置</button>
-        <button class="link" id="welcomeWhatsNew" data-i18n="wn9_title">9.0 有什么新功能？</button>
       </div>
     </div>
     <div class="welcome__foot">
-      <span data-i18n="welcome_hint">提示：按 F1 可随时查看键盘快捷键。</span>
-      <span class="welcome__ver">v9.0</span>
+      <span data-i18n="welcome_foot">版权所有 © Microsoft Corporation。保留所有权利。</span>
+      <span class="welcome__ver">v12.0</span>
     </div>
   </div>
 </section>
@@ -1049,6 +1019,14 @@
   </div>
 </div>
 
+<!-- ===== v13.0：输入捕获提示条 ===== -->
+<div class="cap-bar" id="capBar">
+  <span class="cap-dot"></span>
+  <b id="capApp"></b>
+  <span class="cap-tip" data-i18n="cap_hint">按 Esc 退出捕获</span>
+  <button id="capCancel" data-i18n="cap_cancel">取消捕获</button>
+</div>
+
 <!-- ===== v11.0：驱动程序加载 ===== -->
 <div class="v8-overlay" id="drvOverlay">
   <div class="dialog" style="max-width:560px;">
@@ -1079,71 +1057,6 @@
   </div>
 </div>
 
-<!-- ===== v11.0：步骤地图 ===== -->
-<div class="v8-overlay" id="mapOverlay">
-  <div class="dialog" style="max-width:640px;">
-    <div class="dialog__bar">
-      <div class="dialog__title" data-i18n="map_title">步骤地图</div>
-    </div>
-    <div class="dialog__body">
-      <p class="dlg-sub" data-i18n="map_desc">点击任意页面即可直接跳转，适合演示时快速定位。</p>
-      <div class="map-grid" id="mapGrid"></div>
-    </div>
-    <div class="dialog__foot">
-      <div class="spacer"></div>
-      <button class="btn primary" id="mapClose" data-i18n="wn10_close">关闭</button>
-    </div>
-  </div>
-</div>
 
-<!-- ===== v11.0：系统信息 ===== -->
-<div class="v8-overlay" id="sysinfoOverlay">
-  <div class="dialog" style="max-width:560px;">
-    <div class="dialog__bar">
-      <div class="dialog__title" data-i18n="sys_title">系统信息</div>
-    </div>
-    <div class="dialog__body">
-      <p class="dlg-sub" data-i18n="sys_desc">这台电脑的模拟硬件规格与本次安装信息。</p>
-      <div class="sys-rows" id="sysRows"></div>
-    </div>
-    <div class="dialog__foot">
-      <div class="spacer"></div>
-      <button class="btn primary" id="sysClose" data-i18n="wn10_close">关闭</button>
-    </div>
-  </div>
-</div>
 
-<!-- ===== v11.0：命令面板 ===== -->
-<div class="cmd" id="cmdPalette">
-  <div class="cmd__box">
-    <input class="cmd__input" id="cmdInput" data-i18n-ph="cmd_ph" placeholder="输入命令或页面名称…" autocomplete="off" spellcheck="false">
-    <div class="cmd__list" id="cmdList"></div>
-    <div class="cmd__hint" data-i18n="cmd_hint">↑↓ 选择 · Enter 执行 · Esc 关闭</div>
-  </div>
-</div>
 
-<!-- ===== v10.0：安装助手面板 ===== -->
-<div class="copilot" id="copilotPanel">
-  <div class="copilot__head">
-    <b data-i18n="cp_title">安装助手</b>
-    <button class="copilot__x" id="cpClose" aria-label="close">×</button>
-  </div>
-  <div class="copilot__now"><span data-i18n="cp_now">当前步骤</span><b id="cpScreen">—</b></div>
-  <p class="copilot__hint" id="cpHint"></p>
-  <div class="copilot__acts">
-    <button data-cp="log" data-i18n="cp_action_log">查看日志</button>
-    <button data-cp="help" data-i18n="cp_action_help">快捷键</button>
-    <button data-cp="ach" data-i18n="cp_action_ach">成就</button>
-    <button data-cp="time" data-i18n="cp_action_time">时间线</button>
-    <button data-cp="map" data-i18n="cmd_map">步骤地图</button>
-    <button data-cp="exportlog" data-i18n="log_export">导出日志</button>
-  </div>
-</div>
-
-<!-- ===== v8.0 特大更新：安装界面浮动工具（主题 / 帮助） ===== -->
-<div class="setup-fab" id="setupFab">
-  <button id="v11Cmd" data-i18n-title="cmd_title" title="命令面板 Ctrl+K">⌘</button>
-  <button id="v10Copilot" data-i18n-title="cp_title" title="安装助手">🤖</button>
-  <button id="v8Theme" data-i18n-title="theme_toggle" title="切换安装程序主题">🌙</button>
-  <button id="v8Help" data-i18n-title="help_title" title="键盘快捷键">?</button>
-</div>

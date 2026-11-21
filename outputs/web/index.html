@@ -6,8 +6,8 @@
 <title>Windows 11 安装程序</title>
 
 <!-- 外部依赖：样式（带版本号，避免更新后仍命中旧缓存） -->
-<link rel="stylesheet" href="styles/app.css?v=11.0.0">
-<link rel="stylesheet" href="styles/windows.css?v=11.0.0">
+<link rel="stylesheet" href="styles/app.css?v=13.0.0">
+<link rel="stylesheet" href="styles/windows.css?v=13.0.0">
 </head>
 <body>
 <body>
@@ -161,8 +161,9 @@
         <p>本软件的支持服务受设备制造商或 Microsoft 当时提供的支持政策约束。本条款中的任何内容均不限制消费者依法享有的法定权利。</p>
         <p style="margin-top:14px;color:#888;">（以上条款为演示用途的简化文本，非 Microsoft 官方条款。）</p>
       </div>
-      <label class="check" style="margin-top:16px;">
-        <input type="checkbox" id="licenseCheck">
+      <p class="dlg-note" id="licenseScrollHint" style="margin-top:14px;" data-i18n="license_scroll_hint">请向下滚动阅读完整条款，滚动到底部后才能接受。</p>
+      <label class="check" style="margin-top:10px;">
+        <input type="checkbox" id="licenseCheck" disabled>
         <span data-i18n="chk_license">我接受 Microsoft 软件许可条款和适用的通知。</span>
       </label>
     </div>
@@ -432,27 +433,10 @@
       <div><b data-i18n="inst_remain">剩余时间</b> <span id="instRemain">—</span></div>
     </div>
     <!-- v10.0：性能监视器 -->
-    <div style="margin-top:12px; text-align:center;">
-      <button class="link" id="instPerfToggle" data-i18n="perf_show">显示性能曲线</button>
-    </div>
-    <div class="perf" id="instPerf" style="display:none;">
-      <div class="perf__head">
-        <b data-i18n="perf_title">性能监视器</b>
-        <span class="perf__legend">
-          <i class="pl-cpu"></i><span data-i18n="perf_cpu">CPU</span>
-          <i class="pl-disk"></i><span data-i18n="perf_disk">磁盘</span>
-          <i class="pl-net"></i><span data-i18n="perf_net">网络</span>
-        </span>
-      </div>
-      <svg class="perf__chart" id="perfChart" viewBox="0 0 320 90" preserveAspectRatio="none" aria-hidden="true"></svg>
-      <div class="perf__note" data-i18n="perf_note">曲线为模拟数据，用于演示安装期间的资源占用变化。</div>
-    </div>
+    <div class="perf" id="instPerf" style="display:none;"></div>
     <div style="margin-top:14px; display:flex; gap:10px; justify-content:center; align-items:center;">
       <button class="btn" id="instPause" style="min-width:96px;" disabled data-i18n="inst_pause">暂停</button>
       <button class="btn" id="instCancel" style="min-width:96px;" disabled data-i18n="inst_cancel">取消</button>
-      <button class="link" id="instOpenLog" data-i18n="inst_open_log">查看安装日志</button>
-      <button class="link" id="instDiag" data-i18n="diag_title">故障诊断中心</button>
-      <button class="link" id="instInject" data-i18n="bsod_inject">故障注入（蓝屏演示）</button>
     </div>
   </div>
 </section>
@@ -541,13 +525,7 @@
         <div><span data-i18n="sum_duration">总耗时</span><b id="sumDuration">—</b></div>
       </div>
     </div>
-    <div class="bench" id="benchBox"></div>
     <div class="oobe-foot" style="justify-content:center; gap:10px;">
-      <button class="btn" id="sysinfoOpen" data-i18n="sys_title">系统信息</button>
-      <button class="btn" id="sumExport" data-i18n="sum_export">导出安装报告</button>
-      <button class="btn" id="cfgExport" data-i18n="cfg_export">导出安装配置</button>
-      <button class="btn" id="timelineOpen" data-i18n="tl_open">查看时间线</button>
-      <button class="btn" id="doneWhatsNew" data-i18n="wn_open">查看新功能</button>
       <button class="btn primary" data-go="desktop" data-i18n="done_start">开始使用</button>
     </div>
   </div>
@@ -640,10 +618,6 @@
 <!-- ===== v8.1：启动欢迎页（立即安装 / 修复计算机 / 导入配置） ===== -->
 <section class="screen dark" id="s-welcome">
   <div class="welcome">
-    <div class="welcome__lang">
-      <span data-i18n="welcome_lang">安装语言</span>
-      <div class="welcome__langlist" id="welcomeLangs"></div>
-    </div>
     <div class="welcome__center">
       <svg class="welcome__logo" viewBox="0 0 64 64" aria-hidden="true">
         <g fill="#ffffff"><rect x="2" y="2" width="27" height="27" rx="1.5"/><rect x="35" y="2" width="27" height="27" rx="1.5"/><rect x="2" y="35" width="27" height="27" rx="1.5"/><rect x="35" y="35" width="27" height="27" rx="1.5"/></g>
@@ -653,14 +627,11 @@
       <button class="btn primary welcome__install" id="welcomeInstall" data-i18n="welcome_install">立即安装</button>
       <div class="welcome__links">
         <button class="link" id="welcomeRepair" data-i18n="welcome_repair">修复计算机</button>
-        <button class="link" id="welcomeUnattend" data-i18n="ua_title">无人值守安装</button>
-        <button class="link" id="welcomeImport" data-i18n="welcome_import">导入安装配置</button>
-        <button class="link" id="welcomeWhatsNew" data-i18n="wn9_title">9.0 有什么新功能？</button>
       </div>
     </div>
     <div class="welcome__foot">
-      <span data-i18n="welcome_hint">提示：按 F1 可随时查看键盘快捷键。</span>
-      <span class="welcome__ver">v9.0</span>
+      <span data-i18n="welcome_foot">版权所有 © Microsoft Corporation。保留所有权利。</span>
+      <span class="welcome__ver">v12.0</span>
     </div>
   </div>
 </section>
@@ -1257,6 +1228,14 @@
   </div>
 </div>
 
+<!-- ===== v13.0：输入捕获提示条 ===== -->
+<div class="cap-bar" id="capBar">
+  <span class="cap-dot"></span>
+  <b id="capApp"></b>
+  <span class="cap-tip" data-i18n="cap_hint">按 Esc 退出捕获</span>
+  <button id="capCancel" data-i18n="cap_cancel">取消捕获</button>
+</div>
+
 <!-- ===== v11.0：驱动程序加载 ===== -->
 <div class="v8-overlay" id="drvOverlay">
   <div class="dialog" style="max-width:560px;">
@@ -1287,74 +1266,9 @@
   </div>
 </div>
 
-<!-- ===== v11.0：步骤地图 ===== -->
-<div class="v8-overlay" id="mapOverlay">
-  <div class="dialog" style="max-width:640px;">
-    <div class="dialog__bar">
-      <div class="dialog__title" data-i18n="map_title">步骤地图</div>
-    </div>
-    <div class="dialog__body">
-      <p class="dlg-sub" data-i18n="map_desc">点击任意页面即可直接跳转，适合演示时快速定位。</p>
-      <div class="map-grid" id="mapGrid"></div>
-    </div>
-    <div class="dialog__foot">
-      <div class="spacer"></div>
-      <button class="btn primary" id="mapClose" data-i18n="wn10_close">关闭</button>
-    </div>
-  </div>
-</div>
 
-<!-- ===== v11.0：系统信息 ===== -->
-<div class="v8-overlay" id="sysinfoOverlay">
-  <div class="dialog" style="max-width:560px;">
-    <div class="dialog__bar">
-      <div class="dialog__title" data-i18n="sys_title">系统信息</div>
-    </div>
-    <div class="dialog__body">
-      <p class="dlg-sub" data-i18n="sys_desc">这台电脑的模拟硬件规格与本次安装信息。</p>
-      <div class="sys-rows" id="sysRows"></div>
-    </div>
-    <div class="dialog__foot">
-      <div class="spacer"></div>
-      <button class="btn primary" id="sysClose" data-i18n="wn10_close">关闭</button>
-    </div>
-  </div>
-</div>
 
-<!-- ===== v11.0：命令面板 ===== -->
-<div class="cmd" id="cmdPalette">
-  <div class="cmd__box">
-    <input class="cmd__input" id="cmdInput" data-i18n-ph="cmd_ph" placeholder="输入命令或页面名称…" autocomplete="off" spellcheck="false">
-    <div class="cmd__list" id="cmdList"></div>
-    <div class="cmd__hint" data-i18n="cmd_hint">↑↓ 选择 · Enter 执行 · Esc 关闭</div>
-  </div>
-</div>
 
-<!-- ===== v10.0：安装助手面板 ===== -->
-<div class="copilot" id="copilotPanel">
-  <div class="copilot__head">
-    <b data-i18n="cp_title">安装助手</b>
-    <button class="copilot__x" id="cpClose" aria-label="close">×</button>
-  </div>
-  <div class="copilot__now"><span data-i18n="cp_now">当前步骤</span><b id="cpScreen">—</b></div>
-  <p class="copilot__hint" id="cpHint"></p>
-  <div class="copilot__acts">
-    <button data-cp="log" data-i18n="cp_action_log">查看日志</button>
-    <button data-cp="help" data-i18n="cp_action_help">快捷键</button>
-    <button data-cp="ach" data-i18n="cp_action_ach">成就</button>
-    <button data-cp="time" data-i18n="cp_action_time">时间线</button>
-    <button data-cp="map" data-i18n="cmd_map">步骤地图</button>
-    <button data-cp="exportlog" data-i18n="log_export">导出日志</button>
-  </div>
-</div>
-
-<!-- ===== v8.0 特大更新：安装界面浮动工具（主题 / 帮助） ===== -->
-<div class="setup-fab" id="setupFab">
-  <button id="v11Cmd" data-i18n-title="cmd_title" title="命令面板 Ctrl+K">⌘</button>
-  <button id="v10Copilot" data-i18n-title="cp_title" title="安装助手">🤖</button>
-  <button id="v8Theme" data-i18n-title="theme_toggle" title="切换安装程序主题">🌙</button>
-  <button id="v8Help" data-i18n-title="help_title" title="键盘快捷键">?</button>
-</div>
 
 <!-- ===== OOBE：设备命名 ===== -->
 <section class="screen oobe" id="s-device">
@@ -1612,7 +1526,7 @@
     </div>
     <div class="nc-body">
       <div class="nn-empty" data-i18n="cal_notif_empty">没有新通知</div>
-      <div class="nc-notif"><div class="nn-icon">★</div><div><div class="nn-title" data-i18n="notif_v11_title">Windows 11 安装模拟器 11.0</div><div class="nn-body" data-i18n="notif_v11_body">新增镜像选择、预检清单、驱动加载、命令面板、步骤地图等 9 项功能。</div></div></div>
+      <div class="nc-notif"><div class="nn-icon">★</div><div><div class="nn-title" data-i18n="notif_v13_title">Windows 11 安装模拟器 13.0</div><div class="nn-body" data-i18n="notif_v13_body">所有内置应用全面可用，新增相机、邮件、天气，并支持可取消的键盘鼠标捕获与本地时间。</div></div></div>
       <div class="nc-notif"><div class="nn-icon">★</div><div><div class="nn-title" data-i18n="notif_v10_title">Windows 11 安装模拟器 10.0</div><div class="nn-body" data-i18n="notif_v10_body">新增安装助手、性能监视器、故障诊断、成就系统等 10 项功能。</div></div></div>
       <div class="nc-notif"><div class="nn-icon">★</div><div><div class="nn-title" data-i18n="notif_v9_title">Windows 11 安装模拟器 9.0</div><div class="nn-body" data-i18n="notif_v9_body">新增无人值守安装、安装源选择、磁盘清理、人脸识别、两步验证等 12 项功能。</div></div></div>
       <div class="nc-notif"><div class="nn-icon">i</div><div><div class="nn-title" data-i18n="notif_v60_title">Windows 11 安装模拟器 6.0</div><div class="nn-body" data-i18n="notif_v60_body">新增多桌面、任务视图、贴靠布局、全局搜索、小组件、画图、时钟与媒体播放器</div></div></div>
@@ -1814,38 +1728,12 @@
   </div>
 </div>
 
-<div class="demo" id="demo">
-  <div class="demo__panel" id="demoPanel">
-    <div class="demo__title">演示导航 <span data-i18n="demo_hint">按 D 键切换 · 点击直接跳到该阶段</span></div>
-    <div class="demo__group"><b data-i18n="demo_g_setup">安装程序</b><div class="demo__btns">
-      <button data-jump="lang">语言与区域</button><button data-jump="key" data-i18n="lbl_key">产品密钥</button>
-      <button data-jump="edition">选择版本</button><button data-jump="license" data-i18n="ua_step_license">许可条款</button>
-      <button data-jump="type" data-i18n="ua_step_type">安装类型</button><button data-jump="disk">磁盘分区</button>
-    </div></div>
-    <div class="demo__group"><b data-i18n="demo_g_proc">安装过程</b><div class="demo__btns">
-      <button data-jump="install">复制文件与进度</button><button data-jump="restart">重启提示</button>
-      <button data-jump="prepare1">重启后准备</button>
-    </div></div>
-    <div class="demo__group"><b data-i18n="demo_g_oobe">首次开机设置（OOBE）</b><div class="demo__btns">
-      <button data-jump="region">区域</button><button data-jump="keyboard">键盘</button>
-      <button data-jump="keyboard2">第二键盘</button><button data-jump="network" data-i18n="perf_net">网络</button>
-      <button data-jump="limited" data-i18n="limited_title">受限设置</button><button data-jump="device">设备命名</button>
-      <button data-jump="acctype" data-i18n="sum_account">账户类型</button><button data-jump="msaccount">微软账户</button>
-      <button data-jump="local" data-i18n="set_account_type">本地账户</button><button data-jump="privacy">隐私选项</button>
-      <button data-jump="custom">自定义体验</button><button data-jump="final">准备桌面</button>
-    </div></div>
-    <div class="demo__group"><b data-i18n="demo_g_desk">桌面</b><div class="demo__btns"><button data-jump="desktop">Windows 11 桌面</button></div></div>
-    <button class="demo__reset" id="demoReset" data-i18n="demo_reset">重置并重新开始</button>
-  </div>
-  <button class="demo__dot" id="demoDot" title="演示导航（D）"></button>
-</div>
 
 
-<!-- 语言按钮由 locales/index.json 清单渲染 -->
-<div class="lang-switch" id="langSwitch"></div>
+
 
 <!-- 外部依赖：语言包加载器 + 主逻辑（语言包为 locales/*.json，需通过本地服务器访问） -->
-<script src="scripts/i18n.js?v=11.0.0"></script>
-<script src="scripts/app.js?v=11.0.0"></script>
+<script src="scripts/i18n.js?v=13.0.0"></script>
+<script src="scripts/app.js?v=13.0.0"></script>
 </body>
 </html>

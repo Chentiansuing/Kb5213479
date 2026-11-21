@@ -21,7 +21,7 @@ import json, pathlib, re, sys
 ROOT = pathlib.Path(r"c:\Users\Administrator\Documents\Kb5213479\2026-11-15\windows-installer-sim")
 PARTS = ROOT / "work" / "parts"
 OUT = ROOT / "outputs" / "web"
-VERSION = "11.0.0"
+VERSION = "13.0.0"
 
 sys.path.insert(0, str(ROOT / "work"))
 from locales_data import LANG_JSON, LANG_CSS, LANG_LABELS, LANG_ORDER  # noqa: E402
@@ -35,6 +35,9 @@ from extra_v81 import EXTRA_V81  # noqa: E402
 from extra_v9 import EXTRA_V9  # noqa: E402
 from extra_v10 import EXTRA_V10  # noqa: E402
 from extra_v11 import EXTRA_V11  # noqa: E402
+from extra_v12 import EXTRA_V12  # noqa: E402
+from extra_v13 import EXTRA_V13  # noqa: E402
+from extra_cam import EXTRA_CAM  # noqa: E402
 
 for _code in LANG_ORDER:
     LANG_JSON[_code].update(EXTRA_V3[_code])
@@ -47,6 +50,9 @@ for _code in LANG_ORDER:
     LANG_JSON[_code].update(EXTRA_V9[_code])
     LANG_JSON[_code].update(EXTRA_V10[_code])
     LANG_JSON[_code].update(EXTRA_V11[_code])
+    LANG_JSON[_code].update(EXTRA_V12[_code])
+    LANG_JSON[_code].update(EXTRA_V13[_code])
+    LANG_JSON[_code].update(EXTRA_CAM[_code])
 assert all(len(v) == len(LANG_JSON[LANG_ORDER[0]]) for v in LANG_JSON.values()), "语言包键数不一致"
 
 # ---------- 1. 切 CSS ----------
@@ -373,6 +379,7 @@ I18N_JS = r"""/* 语言包加载器 v4.0 —— 依赖外部 locales/index.json 
       var codes = langs.map(function (x) { return x.code; });
       if (codes.indexOf(current) < 0) current = codes.indexOf(FALLBACK) >= 0 ? FALLBACK : codes[0];
       window.__i18n.supported = codes;
+      window.__i18n.meta = langs;
       renderButtons();
       return Promise.all(langs.map(function (item) {
         return fetch('locales/' + item.code + '.json', { cache: 'no-cache' })
@@ -405,8 +412,6 @@ I18N_JS = r"""/* 语言包加载器 v4.0 —— 依赖外部 locales/index.json 
 (OUT / "scripts" / "i18n.js").write_text(I18N_JS, encoding="utf-8")
 (OUT / "scripts" / "app.js").write_text(app_js + "\n", encoding="utf-8")
 
-SWITCH_HTML = '<div class="lang-switch" id="langSwitch"></div>'
-
 index_html = f"""<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -420,8 +425,6 @@ index_html = f"""<!DOCTYPE html>
 </head>
 <body>
 {body}
-<!-- 语言按钮由 locales/index.json 清单渲染 -->
-{SWITCH_HTML}
 
 <!-- 外部依赖：语言包加载器 + 主逻辑（语言包为 locales/*.json，需通过本地服务器访问） -->
 <script src="scripts/i18n.js?v={VERSION}"></script>

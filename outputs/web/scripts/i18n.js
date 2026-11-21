@@ -122,6 +122,7 @@
       var codes = langs.map(function (x) { return x.code; });
       if (codes.indexOf(current) < 0) current = codes.indexOf(FALLBACK) >= 0 ? FALLBACK : codes[0];
       window.__i18n.supported = codes;
+      window.__i18n.meta = langs;
       renderButtons();
       return Promise.all(langs.map(function (item) {
         return fetch('locales/' + item.code + '.json', { cache: 'no-cache' })

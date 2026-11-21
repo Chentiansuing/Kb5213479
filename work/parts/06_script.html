@@ -121,7 +121,7 @@
   function updateVersionBadge() {
     var badge = $('#versionBadge');
     if (!badge) return;
-    badge.textContent = 'v11.0';
+    badge.textContent = 'v13.0';
   }
 
   /* ============================================================
@@ -368,7 +368,8 @@
         terminal: 'Windows Terminal', setup: _t('setup_title'),
         calc: _t('app_calc'), notepad: _t('app_notepad'), photos: _t('app_photos'),
         store: _t('app_store'), paint: _t('app_paint'), clock: _t('app_clock'),
-        player: _t('app_player')
+        player: _t('app_player'), camera: _t('app_camera'), mail: _t('app_mail'),
+        weather: _t('app_weather')
       };
       return map[type] || type;
     },
@@ -400,6 +401,12 @@
         return '<svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="#0f6cbd" stroke-width="1.3"/><path d="M8 4.6V8l2.4 1.6" stroke="#0f6cbd" stroke-width="1.3" stroke-linecap="round"/></svg>';
       if (type === 'player')
         return '<svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" fill="#c42b1c"/><path d="M6.5 5.2l4.2 2.8-4.2 2.8V5.2Z" fill="#fff"/></svg>';
+      if (type === 'camera')
+        return '<svg viewBox="0 0 16 16" fill="none"><rect x="1.6" y="4.4" width="12.8" height="9.2" rx="2" fill="#2b88d8"/><path d="M5.6 4.4l1-1.6h2.8l1 1.6" fill="#2b88d8"/><circle cx="8" cy="9" r="2.6" stroke="#fff" stroke-width="1.3"/></svg>';
+      if (type === 'mail')
+        return '<svg viewBox="0 0 16 16" fill="none"><rect x="1.8" y="3.4" width="12.4" height="9.2" rx="1.6" fill="#0f6cbd"/><path d="M2.4 4.4L8 8.8l5.6-4.4" stroke="#fff" stroke-width="1.2"/></svg>';
+      if (type === 'weather')
+        return '<svg viewBox="0 0 16 16" fill="none"><circle cx="6" cy="6" r="2.4" fill="#f5c04a"/><path d="M5.4 11.4h5.4a2.4 2.4 0 0 0 .2-4.8A3.2 3.2 0 0 0 5.4 7.4a2 2 0 0 0 0 4Z" fill="#bcd7f0"/></svg>';
       return '<svg viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" rx="2" fill="#0067c0"/></svg>';
     },
     _svg: function (kind) {
@@ -662,6 +669,9 @@
       else if (type === 'paint') this._renderPaint(body);
       else if (type === 'clock') this._renderClock(body);
       else if (type === 'player') this._renderMedia(body);
+      else if (type === 'camera') v13RenderCamera(body);
+      else if (type === 'mail') v13RenderMail(body);
+      else if (type === 'weather') v13RenderWeather(body);
     },
 
     _renderExplorer: function (body, opts) {
@@ -1568,12 +1578,19 @@
             }).join('') + '</div></div>' +
           '<div class="settings__row clickable" data-page="time"><div class="sr-left"><div><div class="sr-title">' + _t('set_lang') + '</div><div class="sr-desc">' + _t('set_time_desc') + '</div></div></div><span>›</span></div>';
       } else if (page === 'time') {
-        var langBtns = $$('.lang-switch button[data-lang]');
+        var i18nLib = window.__i18n || {};
+        var meta = i18nLib.meta || [];
+        var codes = i18nLib.supported || ['zh-CN', 'zh-TW', 'en-US', 'ja-JP', 'ko-KR'];
+        var cur = i18nLib.current || 'zh-CN';
+        var fallbackLabel = { 'zh-CN': '简体中文', 'zh-TW': '繁體中文', 'en-US': 'English', 'ja-JP': '日本語', 'ko-KR': '한국어' };
+        var labelOf = {};
+        meta.forEach(function (m) { labelOf[m.code] = m.label; });
         main =
           '<h2>' + _t('set_time') + '</h2><p class="s-sub">' + _t('set_time_desc') + '</p>' +
           '<div class="set-block"><b>' + _t('set_lang') + '</b><i>' + _t('set_lang_desc') + '</i>' +
-            '<div class="set-langs">' + langBtns.map(function (b) {
-              return '<button class="set-lang' + (b.classList.contains('on') ? ' on' : '') + '" data-setlang="' + b.dataset.lang + '">' + b.textContent + '</button>';
+            '<div class="set-langs">' + codes.map(function (c) {
+              return '<button class="set-lang' + (c === cur ? ' on' : '') + '" data-setlang="' + c + '">' +
+                (labelOf[c] || fallbackLabel[c] || c) + '</button>';
             }).join('') + '</div></div>' +
           row(_t('set_region'), '', '<span class="sr-val">' + _t('set_region_value') + '</span>') +
           row(_t('set_keyboard'), '', '<span class="sr-val">' + _t('set_keyboard_value') + '</span>');
@@ -1728,6 +1745,8 @@
         var lang = e.target.closest('[data-setlang]');
         if (lang && window.__i18n) {
           window.__i18n.switch(lang.dataset.setlang);
+          var wrap = lang.parentElement;
+          Array.prototype.forEach.call(wrap.children, function (b) { b.classList.toggle('on', b === lang); });
           return;
         }
         var openApp = e.target.closest('[data-open-app]');
@@ -2804,6 +2823,8 @@
     openModal({
       title: _t('uh_title'),
       body: '<div class="uh-list">' +
+        '<div class="uh-item"><span class="uh-ic">★</span><b>' + _t('uh_v13_t') + '</b><i>2026/11/21</i></div>' +
+        '<div class="uh-item"><span class="uh-ic">★</span><b>' + _t('uh_v12_t') + '</b><i>2026/11/21</i></div>' +
         '<div class="uh-item"><span class="uh-ic">★</span><b>' + _t('uh_v11_t') + '</b><i>2026/11/21</i></div>' +
         '<div class="uh-item"><span class="uh-ic">★</span><b>' + _t('uh_v10_t') + '</b><i>2026/11/19</i></div>' +
         '<div class="uh-item"><span class="uh-ic">✓</span><b>' + _t('uh_1') + '</b><i>2026/11/10</i></div>' +
@@ -3255,21 +3276,7 @@
     },
     welcome: function () {
       _apply();
-      // v8.1：渲染欢迎页语言快捷切换
-      var host = $('#welcomeLangs');
-      if (host) {
-        var langs = (window.__i18n && window.__i18n.supported) || [];
-        var cur = window.__i18n ? window.__i18n.current : '';
-        host.innerHTML = '';
-        langs.forEach(function (code, i) {
-          if (i) host.appendChild(document.createElement('span')).className = 'wsep';
-          var b = document.createElement('button');
-          b.type = 'button'; b.dataset.setlang = code; b.textContent = code;
-          b.className = code === cur ? 'on' : '';
-          host.appendChild(b);
-        });
-      }
-      v8Log('Welcome screen: install now / repair / import settings');
+      v8Log('Welcome screen: install now / repair');
     },
     restore: function () {
       _apply();
@@ -3312,7 +3319,7 @@
     whatsnew: function () {
       _apply();
       var tag = $('#wnVerTag');
-      if (tag) tag.textContent = 'v' + (_t('version_v11') || '11.0');
+      if (tag) tag.textContent = 'v' + (_t('version_v13') || '13.0');
     },
     hist: function () {
       _apply();
@@ -3633,7 +3640,6 @@
       $('#keyNext').disabled = raw.length < 25;
     });
   }
-  $('#keyNext').addEventListener('click', function () { go('edition'); });
   $('#btnNoKey').addEventListener('click', function () { keyInput.value = ''; $('#keyNext').disabled = true; go('edition'); });
 
   /* 版本 */
@@ -3644,9 +3650,69 @@
   });
   $('#editionNext').addEventListener('click', function () { go('license'); });
 
+  /* 许可：必须滚动到底部才能勾选（贴近真实安装程序） */
+  var KEY_EDITIONS = {
+    'VK7JGNPHTMC97JM9MPGT3V66T': 'Windows 11 专业版',
+    'W269NWFGWXYVC9B4J6C9T83GX': 'Windows 11 专业版',
+    'TX9XD98N7V6WMQ6BX7FGH8Q99': 'Windows 11 家庭版',
+    'NPPR9FWDCXD2C8JH872K2YT43': 'Windows 11 企业版',
+    'NW6C2QMPVWD7KKK3GKT6VCFB2': 'Windows 11 教育版'
+  };
+  var termsBox = document.querySelector('#s-license .terms');
+  function resetLicenseScroll() {
+    var cb = $('#licenseCheck'), hint = $('#licenseScrollHint');
+    if (cb) { cb.checked = false; cb.disabled = true; }
+    if (hint) hint.style.display = '';
+    var nx = $('#licenseNext'); if (nx) nx.disabled = true;
+    if (termsBox) termsBox.scrollTop = 0;
+  }
+  if (termsBox) {
+    termsBox.addEventListener('scroll', function () {
+      if (termsBox.scrollTop + termsBox.clientHeight >= termsBox.scrollHeight - 8) {
+        var cb = $('#licenseCheck'); if (cb) cb.disabled = false;
+        var hint = $('#licenseScrollHint'); if (hint) hint.style.display = 'none';
+      }
+    });
+  }
+  var v12OrigLicenseHook = hooks.license;
+  hooks.license = function () { if (v12OrigLicenseHook) v12OrigLicenseHook(); resetLicenseScroll(); };
+
+  /* 产品密钥：格式校验 + 按密钥识别版本 */
+  keyInput.addEventListener('input', function () {
+    var raw = keyInput.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 25);
+    var out = raw.replace(/(.{5})/g, '$1-').replace(/-$/, '');
+    keyInput.value = out;
+    $('#keyNext').disabled = raw.length < 25;
+    state._keyRaw = raw;
+  });
+  $('#keyNext').onclick = null;
+  $('#keyNext').addEventListener('click', function () {
+    var raw = state._keyRaw || keyInput.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    if (raw.length !== 25) return;
+    var edition = KEY_EDITIONS[raw];
+    if (!edition) {
+      openModal({
+        title: _t('key_invalid_title'),
+        body: '<p>' + _t('key_invalid_desc') + '</p>',
+        ok: _t('modal_default_ok'),
+        cancel: null
+      });
+      return;
+    }
+    $$('#editionList .opt').forEach(function (o) {
+      if (o.dataset.edition === edition) {
+        o.classList.add('sel');
+        state.edition = edition;
+        $('#editionNext').disabled = false;
+      } else o.classList.remove('sel');
+    });
+    toast(_t('key_edition_ok', { n: edition }));
+    go('edition');
+  });
+
   /* 许可 */
-  $('#licenseCheck').addEventListener('change', function () { $('#licenseNext').disabled = !this.checked; });
-  $('#licenseNext').addEventListener('click', function () { go('type'); });
+  $('#licenseCheck').addEventListener('change', function () { $('#licenseNext').disabled = !this.checked || this.disabled; });
+  $('#licenseNext').addEventListener('click', function () { if (!$('#licenseCheck').disabled) go('type'); });
 
   /* 安装类型 */
   $('#typeList').addEventListener('click', function (e) {
@@ -3824,7 +3890,7 @@
 
   /* ============ v9.0 事件绑定 ============ */
   // 欢迎页：立即安装 → 先选安装源
-  if ($('#welcomeInstall')) $('#welcomeInstall').addEventListener('click', function () { go('source'); });
+  if ($('#welcomeInstall')) $('#welcomeInstall').addEventListener('click', function () { go('bootcheck'); });
   if ($('#welcomeUnattend')) $('#welcomeUnattend').addEventListener('click', function () { go('unattend'); });
 
   // 安装源
@@ -4089,11 +4155,6 @@
 
   /* 键盘快捷键 */
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'F1') {
-      e.preventDefault();
-      v8ToggleHelp();
-      return;
-    }
     if ((e.ctrlKey || e.metaKey) && (e.key === 'l' || e.key === 'L')) {
       e.preventDefault();
       var lo = $('#logOverlay');
@@ -4131,8 +4192,6 @@
   /* v4.0：启动应用（未实现的仍给出演示提示） */
   function openAppType(type) {
     if (!type) return;
-    var demoLabels = { camera: 'app_camera', mail: 'app_mail', weather: 'app_weather' };
-    if (demoLabels[type]) { toast(_t('toast_demo_unavailable', { name: _t(demoLabels[type]) })); return; }
     if (type === 'setup') { AppWindows.open('setup'); return; }
     AppWindows.open(type);
   }
@@ -4793,18 +4852,6 @@
   $('#mCancel').addEventListener('click', closeModal);
   $('#modal').addEventListener('click', function (e) { if (e.target === this) closeModal(); });
 
-  /* 演示导航 */
-  var demoPanel = $('#demoPanel');
-  function toggleDemo() { demoPanel.classList.toggle('open'); }
-  $('#demoDot').addEventListener('click', function (e) { e.stopPropagation(); toggleDemo(); });
-  demoPanel.addEventListener('click', function (e) {
-    e.stopPropagation();
-    var j = e.target.closest('[data-jump]');
-    if (j) { go(j.dataset.jump); demoPanel.classList.remove('open'); }
-  });
-  $('#demoReset').addEventListener('click', function () { resetExperience(); });
-  document.addEventListener('click', function () { if (demoPanel.classList.contains('open')) demoPanel.classList.remove('open'); });
-
   /* 全局键盘 */
   document.addEventListener('keydown', function (e) {
     var lockLay = $('#lockScreen');
@@ -4866,9 +4913,8 @@
       }
       var qp = $('#quickPanel'), cm = $('#ctxMenu'), pm = $('#powerMenu');
       if ($('#startMenu').classList.contains('open') || $('#notifCenter').classList.contains('open') ||
-          demoPanel.classList.contains('open') ||
           (qp && qp.classList.contains('open')) || (cm && cm.classList.contains('open')) || (pm && pm.classList.contains('open'))) {
-        closeStart(); closeNotif(); demoPanel.classList.remove('open');
+        closeStart(); closeNotif();
         if (qp) qp.classList.remove('open');
         if (cm) cm.classList.remove('open');
         if (pm) pm.classList.remove('open');
@@ -4892,7 +4938,9 @@
       if (btn && !btn.disabled) { e.preventDefault(); btn.click(); }
       return;
     }
-    if (!inInput && !e.ctrlKey && !e.altKey && !e.metaKey && (e.key === 'd' || e.key === 'D')) { toggleDemo(); }
+    if (!inInput && !e.ctrlKey && !e.altKey && !e.metaKey && (e.key === 'd' || e.key === 'D')) {
+      return;
+    }
   });
   document.addEventListener('keyup', function (e) {
     if (e.key === 'Control' && altOpen) commitAltTab();
@@ -5377,9 +5425,6 @@
   hooks.install = function () {
     v10OrigInstallHook();
     v10PerfStart();
-    var box = $('#instPerf');
-    if (box && box.style.display === 'none') { box.style.display = ''; }
-    var tg = $('#instPerfToggle'); if (tg) tg.textContent = _t('perf_hide');
   };
   hooks.diag = function () { _apply(); v10DiagEnter(); };
   var v10OrigDiskHook = hooks.disk;
@@ -5537,11 +5582,6 @@
     if (e.target === this) v11CloseCmd();
   });
   document.addEventListener('keydown', function (e) {
-    if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) {
-      e.preventDefault(); e.stopImmediatePropagation();
-      v11OpenCmd();
-      return;
-    }
     var el = $('#cmdPalette');
     if (!el || !el.classList.contains('open')) return;
     if (e.key === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); v11CloseCmd(); }
@@ -5686,6 +5726,431 @@
     fsSave('setup-log.txt', txt, null);
     toast(_t('log_exported'));
     v8Log('Setup log exported to setup-log.txt');
+  }
+
+  /* ============================================================
+   * v13.0：全应用可用 / 输入捕获 / 本地时间 / 新 UI
+   * ============================================================ */
+  state.v13 = { photos: 0, mails: [{ key: 1, time: '' }, { key: 2, time: '' }, { key: 3, time: '' }] };
+
+  function v13NowHM() {
+    var d = new Date();
+    var h = d.getHours(), m = d.getMinutes();
+    return (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m;
+  }
+
+  /* ---- 输入捕获（可取消） ---- */
+  var v13Cap = { name: '', keys: null, mouse: null, release: null };
+  function v13Capturing() {
+    var b = $('#capBar');
+    return !!(b && b.classList.contains('show'));
+  }
+  function v13Capture(name, keys, mouse, release) {
+    if (!name) return;
+    v13Cap.name = name; v13Cap.keys = keys; v13Cap.mouse = mouse; v13Cap.release = release;
+    var b = $('#capBar'); if (!b) return;
+    var n = $('#capApp');
+    if (n) n.textContent = _t('cap_bar', { n: name });
+    b.classList.add('show');
+    document.body.classList.add('v13-capturing');
+    v8Log('Input capture started: ' + name);
+  }
+  function v13ReleaseCapture() {
+    var b = $('#capBar');
+    if (!b || !b.classList.contains('show')) return;
+    b.classList.remove('show');
+    document.body.classList.remove('v13-capturing');
+    var cb = v13Cap.release;
+    v13Cap.keys = null; v13Cap.mouse = null; v13Cap.release = null;
+    if (cb) cb();
+    v8Log('Input capture released');
+  }
+  if ($('#capCancel')) $('#capCancel').addEventListener('click', v13ReleaseCapture);
+  document.addEventListener('keydown', function (e) {
+    if (!v13Capturing()) return;
+    if (e.key === 'Escape') {
+      e.preventDefault(); e.stopImmediatePropagation();
+      v13ReleaseCapture();
+      return;
+    }
+    e.preventDefault(); e.stopImmediatePropagation();
+    if (v13Cap.keys) v13Cap.keys(e);
+  }, true);
+  document.addEventListener('mousemove', function (e) {
+    if (v13Cap.mouse) v13Cap.mouse(e);
+  }, true);
+
+  /* ---- 相机 ---- */
+  function v13RenderCamera(body) {
+    var FILTERS = ['none', 'grayscale(1)', 'sepia(.75)', 'saturate(1.9)', 'hue-rotate(200deg)'];
+    var idx = 0, photos = state.v13.photos, recording = false, recTimer = 0, recSec = 0;
+    body.innerHTML =
+      '<div class="cam">' +
+        '<div class="cam__stage" id="camStage">' +
+          '<div class="cam__grid"></div>' +
+          '<div class="cam__hud" id="camHud">1920×1080 · 30 fps</div>' +
+          '<div class="cam__rec" id="camRec"></div>' +
+          '<div class="cam__flash" id="camFlash"></div>' +
+        '</div>' +
+        '<div class="cam__bar">' +
+          '<button class="cam__shutter" id="camShutter" aria-label="shutter"></button>' +
+          '<div class="cam__meta"><b id="camCount"></b><span id="camFilter"></span></div>' +
+          '<button class="btn" id="camRecord"></button>' +
+        '</div>' +
+        '<p class="cam__hint">' + _t('cam_hint') + '</p>' +
+      '</div>';
+    var stage = body.querySelector('#camStage');
+    var hud = body.querySelector('#camHud');
+    var flash = body.querySelector('#camFlash');
+    var countEl = body.querySelector('#camCount');
+    var filterEl = body.querySelector('#camFilter');
+    var recEl = body.querySelector('#camRec');
+    var recBtn = body.querySelector('#camRecord');
+
+    function paint() {
+      stage.style.filter = FILTERS[idx];
+      filterEl.textContent = _t('cam_filter') + ' ' + (idx + 1) + '/' + FILTERS.length;
+      countEl.textContent = _t('cam_photos', { n: photos });
+    }
+    function shoot() {
+      photos++; state.v13.photos = photos;
+      flash.classList.remove('go');
+      void flash.offsetWidth;
+      flash.classList.add('go');
+      v9Sfx('click');
+      paint();
+      v8Log('Camera: photo #' + photos);
+    }
+    function stopRec() {
+      recording = false;
+      clearInterval(recTimer); recTimer = 0;
+      recEl.classList.remove('on');
+      recBtn.textContent = _t('cam_record');
+      paint();
+    }
+    function startRec() {
+      recording = true; recSec = 0;
+      v13Capture(_t('app_camera'), function (e) {
+        if (e.code === 'Space') { shoot(); return; }
+        if (e.key === 'ArrowLeft') { idx = (idx + FILTERS.length - 1) % FILTERS.length; paint(); }
+        if (e.key === 'ArrowRight') { idx = (idx + 1) % FILTERS.length; paint(); }
+      }, function (e) {
+        var r = stage.getBoundingClientRect();
+        var x = Math.max(0, Math.round(e.clientX - r.left));
+        var y = Math.max(0, Math.round(e.clientY - r.top));
+        hud.textContent = x + ', ' + y + ' px · ' + _t('cam_recording');
+      }, stopRec);
+      recEl.classList.add('on');
+      recBtn.textContent = _t('cam_stop');
+      recTimer = setInterval(function () {
+        recSec++;
+        var mm = Math.floor(recSec / 60), ss = recSec % 60;
+        hud.textContent = 'REC ' + (mm < 10 ? '0' : '') + mm + ':' + (ss < 10 ? '0' : '') + ss;
+      }, 1000);
+      paint();
+    }
+    body.querySelector('#camShutter').addEventListener('click', shoot);
+    recBtn.addEventListener('click', function () {
+      if (recording) { v13ReleaseCapture(); stopRec(); }
+      else startRec();
+    });
+    paint();
+  }
+
+  /* ---- 相机（增强版：12 滤镜 / 模式 / 画质 / 暂停 / 片段） ---- */
+  v13RenderCamera = function (body) {
+    var FILTERS = [
+      { k: 'cam_f_none', css: 'none' },
+      { k: 'cam_f_bw', css: 'grayscale(1) contrast(1.05)' },
+      { k: 'cam_f_vintage', css: 'sepia(.75) contrast(.92) saturate(1.1)' },
+      { k: 'cam_f_vivid', css: 'saturate(1.9) contrast(1.1)' },
+      { k: 'cam_f_cool', css: 'hue-rotate(200deg) saturate(1.2)' },
+      { k: 'cam_f_warm', css: 'sepia(.35) saturate(1.4) hue-rotate(-12deg)' },
+      { k: 'cam_f_invert', css: 'invert(1)' },
+      { k: 'cam_f_soft', css: 'blur(1.2px) brightness(1.06)' },
+      { k: 'cam_f_contrast', css: 'contrast(1.65) brightness(.95)' },
+      { k: 'cam_f_fade', css: 'saturate(.7) brightness(1.15)' },
+      { k: 'cam_f_cyber', css: 'hue-rotate(290deg) saturate(1.7)' },
+      { k: 'cam_f_noir', css: 'grayscale(1) contrast(1.5) brightness(.9)' }
+    ];
+    var BITRATE = { '720p': 4, '1080p': 8, '4K': 20 };
+    var idx = 0, mode = 'photo', res = '1080p', fps = 30, mic = true;
+    var recording = false, paused = false, recSec = 0, recTimer = 0;
+    if (!state.v13.items) state.v13.items = [];
+
+    body.innerHTML =
+      '<div class="cam">' +
+        '<div class="cam__stage">' +
+          '<div class="cam__grid"></div>' +
+          '<div class="cam__hud" id="camHud">' + res + ' · ' + fps + ' fps</div>' +
+          '<div class="cam__mode-tag" id="camModeTag"></div>' +
+          '<div class="cam__rec" id="camRec"></div>' +
+          '<div class="cam__flash" id="camFlash"></div>' +
+        '</div>' +
+        '<div class="cam__filters" id="camFilters"></div>' +
+        '<div class="cam__modes">' +
+          '<div class="cam__seg" id="camMode">' +
+            '<button data-mode="photo"></button><button data-mode="video"></button><button data-mode="timelapse"></button>' +
+          '</div>' +
+          '<select class="cam__sel" id="camRes"><option value="720p">720p</option><option value="1080p" selected>1080p</option><option value="4K">4K</option></select>' +
+          '<select class="cam__sel" id="camFps"><option value="30">30 fps</option><option value="60">60 fps</option></select>' +
+          '<button class="cam__mic" id="camMic"></button>' +
+        '</div>' +
+        '<div class="cam__bar">' +
+          '<button class="cam__shutter" id="camShutter" aria-label="shutter"></button>' +
+          '<div class="cam__meta"><b id="camCount"></b><span id="camInfo"></span></div>' +
+          '<button class="btn cam__pause" id="camPause" style="display:none;"></button>' +
+          '<button class="btn" id="camRecord"></button>' +
+        '</div>' +
+        '<div class="cam__strip"><div class="cam__strip-h">' + _t('cam_strip') + '</div><div class="cam__thumbs" id="camThumbs"></div></div>' +
+        '<p class="cam__hint">' + _t('cam_hint') + '</p>' +
+      '</div>';
+
+    var stage = body.querySelector('.cam__stage');
+    var hud = body.querySelector('#camHud');
+    var tag = body.querySelector('#camModeTag');
+    var flash = body.querySelector('#camFlash');
+    var recEl = body.querySelector('#camRec');
+    var countEl = body.querySelector('#camCount');
+    var infoEl = body.querySelector('#camInfo');
+    var recBtn = body.querySelector('#camRecord');
+    var pauseBtn = body.querySelector('#camPause');
+    var shutter = body.querySelector('#camShutter');
+    var thumbs = body.querySelector('#camThumbs');
+
+    function sizeMB(sec) {
+      var b = BITRATE[res] * (fps === 60 ? 1.5 : 1);
+      if (mode === 'timelapse') b *= 0.6;
+      return Math.max(0, (b * sec) / 8);
+    }
+    function mmss(s) {
+      var m = Math.floor(s / 60), x = s % 60;
+      return (m < 10 ? '0' : '') + m + ':' + (x < 10 ? '0' : '') + x;
+    }
+    function paintFilters() {
+      Array.prototype.forEach.call(body.querySelectorAll('#camFilters .cam__chip'), function (c, i) {
+        c.classList.toggle('on', i === idx);
+      });
+      stage.style.filter = FILTERS[idx].css;
+    }
+    function paintMeta() {
+      countEl.textContent = _t('cam_photos', { n: state.v13.photos });
+      var last = state.v13.items[0];
+      infoEl.textContent = last ? _t('cam_size', { n: last.size.toFixed(1) }) : _t(FILTERS[idx].k);
+    }
+    function paintMode() {
+      Array.prototype.forEach.call(body.querySelectorAll('#camMode button'), function (b) {
+        b.classList.toggle('on', b.dataset.mode === mode);
+        b.textContent = _t('cam_mode_' + b.dataset.mode);
+      });
+      tag.textContent = mode === 'timelapse' ? '×4 ' + _t('cam_mode_timelapse') : _t('cam_mode_' + mode);
+      hud.textContent = res + ' · ' + fps + ' fps';
+    }
+    function paintMic() {
+      var m = body.querySelector('#camMic');
+      m.classList.toggle('off', !mic);
+      m.textContent = mic ? '🎤' : '🔇';
+      m.title = _t(mic ? 'cam_mic_on' : 'cam_mic_off');
+    }
+    function renderStrip() {
+      if (!state.v13.items.length) {
+        thumbs.innerHTML = '<span class="cam__empty">' + _t('cam_empty_strip') + '</span>';
+        return;
+      }
+      thumbs.innerHTML = state.v13.items.map(function (it) {
+        return '<div class="cam__thumb ' + it.t + '" title="' + it.label + '">' +
+          '<i></i><span>' + it.label + '</span></div>';
+      }).join('');
+    }
+    function pushItem(it) {
+      state.v13.items.unshift(it);
+      state.v13.items = state.v13.items.slice(0, 8);
+      renderStrip();
+      paintMeta();
+    }
+    function shoot() {
+      if (recording) { toast(_t('cam_record')); return; }
+      state.v13.photos++;
+      flash.classList.remove('go');
+      void flash.offsetWidth;
+      flash.classList.add('go');
+      v9Sfx('click');
+      pushItem({ t: 'photo', label: _t(FILTERS[idx].k), size: 0.6 });
+      toast(_t('cam_saved_photo', { n: state.v13.photos }));
+      paintMeta();
+    }
+    function stopRec(auto) {
+      if (recTimer) { clearInterval(recTimer); recTimer = 0; }
+      var sec = recSec, size = sizeMB(sec);
+      recording = false; paused = false; recSec = 0;
+      recEl.classList.remove('on');
+      recBtn.textContent = _t('cam_record');
+      pauseBtn.style.display = 'none';
+      shutter.disabled = false;
+      v13ReleaseCapture();
+      pushItem({ t: 'video', label: mmss(sec || 1) + ' · ' + FILTERS[idx].k, size: size });
+      toast(_t('cam_saved_video', { n: mmss(sec || 1) }));
+      if (auto) toast(_t('cam_autostop'));
+      paintMeta();
+    }
+    function startRec() {
+      recording = true; paused = false; recSec = 0;
+      recEl.classList.add('on');
+      recBtn.textContent = _t('cam_stop');
+      pauseBtn.style.display = '';
+      pauseBtn.textContent = _t('cam_pause');
+      shutter.disabled = true;
+      v13Capture(_t('app_camera'), function (e) {
+        if (e.code === 'Space') { shoot(); return; }
+        if (e.key === 'ArrowLeft') { idx = (idx + FILTERS.length - 1) % FILTERS.length; paintFilters(); paintMeta(); }
+        if (e.key === 'ArrowRight') { idx = (idx + 1) % FILTERS.length; paintFilters(); paintMeta(); }
+        if (e.key === 'p' || e.key === 'P') togglePause();
+      }, function (e) {
+        var r = stage.getBoundingClientRect();
+        var x = Math.max(0, Math.round(e.clientX - r.left));
+        var y = Math.max(0, Math.round(e.clientY - r.top));
+        hud.textContent = x + ', ' + y + ' px · ' + (paused ? _t('cam_pause') : _t('cam_recording'));
+      }, function () { if (recording) stopRec(false); });
+      tick();
+    }
+    function tick() {
+      if (recTimer) clearInterval(recTimer);
+      recTimer = setInterval(function () {
+        if (!recording) return;
+        if (!paused) recSec++;
+        hud.textContent = 'REC ' + mmss(recSec) + ' · ' + sizeMB(recSec).toFixed(1) + ' MB';
+        if (recSec >= 30) stopRec(true);
+      }, 1000);
+    }
+    function togglePause() {
+      if (!recording) return;
+      paused = !paused;
+      pauseBtn.textContent = _t(paused ? 'cam_resume' : 'cam_pause');
+      recEl.classList.toggle('paused', paused);
+      v8Log('Camera recording ' + (paused ? 'paused' : 'resumed') + ' at ' + mmss(recSec));
+    }
+
+    body.querySelector('#camFilters').innerHTML = FILTERS.map(function (f, i) {
+      return '<button class="cam__chip' + (i === 0 ? ' on' : '') + '" data-f="' + i + '">' + _t(f.k) + '</button>';
+    }).join('');
+    body.querySelector('#camFilters').addEventListener('click', function (e) {
+      var c = e.target.closest('.cam__chip'); if (!c) return;
+      idx = Number(c.dataset.f);
+      paintFilters(); paintMeta();
+    });
+    body.querySelector('#camMode').addEventListener('click', function (e) {
+      var b = e.target.closest('button'); if (!b) return;
+      mode = b.dataset.mode;
+      paintMode();
+    });
+    body.querySelector('#camRes').addEventListener('change', function () { res = this.value; paintMode(); });
+    body.querySelector('#camFps').addEventListener('change', function () { fps = Number(this.value); paintMode(); });
+    body.querySelector('#camMic').addEventListener('click', function () {
+      mic = !mic; paintMic(); toast(_t(mic ? 'cam_mic_on' : 'cam_mic_off'));
+    });
+    shutter.addEventListener('click', shoot);
+    pauseBtn.addEventListener('click', togglePause);
+    recBtn.addEventListener('click', function () {
+      if (recording) { v13ReleaseCapture(); stopRec(false); }
+      else startRec();
+    });
+
+    paintFilters(); paintMode(); paintMic(); renderStrip(); paintMeta();
+  };
+
+  /* ---- 邮件 ---- */
+  function v13RenderMail(body) {
+    body.innerHTML =
+      '<div class="mail">' +
+        '<div class="mail__side">' +
+          '<div class="mail__title">' + _t('mail_inbox') + '</div>' +
+          '<div class="mail__list" id="mailList"></div>' +
+          '<button class="btn primary mail__new" id="mailNew">' + _t('mail_compose') + '</button>' +
+        '</div>' +
+        '<div class="mail__main" id="mailMain"></div>' +
+      '</div>';
+    var list = body.querySelector('#mailList');
+    var main = body.querySelector('#mailMain');
+    if (!state.v13.mails[0].time) {
+      state.v13.mails.forEach(function (m) { m.time = v13NowHM(); });
+    }
+    function openMail(m) {
+      main.innerHTML =
+        '<div class="mail__head"><h3>' + _t('mail_subject_' + m.key) + '</h3>' +
+        '<div class="mail__from">' + _t('mail_from_team') + ' · ' + _t('mail_today') + ' ' + m.time + '</div></div>' +
+        '<p class="mail__text">' + _t('mail_body_' + m.key) + '</p>';
+      Array.prototype.forEach.call(list.children, function (c) { c.classList.toggle('on', c.dataset.key === String(m.key)); });
+    }
+    function renderList() {
+      list.innerHTML = state.v13.mails.map(function (m) {
+        return '<button class="mail__item" data-key="' + m.key + '">' +
+          '<b>' + _t('mail_subject_' + m.key) + '</b>' +
+          '<span>' + _t('mail_from_team') + ' · ' + m.time + '</span></button>';
+      }).join('');
+    }
+    list.addEventListener('click', function (e) {
+      var it = e.target.closest('.mail__item'); if (!it) return;
+      var m = state.v13.mails.filter(function (x) { return String(x.key) === it.dataset.key; })[0];
+      if (m) openMail(m);
+    });
+    body.querySelector('#mailNew').addEventListener('click', function () {
+      main.innerHTML =
+        '<div class="mail__form">' +
+          '<label>' + _t('mail_to') + '<input class="inp" id="mTo" value="user@outlook.com"></label>' +
+          '<label>' + _t('mail_subject') + '<input class="inp" id="mSub" placeholder=""></label>' +
+          '<label>' + _t('mail_body') + '<textarea class="inp" id="mBody" rows="5"></textarea></label>' +
+          '<div class="mail__actions"><button class="btn primary" id="mSend">' + _t('mail_send') + '</button></div>' +
+        '</div>';
+      main.querySelector('#mSend').addEventListener('click', function () {
+        var sub = main.querySelector('#mSub').value.trim() || '—';
+        var txt = main.querySelector('#mBody').value.trim();
+        toast(_t('mail_sent'));
+        v8Log('Mail sent: ' + sub);
+        main.innerHTML = '<div class="mail__sent"><b>' + _t('mail_sent') + '</b><span>' + sub + '</span></div>' +
+          (txt ? '<p class="mail__text">' + txt.replace(/</g, '&lt;') + '</p>' : '');
+      });
+    });
+    renderList();
+    openMail(state.v13.mails[0]);
+  }
+
+  /* ---- 天气 ---- */
+  function v13RenderWeather(body) {
+    var days = [
+      { d: 1, t: 19, k: 'weather_clear' }, { d: 2, t: 21, k: 'weather_cloud' },
+      { d: 3, t: 17, k: 'weather_rain' }, { d: 4, t: 15, k: 'weather_cloud' },
+      { d: 5, t: 12, k: 'weather_snow' }
+    ];
+    var temp = 18;
+    body.innerHTML =
+      '<div class="wx">' +
+        '<div class="wx__now">' +
+          '<div class="wx__city">' + _t('weather_city') + '</div>' +
+          '<div class="wx__temp" id="wxTemp">' + temp + '°</div>' +
+          '<div class="wx__desc" id="wxDesc">' + _t('weather_clear') + '</div>' +
+          '<div class="wx__meta">' + _t('weather_humidity') + ' 46% · ' + _t('weather_wind') + ' 12 km/h</div>' +
+          '<div class="wx__time" id="wxTime"></div>' +
+          '<button class="link" id="wxRefresh">' + _t('weather_refresh') + '</button>' +
+        '</div>' +
+        '<div class="wx__forecast"><div class="wx__fhead">' + _t('weather_forecast') + '</div><div class="wx__days" id="wxDays"></div></div>' +
+      '</div>';
+    function paintTime() {
+      var t = body.querySelector('#wxTime');
+      if (t) t.textContent = _t('weather_updated', { t: v13NowHM() });
+    }
+    body.querySelector('#wxDays').innerHTML = days.map(function (x) {
+      var date = new Date(Date.now() + x.d * 86400000);
+      return '<div class="wx__day"><b>' + (date.getMonth() + 1) + '/' + date.getDate() + '</b>' +
+        '<span>' + _t(x.k) + '</span><em>' + x.t + '°</em></div>';
+    }).join('');
+    body.querySelector('#wxRefresh').addEventListener('click', function () {
+      temp = 16 + Math.floor(Math.random() * 8);
+      body.querySelector('#wxTemp').textContent = temp + '°';
+      paintTime();
+      toast(_t('weather_refresh'));
+      v8Log('Weather refreshed at ' + v13NowHM());
+    });
+    paintTime();
   }
 
   /* ============================================================
