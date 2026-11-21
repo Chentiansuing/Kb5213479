@@ -6,10 +6,10 @@
 <title>Windows 11 安装程序</title>
 
 <!-- 外部依赖：样式（带版本号，避免更新后仍命中旧缓存） -->
-<link rel="stylesheet" href="styles/app.css?v=15.0.0">
-<link rel="stylesheet" href="styles/windows.css?v=15.0.0">
-<link rel="stylesheet" href="styles/v14.css?v=15.0.0">
-<link rel="stylesheet" href="styles/v15.css?v=15.0.0">
+<link rel="stylesheet" href="styles/app.css?v=15.1.0">
+<link rel="stylesheet" href="styles/windows.css?v=15.1.0">
+<link rel="stylesheet" href="styles/v14.css?v=15.1.0">
+<link rel="stylesheet" href="styles/v15.css?v=15.1.0">
 </head>
 <body>
 <body>
@@ -689,11 +689,16 @@
   <div class="dialog dialog--wide">
     <div class="dialog__bar">
       <div class="dialog__title" data-i18n="setup_title">Windows 11 安装程序</div>
-      <span class="ver-tag" id="wnVerTag" data-i18n="version_v15">15.0</span>
+      <span class="ver-tag" id="wnVerTag" data-i18n="version_v151">15.1</span>
     </div>
     <div class="dialog__body">
-      <h1 class="dlg-h" data-i18n="wn15_title">15.0 有什么新功能</h1>
-      <p class="dlg-sub" data-i18n="wn_desc15">15.0 补齐了一组常用的系统工具与快捷操作。</p>
+      <h1 class="dlg-h" data-i18n="wn151_title">15.1 有什么新功能</h1>
+      <p class="dlg-sub" data-i18n="wn_desc151">15.1 是一个质量更新，修复问题并补齐细节。</p>
+      <div class="wn-group" data-i18n="wn_v151">15.1 更新</div>
+      <div class="wn-item"><b data-i18n="wn_quality">问题修复</b><span data-i18n="wn_quality_d">修复深色模式下设置文字不可读、任务栏图标反色与开关滑块越界的问题。</span></div>
+      <div class="wn-item"><b data-i18n="wn_tmstart">任务管理器启动项</b><span data-i18n="wn_tmstart_d">新增“启动”标签，查看开机启动项及其影响程度，可逐个启用或禁用。</span></div>
+      <div class="wn-item"><b data-i18n="wn_clipfix">剪贴板固定与删除</b><span data-i18n="wn_clipfix_d">常用片段可以固定到顶部，也可以单独删除某一条记录。</span></div>
+      <div class="wn-item"><b data-i18n="wn_ncempty">通知空状态</b><span data-i18n="wn_ncempty_d">有通知时不再显示“没有新通知”，清除后自动回到空状态。</span></div>
       <div class="wn-group" data-i18n="wn_v15">15.0 新增</div>
       <div class="wn-item"><b data-i18n="wn_tm">任务管理器</b><span data-i18n="wn_tm_d">查看应用与系统进程、实时 CPU / 内存曲线，并可直接结束任务。</span></div>
       <div class="wn-item"><b data-i18n="wn_clip">剪贴板历史</b><span data-i18n="wn_clip_d">复制过的文本会被记录，随时取回并再次复制。</span></div>
@@ -1541,6 +1546,7 @@
     <div class="nc-body">
       <button class="nc-clear" id="ncClear" data-i18n="nc_clear">清除全部</button>
       <div class="nn-empty" data-i18n="cal_notif_empty">没有新通知</div>
+      <div class="nc-notif"><div class="nn-icon">★</div><div><div class="nn-title" data-i18n="notif_v151_title">Windows 11 安装模拟器 15.1</div><div class="nn-body" data-i18n="notif_v151_body">质量更新：修复通知空状态、深色模式与开关对齐，任务管理器新增启动项，剪贴板支持固定。</div></div></div>
       <div class="nc-notif"><div class="nn-icon">★</div><div><div class="nn-title" data-i18n="notif_v15_title">Windows 11 安装模拟器 15.0</div><div class="nn-body" data-i18n="notif_v15_body">新增任务管理器、剪贴板历史、存储感知、专注助手、设置搜索、快捷键指南与动态主题。</div></div></div>
       <div class="nc-notif"><div class="nn-icon">★</div><div><div class="nn-title" data-i18n="notif_v14_title">Windows 11 安装模拟器 14.0</div><div class="nn-body" data-i18n="notif_v14_body">界面全面重写：极光壁纸、悬浮任务栏、Fluent 图标包与弹簧动效，并优化了渲染性能。</div></div></div>
       <div class="nc-notif"><div class="nn-icon">★</div><div><div class="nn-title" data-i18n="notif_v13_title">Windows 11 安装模拟器 13.0</div><div class="nn-body" data-i18n="notif_v13_body">所有内置应用全面可用，新增相机、邮件、天气，并支持可取消的键盘鼠标捕获与本地时间。</div></div></div>
@@ -1742,7 +1748,7 @@
 
 <!-- 非桌面界面的 Shift+F10 窗口层；进入桌面时窗口会移回 #winLayer -->
 <div class="win-layer setup-win-layer" id="setupWinLayer"></div>
-<div class="version-badge" id="versionBadge" title="快捷键">v15.0</div>
+<div class="version-badge" id="versionBadge" title="快捷键">v15.1</div>
 
 <div id="toast"></div>
 
@@ -1884,7 +1890,7 @@
 
 
 <!-- 外部依赖：语言包加载器 + 主逻辑（语言包为 locales/*.json，需通过本地服务器访问） -->
-<script src="scripts/i18n.js?v=15.0.0"></script>
-<script src="scripts/app.js?v=15.0.0"></script>
+<script src="scripts/i18n.js?v=15.1.0"></script>
+<script src="scripts/app.js?v=15.1.0"></script>
 </body>
 </html>

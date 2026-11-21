@@ -120,7 +120,7 @@
   function updateVersionBadge() {
     var badge = $('#versionBadge');
     if (!badge) return;
-    badge.textContent = 'v15.0';
+    badge.textContent = 'v15.1';
   }
 
   /* ============================================================
@@ -6330,6 +6330,8 @@ var V15_ANIM = 'windows11_sim_anim';
 var V15_PALETTE = { 1: '#0067c0', 2: '#c2410c', 3: '#5b5bd6', 4: '#0f7b3f', 5: '#c0266b', 6: '#00707f', 7: '#6d3fe0' };
 var V15 = {
   clip: [],
+  pins: [],
+  startup: { winsec: true, onedrive: true, teams: false, steam: true },
   focusUntil: 0,
   focusTick: 0,
   procs: {},
@@ -6371,9 +6373,42 @@ function v15RenderClip() {
     box.innerHTML = '<div class="v15-clip-empty">' + _t('clip_empty') + '</div>';
     return;
   }
-  box.innerHTML = V15.clip.map(function (t, i) {
-    return '<button class="v15-clip-item" data-clip="' + i + '">' + v15Esc(t) + '</button>';
+  /* 固定项排在最前，其余保持最近使用顺序 */
+  var order = V15.clip.slice().sort(function (a, b) {
+    return (V15.pins.indexOf(b) >= 0 ? 1 : 0) - (V15.pins.indexOf(a) >= 0 ? 1 : 0);
+  });
+  box.innerHTML = order.map(function (t) {
+    var i = V15.clip.indexOf(t);
+    var pinned = V15.pins.indexOf(t) >= 0;
+    return '<div class="v15-clip-row' + (pinned ? ' pinned' : '') + '">' +
+      '<button class="v15-clip-item" data-clip="' + i + '">' + v15Esc(t) + '</button>' +
+      '<button class="v15-clip-pin" data-clip-pin="' + i + '" title="' + (pinned ? _t('clip_unpin') : _t('clip_pin')) + '">' + (pinned ? '★' : '☆') + '</button>' +
+      '<button class="v15-clip-del" data-clip-del="' + i + '" title="' + _t('clip_delete') + '">×</button>' +
+      '</div>';
   }).join('');
+}
+function v15SaveClip() {
+  try {
+    sessionStorage.setItem('win11_v15_clip', JSON.stringify(V15.clip));
+    sessionStorage.setItem('win11_v15_pins', JSON.stringify(V15.pins));
+  } catch (e) { /* ignore */ }
+}
+function v15TogglePin(i) {
+  var t = V15.clip[i];
+  if (t == null) return;
+  var at = V15.pins.indexOf(t);
+  if (at >= 0) V15.pins.splice(at, 1); else V15.pins.push(t);
+  v15SaveClip();
+  v15RenderClip();
+}
+function v15DeleteClip(i) {
+  var t = V15.clip[i];
+  if (t == null) return;
+  V15.clip.splice(i, 1);
+  var at = V15.pins.indexOf(t);
+  if (at >= 0) V15.pins.splice(at, 1);
+  v15SaveClip();
+  v15RenderClip();
 }
 function v15OpenClip() {
   v15RenderClip();
@@ -6546,6 +6581,7 @@ function v15RenderTaskMgr(win) {
       '<div class="tm-tabs">' +
         '<button data-tm="proc" class="on">' + _t('tm_tab_proc') + '</button>' +
         '<button data-tm="perf">' + _t('tm_tab_perf') + '</button>' +
+        '<button data-tm="start">' + _t('tm_tab_start') + '</button>' +
       '</div>' +
       '<div class="tm-body" id="v15TmBody"></div>' +
     '</div>';
@@ -6599,7 +6635,28 @@ function v15RenderTaskMgr(win) {
         '<div class="tm-card"><h4>' + _t('tm_net') + '</h4><div class="big">' + net.toFixed(1) + '<em>Mbps</em></div>' + spark(V15.memHist.map(function (v) { return Math.max(2, v * 0.22); })) + '</div>' +
       '</div>';
   }
-  function draw() { if (tab === 'proc') drawProc(); else drawPerf(); }
+  function drawStart() {
+    var items = [
+      { k: 'winsec', n: 'Windows Security', imp: 'high' },
+      { k: 'onedrive', n: 'OneDrive', imp: 'med' },
+      { k: 'teams', n: 'Microsoft Teams', imp: 'med' },
+      { k: 'steam', n: 'Steam', imp: 'low' }
+    ];
+    host.innerHTML = '<div class="tm-sect">' + _t('tm_startup') + '</div>' +
+      '<div class="tm-row head"><span class="n">' + _t('tm_name') + '</span><span class="s">' + _t('tm_impact') + '</span><span></span><span></span><span></span></div>' +
+      items.map(function (it) {
+        var on = !!V15.startup[it.k];
+        return '<div class="tm-row"><span class="n"><svg viewBox="0 0 24 24"><use href="#v14-power"/></svg><b>' + it.n + '</b></span>' +
+          '<span class="s">' + _t('tm_impact_' + it.imp) + '</span><span></span>' +
+          '<span class="s">' + (on ? _t('tm_enabled') : _t('tm_disabled')) + '</span>' +
+          '<button class="tm-toggle' + (on ? ' on' : '') + '" data-start="' + it.k + '">' + _t('tm_tab_start') + '</button></div>';
+      }).join('');
+  }
+  function draw() {
+    if (tab === 'proc') drawProc();
+    else if (tab === 'start') drawStart();
+    else drawPerf();
+  }
   draw();
 
   body.addEventListener('click', function (e) {
@@ -6615,12 +6672,19 @@ function v15RenderTaskMgr(win) {
       var id = end.dataset.end;
       if (typeof AppWindows.close === 'function') AppWindows.close(id);
       drawProc();
+      return;
+    }
+    var st = e.target.closest('[data-start]');
+    if (st) {
+      V15.startup[st.dataset.start] = !V15.startup[st.dataset.start];
+      drawStart();
     }
   });
 
   var timer = setInterval(function () {
     if (!body.isConnected) { clearInterval(timer); return; }
-    if (tab === 'proc') drawProc(); else drawPerf();
+    if (tab === 'proc') drawProc();
+    else if (tab === 'perf') drawPerf();
   }, 1200);
 }
 
@@ -6634,13 +6698,21 @@ function v15InjectSettingsSearch(body) {
   wrap.innerHTML = '<svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l4.5 4.5"/></svg>' +
     '<input type="text" placeholder="' + _t('set_search_ph') + '" aria-label="' + _t('set_search_ph') + '">';
   nav.insertBefore(wrap, nav.firstChild);
+  var nores = document.createElement('div');
+  nores.className = 'v15-nores';
+  nores.textContent = _t('set_noresult');
+  nores.hidden = true;
+  nav.appendChild(nores);
   var input = wrap.querySelector('input');
   input.addEventListener('input', function () {
     var q = input.value.trim().toLowerCase();
+    var shown = 0;
     nav.querySelectorAll('.s-item').forEach(function (it) {
       var hit = !q || it.textContent.toLowerCase().indexOf(q) >= 0;
       it.classList.toggle('v15-hide', !hit);
+      if (hit) shown++;
     });
+    nores.hidden = !q || shown > 0;
   });
   input.addEventListener('keydown', function (e) {
     if (e.key === 'Escape') {
@@ -6709,11 +6781,22 @@ function v15SyncNotifDot() {
   try { cleared = sessionStorage.getItem('win11_v15_notif') === '1'; } catch (e) { /* ignore */ }
   dot.classList.toggle('on', !cleared && !state.v15.notifRead);
 }
+function v15SyncNcEmpty() {
+  var body = document.querySelector('#notifCenter .nc-body');
+  if (!body) return;
+  var empty = body.querySelector('.nn-empty');
+  if (!empty) return;
+  var any = Array.prototype.some.call(body.querySelectorAll('.nc-notif'), function (n) { return !n.hidden; });
+  empty.style.display = any ? 'none' : '';
+  var clear = body.querySelector('.nc-clear');
+  if (clear) clear.hidden = !any;
+}
 function v15ClearNotifs() {
   document.querySelectorAll('#notifCenter .nc-notif').forEach(function (n) { n.hidden = true; });
   try { sessionStorage.setItem('win11_v15_notif', '1'); } catch (e) { /* ignore */ }
   state.v15.notifRead = true;
   v15SyncNotifDot();
+  v15SyncNcEmpty();
 }
 
 /* ================= 浮层与快捷键 ================= */
@@ -6732,6 +6815,8 @@ function v15Boot() {
   try {
     var saved = sessionStorage.getItem('win11_v15_clip');
     if (saved) V15.clip = JSON.parse(saved) || [];
+    var savedPins = sessionStorage.getItem('win11_v15_pins');
+    if (savedPins) V15.pins = JSON.parse(savedPins) || [];
   } catch (e) { /* ignore */ }
 
   /* 复制内容记录 */
@@ -6745,6 +6830,10 @@ function v15Boot() {
   document.addEventListener('click', function (e) {
     var x = e.target.closest('[data-v15-close]');
     if (x) { v15CloseLayers(); return; }
+    var pin = e.target.closest('[data-clip-pin]');
+    if (pin) { v15TogglePin(Number(pin.dataset.clipPin)); return; }
+    var del = e.target.closest('[data-clip-del]');
+    if (del) { v15DeleteClip(Number(del.dataset.clipDel)); return; }
     var item = e.target.closest('[data-clip]');
     if (item) { v15CopyClip(Number(item.dataset.clip)); return; }
     if (e.target.id === 'v15Clip' || e.target.id === 'v15Storage' || e.target.id === 'v15Keys') { v15CloseLayers(); }
@@ -6752,7 +6841,8 @@ function v15Boot() {
 
   document.getElementById('v15ClipClear').addEventListener('click', function () {
     V15.clip = [];
-    try { sessionStorage.removeItem('win11_v15_clip'); } catch (e) { /* ignore */ }
+    V15.pins = [];
+    v15SaveClip();
     v15RenderClip();
   });
 
@@ -6783,6 +6873,7 @@ function v15Boot() {
   var clearBtn = document.getElementById('ncClear');
   if (clearBtn) clearBtn.addEventListener('click', v15ClearNotifs);
   v15SyncNotifDot();
+  v15SyncNcEmpty();
 
   /* 剪贴板 / 任务管理器 / 关闭浮层 */
   document.addEventListener('keydown', function (e) {

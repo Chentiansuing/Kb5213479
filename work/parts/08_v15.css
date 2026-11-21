@@ -162,6 +162,26 @@
 #notifBtn{position:relative;padding-right:15px;}
 .tray-dot.on{opacity:1;transform:scale(1);}
 
+/* ---------- 15.1：剪贴板固定/删除、启动项、搜索无结果 ---------- */
+.v15-clip-row{display:flex;align-items:flex-start;gap:6px;margin-bottom:7px;}
+.v15-clip-row .v15-clip-item{flex:1;min-width:0;margin-bottom:0;}
+.v15-clip-pin,.v15-clip-del{
+  width:26px;height:30px;flex:none;border-radius:7px;cursor:pointer;
+  border:1px solid rgba(20,40,70,.1);background:rgba(255,255,255,.8);
+  font-size:12px;line-height:1;color:#6b7687;transition:background .15s,color .15s,border-color .15s;
+}
+.v15-clip-pin:hover,.v15-clip-del:hover{background:#fff;}
+.v15-clip-row.pinned .v15-clip-pin{color:#c98a00;border-color:rgba(201,138,0,.35);background:rgba(255,214,102,.18);}
+.v15-clip-del:hover{color:#b3261e;border-color:#e5a49d;background:#fdecea;}
+.v15-nores{padding:18px 4px;font-size:11px;color:var(--v14-ink-3);text-align:center;}
+.tm-toggle{
+  height:24px;padding:0 9px;border-radius:6px;cursor:pointer;font-size:10.5px;
+  border:1px solid rgba(20,40,70,.14);background:#fff;color:#4a5564;
+  transition:background .15s,color .15s,border-color .15s;
+}
+.tm-toggle.on{background:color-mix(in srgb,var(--accent) 14%,#fff);border-color:color-mix(in srgb,var(--accent) 34%,transparent);color:var(--accent);}
+.tm-toggle:hover{border-color:color-mix(in srgb,var(--accent) 40%,transparent);}
+
 /* ---------- 深色 ---------- */
 body[data-theme="dark"] .v15-clip,
 body[data-theme="dark"] .v15-dlg{background:rgba(28,34,44,.96);color:#e8eef6;}
@@ -180,3 +200,9 @@ body[data-theme="dark"] .v15-setsrch{background:rgba(255,255,255,.07);border-col
 body[data-theme="dark"] .v15-setsrch input{color:#eaf1fb;}
 body[data-theme="dark"] .v15-focus{background:rgba(28,34,44,.94);color:#e8eef6;}
 body[data-theme="dark"] .nc-clear{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.12);color:#cfd9e6;}
+body[data-theme="dark"] .v15-clip-pin,
+body[data-theme="dark"] .v15-clip-del,
+body[data-theme="dark"] .tm-toggle{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.14);color:#cfd9e6;}
+body[data-theme="dark"] .v15-clip-pin:hover,
+body[data-theme="dark"] .v15-clip-del:hover{background:rgba(255,255,255,.14);}
+body[data-theme="dark"] .v15-nores{color:#8b97a8;}
