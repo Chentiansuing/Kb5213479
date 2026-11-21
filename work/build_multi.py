@@ -21,7 +21,7 @@ import json, pathlib, re, sys
 ROOT = pathlib.Path(r"c:\Users\Administrator\Documents\Kb5213479\2026-11-15\windows-installer-sim")
 PARTS = ROOT / "work" / "parts"
 OUT = ROOT / "outputs" / "web"
-VERSION = "15.1.0"
+VERSION = "16.0.0"
 
 sys.path.insert(0, str(ROOT / "work"))
 from locales_data import LANG_JSON, LANG_CSS, LANG_LABELS, LANG_ORDER  # noqa: E402
@@ -40,6 +40,7 @@ from extra_v13 import EXTRA_V13  # noqa: E402
 from extra_v14 import EXTRA_V14  # noqa: E402
 from extra_v15 import EXTRA_V15  # noqa: E402
 from extra_v15_1 import EXTRA_V151  # noqa: E402
+from extra_v16 import EXTRA_V16  # noqa: E402
 from extra_cam import EXTRA_CAM  # noqa: E402
 
 for _code in LANG_ORDER:
@@ -58,6 +59,7 @@ for _code in LANG_ORDER:
     LANG_JSON[_code].update(EXTRA_V14[_code])
     LANG_JSON[_code].update(EXTRA_V15[_code])
     LANG_JSON[_code].update(EXTRA_V151[_code])
+    LANG_JSON[_code].update(EXTRA_V16[_code])
     LANG_JSON[_code].update(EXTRA_CAM[_code])
 assert all(len(v) == len(LANG_JSON[LANG_ORDER[0]]) for v in LANG_JSON.values()), "语言包键数不一致"
 
@@ -83,12 +85,17 @@ v15_css = (PARTS / "08_v15.css").read_text(encoding="utf-8")
 v15_body = (PARTS / "08_v15_body.html").read_text(encoding="utf-8")
 v15_js = (PARTS / "08_v15.js").read_text(encoding="utf-8").strip()
 
+v16_css = (PARTS / "09_v16.css").read_text(encoding="utf-8")
+v16_body = (PARTS / "09_v16_body.html").read_text(encoding="utf-8")
+v16_js = (PARTS / "09_v16.js").read_text(encoding="utf-8").strip()
+
 # ---------- 2. 拼 body ----------
 body = ""
 for name in ("03_setup.html", "04_flow.html", "05_oobe_desktop.html"):
     body += (PARTS / name).read_text(encoding="utf-8") + "\n"
 body += v14_body + "\n"
 body += v15_body + "\n"
+body += v16_body + "\n"
 
 # ---------- 2.1 给静态文案补 data-i18n ----------
 TAG_RE = re.compile(r'<(/?)([a-zA-Z][a-zA-Z0-9-]*)((?:[^>"\']|"[^"]*"|\'[^\']*\')*)>')
@@ -249,7 +256,7 @@ new_boot = """  window.__installer = {
     bootApp();
   }"""
 assert old_boot in app_js, "主脚本启动段没匹配上，无法改为异步启动"
-app_js = app_js.replace(old_boot, v14_js + "\n\n" + v15_js + "\n\n" + new_boot, 1)
+app_js = app_js.replace(old_boot, v14_js + "\n\n" + v15_js + "\n\n" + v16_js + "\n\n" + new_boot, 1)
 
 # ---------- 5. 组装各文件 ----------
 OUT.mkdir(parents=True, exist_ok=True)
@@ -270,6 +277,10 @@ OUT.mkdir(parents=True, exist_ok=True)
 
 (OUT / "styles" / "v15.css").write_text(
     f"/* Windows 11 Setup Simulator {VERSION} — 系统工具面板 */\n" + v15_css,
+    encoding="utf-8")
+
+(OUT / "styles" / "v16.css").write_text(
+    f"/* Windows 11 Setup Simulator {VERSION} — 邮件 / 日历 / 待办 / 个性化 */\n" + v16_css,
     encoding="utf-8")
 
 # 语言清单 + 各语言包
@@ -449,6 +460,7 @@ index_html = f"""<!DOCTYPE html>
 <link rel="stylesheet" href="styles/windows.css?v={VERSION}">
 <link rel="stylesheet" href="styles/v14.css?v={VERSION}">
 <link rel="stylesheet" href="styles/v15.css?v={VERSION}">
+<link rel="stylesheet" href="styles/v16.css?v={VERSION}">
 </head>
 <body>
 {body}
