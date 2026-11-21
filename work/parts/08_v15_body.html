@@ -1,0 +1,72 @@
+<!-- ===== v15.0：新增图标 + 系统工具面板 ===== -->
+<svg id="v15Sprite" width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute;left:-9999px;width:0;height:0;overflow:hidden">
+  <symbol id="v15-taskmgr" viewBox="0 0 24 24"><path d="M4 4.6v15h16"/><path d="M7.4 15.6l3.1-4.1 3 2.2 4.1-6"/><circle cx="7.4" cy="15.6" r="1" class="f14"/><circle cx="17.6" cy="7.7" r="1" class="f14"/></symbol>
+  <symbol id="v15-clipboard" viewBox="0 0 24 24"><rect x="5.2" y="4.6" width="13.6" height="16.2" rx="2.4"/><path d="M9.2 4.6V3.2h5.6v1.4"/><path d="M8.8 9.6h6.4M8.8 13.2h6.4M8.8 16.8h4"/></symbol>
+  <symbol id="v15-storage" viewBox="0 0 24 24"><rect x="3" y="4.4" width="18" height="6.6" rx="2.2"/><rect x="3" y="12.8" width="18" height="6.6" rx="2.2"/><circle cx="7" cy="7.7" r=".9" class="f14"/><circle cx="7" cy="16.1" r=".9" class="f14"/></symbol>
+  <symbol id="v15-focus" viewBox="0 0 24 24"><path d="M18.6 14.6A7.6 7.6 0 0 1 9.4 5.4 7.8 7.8 0 1 0 18.6 14.6Z"/><path d="M16.4 4.2l4 4M20.4 4.2l-4 4"/></symbol>
+  <symbol id="v15-report" viewBox="0 0 24 24"><path d="M6 2.8h7.4L19 8.4v12.8H6V2.8Z"/><path d="M13.2 2.8v5.8H19"/><path d="M9 13.2h6M9 16.4h4"/></symbol>
+</svg>
+
+<!-- 剪贴板历史 -->
+<div class="v15-layer" id="v15Clip" hidden>
+  <div class="v15-clip" role="dialog" aria-modal="true">
+    <div class="v15-hd">
+      <span class="i14 i14--sm t-blue"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#v15-clipboard"/></svg></span>
+      <b data-i18n="clip_title">剪贴板历史</b>
+      <button class="v15-x" data-v15-close="clip" aria-label="关闭">×</button>
+    </div>
+    <div class="v15-clip-list" id="v15ClipList"></div>
+    <div class="v15-ft">
+      <span data-i18n="clip_hint">复制文本后会显示在这里（Ctrl+Shift+V 打开）</span>
+      <button class="v15-link" id="v15ClipClear" data-i18n="clip_clear">全部清除</button>
+    </div>
+  </div>
+</div>
+
+<!-- 存储感知 -->
+<div class="v15-layer" id="v15Storage" hidden>
+  <div class="v15-dlg" role="dialog" aria-modal="true">
+    <div class="v15-hd">
+      <span class="i14 i14--sm t-teal"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#v15-storage"/></svg></span>
+      <b data-i18n="st_title">存储感知</b>
+      <button class="v15-x" data-v15-close="storage" aria-label="关闭">×</button>
+    </div>
+    <p class="v15-sub" data-i18n="st_desc">扫描临时文件、回收站与更新缓存，释放磁盘空间。</p>
+    <div class="v15-cats" id="v15StCats"></div>
+    <div class="v15-stfoot">
+      <b id="v15StSum">—</b>
+      <div class="v15-stbtns">
+        <button class="btn" id="v15StScan" data-i18n="st_scan">扫描</button>
+        <button class="btn primary" id="v15StClean" data-i18n="st_clean" disabled>立即清理</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 快捷键指南 -->
+<div class="v15-layer" id="v15Keys" hidden>
+  <div class="v15-dlg v15-keys" role="dialog" aria-modal="true">
+    <div class="v15-hd">
+      <span class="i14 i14--sm t-violet"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#v14-keyboard"/></svg></span>
+      <b data-i18n="keys_title">键盘快捷键</b>
+      <button class="v15-x" data-v15-close="keys" aria-label="关闭">×</button>
+    </div>
+    <p class="v15-sub" data-i18n="keys_hint">按住 Win 键，或点击右下角版本号打开</p>
+    <div class="v15-kgrid">
+      <div><kbd>Win</kbd><span data-i18n="keys_win">打开开始菜单</span></div>
+      <div><kbd>Win</kbd><kbd>D</kbd><span data-i18n="keys_desk">显示桌面</span></div>
+      <div><kbd>Win</kbd><kbd>Tab</kbd><span data-i18n="keys_tv">任务视图</span></div>
+      <div><kbd>Win</kbd><kbd>←</kbd><kbd>→</kbd><span data-i18n="keys_snap">贴靠窗口</span></div>
+      <div><kbd>Win</kbd><kbd>S</kbd><span data-i18n="keys_search">全局搜索</span></div>
+      <div><kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>V</kbd><span data-i18n="keys_clip">剪贴板历史</span></div>
+      <div><kbd>Win</kbd><kbd>L</kbd><span data-i18n="keys_lock">锁定设备</span></div>
+      <div><kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>Esc</kbd><span data-i18n="keys_task">任务管理器</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- 专注助手倒计时 -->
+<button class="v15-focus" id="v15Focus" hidden>
+  <span class="i14 i14--sm t-violet"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#v15-focus"/></svg></span>
+  <span id="v15FocusTxt">专注 25:00</span>
+</button>

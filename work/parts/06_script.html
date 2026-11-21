@@ -121,7 +121,7 @@
   function updateVersionBadge() {
     var badge = $('#versionBadge');
     if (!badge) return;
-    badge.textContent = 'v14.0';
+    badge.textContent = 'v15.0';
   }
 
   /* ============================================================
@@ -4228,13 +4228,12 @@
   function buildAllApps() {
     var wrap = $('#allAppsList'); if (!wrap) return;
     var list = $$('#startMenu .sm-app').map(function (a) {
-      var tile = a.querySelector('.tile');
+      var ico = a.querySelector('.i14');
       var labelEl = a.querySelector('[data-i18n]');
       var name = labelEl ? labelEl.textContent.trim() : a.textContent.trim();
       return {
         name: name, open: a.dataset.open,
-        color: tile ? tile.style.background : '',
-        short: tile ? tile.textContent.trim() : ''
+        icon: ico ? ico.outerHTML.replace('<span class="i14', '<span class="i14 i14--sm') : ''
       };
     }).filter(function (x) { return x.open && x.name; });
     list.sort(function (a, b) { return a.name.localeCompare(b.name); });
@@ -4242,8 +4241,7 @@
     list.forEach(function (x) {
       var l = x.name.charAt(0).toUpperCase();
       if (l !== letter) { letter = l; html += '<div class="sm-letter">' + l + '</div>'; }
-      html += '<div class="sm-allapp" data-open="' + x.open + '">' +
-        '<span class="tile" style="background:' + x.color + '">' + x.short + '</span>' + x.name + '</div>';
+      html += '<div class="sm-allapp" data-open="' + x.open + '">' + x.icon + x.name + '</div>';
     });
     wrap.innerHTML = html;
   }

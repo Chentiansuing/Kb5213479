@@ -1,0 +1,183 @@
+/* Windows 11 Setup Simulator 15.0.0 — 系统工具面板 */
+/* ============================================================
+   Windows 11 安装模拟器 15.0 —— 系统工具面板
+   ============================================================ */
+
+[hidden]{display:none !important;}
+
+/* ---------- 通用浮层 ---------- */
+.v15-layer{
+  position:fixed;inset:0;z-index:95;display:flex;align-items:center;justify-content:center;
+  background:rgba(6,14,28,.34);
+  -webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);
+  animation:v15Fade .18s var(--v14-ease) both;
+}
+@keyframes v15Fade{from{opacity:0;}to{opacity:1;}}
+.v15-clip,.v15-dlg{
+  width:442px;max-width:calc(100vw - 32px);max-height:calc(100vh - 64px);
+  display:flex;flex-direction:column;
+  border-radius:var(--v14-r-lg);
+  background:rgba(250,252,255,.94);
+  box-shadow:var(--v14-shadow-3),inset 0 0 0 1px rgba(255,255,255,.7);
+  animation:v15Pop .3s var(--v14-spring) both;
+  overflow:hidden;
+}
+@keyframes v15Pop{from{opacity:0;transform:translateY(12px) scale(.97);}to{opacity:1;transform:none;}}
+.v15-hd{
+  display:flex;align-items:center;gap:9px;padding:14px 14px 12px 16px;
+  border-bottom:1px solid rgba(20,40,70,.08);
+}
+.v15-hd b{font-size:12.5px;font-weight:600;flex:1;}
+.v15-x{
+  width:28px;height:28px;border:0;border-radius:8px;background:transparent;
+  font-size:16px;line-height:1;color:#5a6473;cursor:pointer;transition:background .15s;
+}
+.v15-x:hover{background:rgba(10,28,56,.09);}
+.v15-sub{margin:0;padding:14px 18px 0;font-size:11.5px;color:var(--v14-ink-2);line-height:1.6;}
+.v15-ft{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:10px 16px;border-top:1px solid rgba(20,40,70,.08);
+  font-size:10.5px;color:var(--v14-ink-3);
+}
+.v15-link{border:0;background:none;color:var(--accent);font-size:11px;cursor:pointer;padding:4px 2px;border-radius:5px;}
+.v15-link:hover{background:color-mix(in srgb,var(--accent) 9%,transparent);}
+.v15-dlg{padding-bottom:14px;}
+.v15-dlg .v15-stfoot{border-top:0;}
+
+/* ---------- 剪贴板 ---------- */
+.v15-clip-list{padding:10px 12px;overflow:auto;flex:1;min-height:96px;max-height:340px;}
+.v15-clip-item{
+  display:block;width:100%;text-align:left;border:1px solid rgba(20,40,70,.08);
+  background:rgba(255,255,255,.8);border-radius:10px;padding:9px 11px;margin-bottom:7px;
+  font-size:11.5px;line-height:1.55;color:var(--v14-ink);cursor:pointer;
+  white-space:pre-wrap;word-break:break-word;max-height:78px;overflow:hidden;
+  transition:background .15s,border-color .15s,transform .2s var(--v14-spring);
+}
+.v15-clip-item:hover{background:#fff;border-color:color-mix(in srgb,var(--accent) 34%,transparent);transform:translateX(2px);}
+.v15-clip-empty{padding:26px 10px;text-align:center;font-size:11.5px;color:var(--v14-ink-3);}
+
+/* ---------- 存储感知 ---------- */
+.v15-cats{padding:12px 18px 4px;display:flex;flex-direction:column;gap:10px;}
+.v15-cat{display:grid;grid-template-columns:1fr auto;gap:4px 10px;font-size:11.5px;}
+.v15-cat b{font-weight:500;color:var(--v14-ink);}
+.v15-cat em{font-style:normal;color:var(--v14-ink-2);font-variant-numeric:tabular-nums;}
+.v15-cat .v15-track{
+  grid-column:1 / -1;height:6px;border-radius:99px;background:rgba(20,40,70,.09);overflow:hidden;
+}
+.v15-cat .v15-track i{
+  display:block;height:100%;width:0;border-radius:99px;
+  background:linear-gradient(90deg,#3ed7c8,#1f8fd6);
+  transition:width .7s var(--v14-ease);
+}
+.v15-stfoot{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px 2px;}
+.v15-stfoot b{font-size:13px;font-weight:600;color:var(--accent);font-variant-numeric:tabular-nums;}
+.v15-stbtns{display:flex;gap:8px;}
+
+/* ---------- 快捷键 ---------- */
+.v15-kgrid{padding:8px 18px 4px;display:grid;grid-template-columns:1fr 1fr;gap:8px 14px;}
+.v15-kgrid > div{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--v14-ink-2);}
+.v15-kgrid span{margin-left:2px;}
+.v15-kgrid kbd{
+  display:inline-grid;place-items:center;min-width:22px;height:21px;padding:0 6px;
+  border-radius:6px;border:1px solid rgba(20,40,70,.16);border-bottom-width:2px;
+  background:rgba(255,255,255,.92);font:11px/1 "Segoe UI",sans-serif;color:#2c3644;
+}
+
+/* ---------- 专注助手胶囊 ---------- */
+.v15-focus{
+  position:fixed;right:16px;bottom:76px;z-index:60;height:42px;padding:0 14px 0 8px;
+  display:flex;align-items:center;gap:8px;border:1px solid rgba(255,255,255,.5);
+  border-radius:99px;background:rgba(250,252,255,.9);
+  -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
+  box-shadow:0 12px 30px rgba(4,12,28,.28);cursor:pointer;
+  font-size:11.5px;color:#2b3646;
+  animation:v15Pop .34s var(--v14-spring) both;
+}
+.v15-focus:hover{background:#fff;}
+.v15-focus span:last-child{font-variant-numeric:tabular-nums;}
+
+/* ---------- 任务管理器 ---------- */
+.tm{display:flex;flex-direction:column;height:100%;background:#f7f9fc;font-size:11.5px;}
+.tm-tabs{display:flex;gap:4px;padding:9px 12px;border-bottom:1px solid rgba(20,40,70,.08);background:rgba(255,255,255,.6);}
+.tm-tabs button{
+  height:26px;padding:0 12px;border-radius:7px;border:1px solid transparent;background:transparent;
+  font-size:11.5px;color:#4b5665;cursor:pointer;transition:background .15s,color .15s;
+}
+.tm-tabs button:hover{background:rgba(10,28,56,.06);}
+.tm-tabs button.on{background:color-mix(in srgb,var(--accent) 12%,transparent);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 26%,transparent);}
+.tm-body{flex:1;overflow:auto;padding:8px 10px 12px;}
+.tm-sect{font-size:10px;color:#7c8595;letter-spacing:.5px;margin:8px 6px 6px;}
+.tm-row{
+  display:grid;grid-template-columns:1fr 62px 46px 54px 72px;align-items:center;gap:6px;
+  padding:6px 8px;border-radius:7px;transition:background .14s;
+}
+.tm-row.head{font-size:10px;color:#8b95a4;padding:4px 8px;}
+.tm-row:not(.head):hover{background:rgba(10,28,56,.05);}
+.tm-row .n{display:flex;align-items:center;gap:7px;min-width:0;}
+.tm-row .n b{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tm-row .n svg{width:14px;height:14px;flex:none;fill:none;stroke:currentColor;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round;color:#5b6574;}
+.tm-row .s{color:#7c8595;font-size:10.5px;}
+.tm-row .v{font-variant-numeric:tabular-nums;color:#45505f;}
+.tm-end{
+  height:24px;border-radius:6px;border:1px solid rgba(20,40,70,.14);background:#fff;
+  font-size:10.5px;color:#3a4453;cursor:pointer;
+}
+.tm-end:hover{background:#fdecea;border-color:#e5a49d;color:#b3261e;}
+.tm-none{padding:26px;text-align:center;color:#8b95a4;}
+.tm-perf{padding:14px 16px;display:grid;grid-template-columns:repeat(2,1fr);gap:12px;}
+.tm-card{
+  border:1px solid rgba(20,40,70,.08);border-radius:12px;background:#fff;padding:12px 14px;
+  box-shadow:0 2px 8px rgba(12,26,50,.05);
+}
+.tm-card h4{margin:0 0 2px;font-size:10.5px;color:#6c7686;font-weight:500;}
+.tm-card .big{font-size:26px;font-weight:300;color:#1f2937;font-variant-numeric:tabular-nums;letter-spacing:-1px;}
+.tm-card .big em{font-size:12px;font-style:normal;color:#7c8595;margin-left:2px;}
+.tm-spark{height:34px;margin-top:6px;display:block;width:100%;}
+.tm-spark path.line{fill:none;stroke:var(--accent);stroke-width:1.6;stroke-linejoin:round;stroke-linecap:round;}
+.tm-spark path.area{fill:color-mix(in srgb,var(--accent) 12%,transparent);stroke:none;}
+
+/* ---------- 设置搜索 ---------- */
+.v15-setsrch{
+  display:flex;align-items:center;gap:7px;margin:0 0 12px;
+  height:32px;padding:0 10px;border-radius:9px;
+  border:1px solid rgba(20,40,70,.12);background:rgba(255,255,255,.85);
+}
+.v15-setsrch:focus-within{border-color:color-mix(in srgb,var(--accent) 48%,transparent);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 12%,transparent);}
+.v15-setsrch svg{width:13px;height:13px;flex:none;fill:none;stroke:#7c8595;stroke-width:1.7;stroke-linecap:round;}
+.v15-setsrch input{flex:1;min-width:0;border:0;outline:0;background:transparent;font-size:11.5px;color:#25303f;user-select:text;cursor:text;}
+.settings__nav .s-item.v15-hide{display:none;}
+
+/* ---------- 通知中心 ---------- */
+.nc-clear{
+  align-self:flex-end;margin:0 0 8px;height:26px;padding:0 11px;border-radius:7px;
+  border:1px solid rgba(20,40,70,.12);background:rgba(255,255,255,.8);
+  font-size:10.5px;color:#4a5564;cursor:pointer;
+}
+.nc-clear:hover{background:#fff;border-color:color-mix(in srgb,var(--accent) 30%,transparent);color:var(--accent);}
+.tray-dot{
+  position:absolute;top:5px;right:5px;width:6px;height:6px;border-radius:50%;
+  background:#e33b2e;box-shadow:0 0 0 2px rgba(255,255,255,.85);
+  opacity:0;transform:scale(.6);transition:opacity .2s,transform .2s var(--v14-spring);
+}
+/* 预留红点空间，避免压住时钟文字 */
+#notifBtn{position:relative;padding-right:15px;}
+.tray-dot.on{opacity:1;transform:scale(1);}
+
+/* ---------- 深色 ---------- */
+body[data-theme="dark"] .v15-clip,
+body[data-theme="dark"] .v15-dlg{background:rgba(28,34,44,.96);color:#e8eef6;}
+body[data-theme="dark"] .v15-hd,body[data-theme="dark"] .v15-ft{border-color:rgba(255,255,255,.08);}
+body[data-theme="dark"] .v15-sub{color:#aeb9c8;}
+body[data-theme="dark"] .v15-clip-item{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.1);color:#e8eef6;}
+body[data-theme="dark"] .v15-clip-item:hover{background:rgba(255,255,255,.1);}
+body[data-theme="dark"] .v15-kgrid kbd{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.18);color:#eaf1fb;}
+body[data-theme="dark"] .tm{background:#1c222c;}
+body[data-theme="dark"] .tm-tabs{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.08);}
+body[data-theme="dark"] .tm-card{background:#232a35;border-color:rgba(255,255,255,.08);}
+body[data-theme="dark"] .tm-card .big{color:#eaf1fb;}
+body[data-theme="dark"] .tm-row .n b,body[data-theme="dark"] .tm-row .v{color:#dfe7f2;}
+body[data-theme="dark"] .tm-end{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.14);color:#dfe7f2;}
+body[data-theme="dark"] .v15-setsrch{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.12);}
+body[data-theme="dark"] .v15-setsrch input{color:#eaf1fb;}
+body[data-theme="dark"] .v15-focus{background:rgba(28,34,44,.94);color:#e8eef6;}
+body[data-theme="dark"] .nc-clear{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.12);color:#cfd9e6;}

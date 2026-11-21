@@ -1,4 +1,4 @@
-/* Windows 11 Setup Simulator 14.0.0 — Fluent 3 视觉与动效重写层 */
+/* Windows 11 Setup Simulator 15.0.0 — Fluent 3 视觉与动效重写层 */
 /* ============================================================
    Windows 11 安装模拟器 14.0 —— 视觉与动效重写层
    设计目标
@@ -176,7 +176,8 @@ select.inp{padding-right:32px;}
   transition:transform .32s var(--v14-spring),background .2s;
 }
 .switch.on{background:var(--accent);border-color:var(--accent);}
-.switch.on::after{transform:translateX(19px);background:#fff;}
+/* 覆盖旧规则 .switch.on::after{left:24px}，避免与位移叠加后滑块越界 */
+.switch.on::after{left:4px;transform:translateX(18px);background:#fff;}
 .switch-row{border-radius:var(--v14-r-sm);transition:background .18s;}
 .switch-row:hover{background:rgba(255,255,255,.55);}
 
@@ -560,7 +561,12 @@ body.v14-still .tb-btn{will-change:auto;}
 }
 
 /* ---------- 深色模式 ---------- */
-body[data-theme="dark"]{--v14-ink:#eef3fa;--v14-ink-2:#b6c1d0;--v14-ink-3:#8b97a8;--v14-glass:rgba(28,35,46,.82);}
+body[data-theme="dark"]{
+  --v14-ink:#eef3fa;--v14-ink-2:#b6c1d0;--v14-ink-3:#8b97a8;--v14-glass:rgba(28,35,46,.82);
+  /* 同步旧版深色变量，避免设置窗口沿用浅色文字色 */
+  --ink:#eef3fb;--ink-2:#b7c2d4;--ink-3:#8794a8;
+  --line:rgba(255,255,255,.14);--card:rgba(26,34,48,.9);
+}
 body[data-theme="dark"] .bg{
   background:
     radial-gradient(100% 80% at 14% 4%,#132038 0,rgba(19,32,56,0) 60%),
@@ -616,3 +622,38 @@ body[data-theme="dark"] .app-window .win-bar{background:linear-gradient(180deg,#
 body[data-theme="dark"] .app-window .win-title{color:#e4ebf4;}
 body[data-theme="dark"] .app-window .win-btn{color:#dfe7f2;}
 body[data-theme="dark"] .app-window .win-btn:hover{background:rgba(255,255,255,.1);}
+
+/* ---- 深色模式修正：旧组件硬编码颜色 + 图标反色 ---- */
+body[data-theme="dark"] .tb-btn .i14 svg,
+body[data-theme="dark"] .tray .i14 svg{filter:none;}
+body[data-theme="dark"] .settings,
+body[data-theme="dark"] .explorer,
+body[data-theme="dark"] .edge__content .eb-page{color:#e6eaf2;}
+body[data-theme="dark"] .settings__main h2{color:#f3f7ff;}
+body[data-theme="dark"] .settings__main .s-sub,
+body[data-theme="dark"] .settings__row .sr-desc,
+body[data-theme="dark"] .settings__row .sr-val,
+body[data-theme="dark"] .restore-status,
+body[data-theme="dark"] .set-empty{color:#9aa7b8;}
+body[data-theme="dark"] .settings__row{border-bottom-color:rgba(255,255,255,.07);}
+body[data-theme="dark"] .settings__row[data-page]:hover,
+body[data-theme="dark"] .settings__row.clickable:hover{background:rgba(120,180,255,.08);}
+body[data-theme="dark"] .settings__nav .s-item:hover{background:rgba(255,255,255,.07);}
+body[data-theme="dark"] .settings__nav .s-item.active{background:rgba(120,180,255,.14);border-left-color:var(--accent);}
+body[data-theme="dark"] .rec-panel{background:#242424;border-color:rgba(255,255,255,.08);}
+body[data-theme="dark"] .rec-panel > b{color:#eef3fb;}
+body[data-theme="dark"] .switch{background:rgba(255,255,255,.20);border-color:rgba(255,255,255,.26);}
+body[data-theme="dark"] .switch::after{background:#cfd9e8;}
+body[data-theme="dark"] .switch.on{background:var(--accent);border-color:var(--accent);}
+body[data-theme="dark"] .switch.on::after{background:#fff;}
+body[data-theme="dark"] .app-window .win-icon{color:#dbe5f2;}
+body[data-theme="dark"] .sm-search svg{stroke:#94a3b5;}
+body[data-theme="dark"] .sm-search svg path{stroke:#94a3b5;}
+body[data-theme="dark"] ::-webkit-scrollbar{width:10px;height:10px;}
+body[data-theme="dark"] ::-webkit-scrollbar-track{background:transparent;}
+body[data-theme="dark"] ::-webkit-scrollbar-thumb{
+  background:rgba(255,255,255,.18);border-radius:99px;
+  border:2px solid transparent;background-clip:padding-box;
+}
+body[data-theme="dark"] ::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.28);background-clip:padding-box;}
+body[data-theme="dark"] ::-webkit-scrollbar-corner{background:transparent;}

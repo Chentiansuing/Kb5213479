@@ -6,9 +6,10 @@
 <title>Windows 11 安装程序</title>
 
 <!-- 外部依赖：样式（带版本号，避免更新后仍命中旧缓存） -->
-<link rel="stylesheet" href="styles/app.css?v=14.0.0">
-<link rel="stylesheet" href="styles/windows.css?v=14.0.0">
-<link rel="stylesheet" href="styles/v14.css?v=14.0.0">
+<link rel="stylesheet" href="styles/app.css?v=15.0.0">
+<link rel="stylesheet" href="styles/windows.css?v=15.0.0">
+<link rel="stylesheet" href="styles/v14.css?v=15.0.0">
+<link rel="stylesheet" href="styles/v15.css?v=15.0.0">
 </head>
 <body>
 <body>
@@ -527,6 +528,7 @@
       </div>
     </div>
     <div class="oobe-foot" style="justify-content:center; gap:10px;">
+      <button class="btn" id="v15Report"><span data-i18n="report_btn">导出安装报告</span></button>
       <button class="btn primary" data-go="desktop" data-i18n="done_start">开始使用</button>
     </div>
   </div>
@@ -687,11 +689,21 @@
   <div class="dialog dialog--wide">
     <div class="dialog__bar">
       <div class="dialog__title" data-i18n="setup_title">Windows 11 安装程序</div>
-      <span class="ver-tag" id="wnVerTag" data-i18n="version_v14">14.0</span>
+      <span class="ver-tag" id="wnVerTag" data-i18n="version_v15">15.0</span>
     </div>
     <div class="dialog__body">
-      <h1 class="dlg-h" data-i18n="wn14_title">14.0 有什么新功能</h1>
-      <p class="dlg-sub" data-i18n="wn_desc14">14.0 重写了大部分界面与动效，并重做了整套图标。</p>
+      <h1 class="dlg-h" data-i18n="wn15_title">15.0 有什么新功能</h1>
+      <p class="dlg-sub" data-i18n="wn_desc15">15.0 补齐了一组常用的系统工具与快捷操作。</p>
+      <div class="wn-group" data-i18n="wn_v15">15.0 新增</div>
+      <div class="wn-item"><b data-i18n="wn_tm">任务管理器</b><span data-i18n="wn_tm_d">查看应用与系统进程、实时 CPU / 内存曲线，并可直接结束任务。</span></div>
+      <div class="wn-item"><b data-i18n="wn_clip">剪贴板历史</b><span data-i18n="wn_clip_d">复制过的文本会被记录，随时取回并再次复制。</span></div>
+      <div class="wn-item"><b data-i18n="wn_storage">存储感知</b><span data-i18n="wn_storage_d">扫描临时文件、回收站与更新缓存，一键释放空间。</span></div>
+      <div class="wn-item"><b data-i18n="wn_focus">专注助手</b><span data-i18n="wn_focus_d">开启后暂停通知并显示倒计时，专注结束自动恢复。</span></div>
+      <div class="wn-item"><b data-i18n="wn_setsearch">设置搜索</b><span data-i18n="wn_setsearch_d">在设置窗口直接搜索页面名称，回车就能跳转。</span></div>
+      <div class="wn-item"><b data-i18n="wn_keys">键盘快捷键指南</b><span data-i18n="wn_keys_d">按住 Win 键或点击右下角版本号，查看常用快捷键。</span></div>
+      <div class="wn-item"><b data-i18n="wn_theme2">动态主题</b><span data-i18n="wn_theme2_d">按壁纸配色生成强调色，并根据时间自动切换深色或浅色。</span></div>
+      <div class="wn-item"><b data-i18n="wn_report">安装报告导出</b><span data-i18n="wn_report_d">完成页可把版本、设备、分区与耗时导出为 Markdown 文件。</span></div>
+      <div class="wn-item"><b data-i18n="wn_nc">通知中心清理</b><span data-i18n="wn_nc_d">一键清除全部通知，未读时任务栏显示小圆点。</span></div>
       <div class="wn-group" data-i18n="wn_v14">14.0 新增</div>
       <div class="wn-item"><b data-i18n="wn_rewrite">界面全面重写</b><span data-i18n="wn_rewrite_d">对话框、表单、安装页与 OOBE 页面采用全新的层次、圆角与光影体系。</span></div>
       <div class="wn-item"><b data-i18n="wn_motion">全新动效系统</b><span data-i18n="wn_motion_d">弹簧缓动、交错入场、窗口缩放展开与页面交叉淡入，全部只使用 transform 与 opacity。</span></div>
@@ -1451,6 +1463,7 @@
       <div class="sm-app" data-open="camera"><span class="i14 t-teal"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#v14-camera"/></svg></span><span data-i18n="app_camera">相机</span></div>
       <div class="sm-app" data-open="mail"><span class="i14 t-blue"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#v14-mail"/></svg></span><span data-i18n="app_mail">邮件</span></div>
       <div class="sm-app" data-open="weather"><span class="i14 t-amber"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#v14-weather"/></svg></span><span data-i18n="app_weather">天气</span></div>
+      <div class="sm-app" data-open="taskmgr"><span class="i14 t-slate"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#v15-taskmgr"/></svg></span><span data-i18n="app_taskmgr">任务管理器</span></div>
     </div>
     <div class="sm-allapps" id="allAppsList" hidden></div>
     <div class="sm-empty" id="startNoResults" data-i18n="start_no_results" hidden>没有找到匹配的应用</div>
@@ -1508,7 +1521,7 @@
         <span class="i14 i14--mono"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#v14-wifi"/></svg></span>
         <span class="i14 i14--mono"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#v14-volume"/></svg></span>
       </div>
-      <div class="tray" id="notifBtn" title="通知中心"><div class="clock"><b id="clockTime">--:--</b><span id="clockDate">----/--/--</span></div></div>
+      <div class="tray" id="notifBtn" title="通知中心"><div class="clock"><b id="clockTime">--:--</b><span id="clockDate">----/--/--</span></div><span class="tray-dot" id="notifDot"></span></div>
     </div>
   </div>
 
@@ -1526,7 +1539,9 @@
       <div class="cal__grid" id="calGrid"></div>
     </div>
     <div class="nc-body">
+      <button class="nc-clear" id="ncClear" data-i18n="nc_clear">清除全部</button>
       <div class="nn-empty" data-i18n="cal_notif_empty">没有新通知</div>
+      <div class="nc-notif"><div class="nn-icon">★</div><div><div class="nn-title" data-i18n="notif_v15_title">Windows 11 安装模拟器 15.0</div><div class="nn-body" data-i18n="notif_v15_body">新增任务管理器、剪贴板历史、存储感知、专注助手、设置搜索、快捷键指南与动态主题。</div></div></div>
       <div class="nc-notif"><div class="nn-icon">★</div><div><div class="nn-title" data-i18n="notif_v14_title">Windows 11 安装模拟器 14.0</div><div class="nn-body" data-i18n="notif_v14_body">界面全面重写：极光壁纸、悬浮任务栏、Fluent 图标包与弹簧动效，并优化了渲染性能。</div></div></div>
       <div class="nc-notif"><div class="nn-icon">★</div><div><div class="nn-title" data-i18n="notif_v13_title">Windows 11 安装模拟器 13.0</div><div class="nn-body" data-i18n="notif_v13_body">所有内置应用全面可用，新增相机、邮件、天气，并支持可取消的键盘鼠标捕获与本地时间。</div></div></div>
       <div class="nc-notif"><div class="nn-icon">★</div><div><div class="nn-title" data-i18n="notif_v10_title">Windows 11 安装模拟器 10.0</div><div class="nn-body" data-i18n="notif_v10_body">新增安装助手、性能监视器、故障诊断、成就系统等 10 项功能。</div></div></div>
@@ -1557,6 +1572,18 @@
       <button class="qp-tile" data-qc="sound">
         <svg viewBox="0 0 16 16" fill="none"><path d="M3 6.5 7 3v10L3 9.5H1.5v-3H3Z" fill="currentColor"/><path d="M9.5 5.5a3.5 3.5 0 0 1 0 5M11.6 3.6a6 6 0 0 1 0 8.8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
         <span data-i18n="snd_name">系统音效</span>
+      </button>
+      <button class="qp-tile" data-v15="storage">
+        <svg viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="4.4" rx="1.4" stroke="currentColor" stroke-width="1.3"/><rect x="2" y="8.6" width="12" height="4.4" rx="1.4" stroke="currentColor" stroke-width="1.3"/><circle cx="4.6" cy="5.2" r=".7" fill="currentColor"/><circle cx="4.6" cy="10.8" r=".7" fill="currentColor"/></svg>
+        <span data-i18n="qs_storage">存储感知</span>
+      </button>
+      <button class="qp-tile" data-qc="focus">
+        <svg viewBox="0 0 16 16" fill="none"><path d="M12.4 10.2A5.2 5.2 0 0 1 6.2 4 5.4 5.4 0 1 0 12.4 10.2Z" fill="currentColor"/></svg>
+        <span data-i18n="qs_focus">专注助手</span>
+      </button>
+      <button class="qp-tile" data-v15="theme">
+        <svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="3" stroke="currentColor" stroke-width="1.3"/><path d="M8 1.6v1.5M8 12.9v1.5M1.6 8h1.5M12.9 8h1.5M3.5 3.5l1 1M11.5 11.5l1 1M12.5 3.5l-1 1M4.5 11.5l-1 1" stroke="currentColor" stroke-width="1.15" stroke-linecap="round"/></svg>
+        <span data-i18n="qs_theme">动态主题</span>
       </button>
     </div>
     <button class="qp-wide" id="qsFull">
@@ -1715,7 +1742,7 @@
 
 <!-- 非桌面界面的 Shift+F10 窗口层；进入桌面时窗口会移回 #winLayer -->
 <div class="win-layer setup-win-layer" id="setupWinLayer"></div>
-<div class="version-badge" id="versionBadge">v14.0</div>
+<div class="version-badge" id="versionBadge" title="快捷键">v15.0</div>
 
 <div id="toast"></div>
 
@@ -1781,10 +1808,83 @@
   <symbol id="v14-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.4 5.4l1.7 1.7M16.9 16.9l1.7 1.7M18.6 5.4l-1.7 1.7M7.1 16.9l-1.7 1.7"/></symbol>
 </svg>
 
+<!-- ===== v15.0：新增图标 + 系统工具面板 ===== -->
+<svg id="v15Sprite" width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute;left:-9999px;width:0;height:0;overflow:hidden">
+  <symbol id="v15-taskmgr" viewBox="0 0 24 24"><path d="M4 4.6v15h16"/><path d="M7.4 15.6l3.1-4.1 3 2.2 4.1-6"/><circle cx="7.4" cy="15.6" r="1" class="f14"/><circle cx="17.6" cy="7.7" r="1" class="f14"/></symbol>
+  <symbol id="v15-clipboard" viewBox="0 0 24 24"><rect x="5.2" y="4.6" width="13.6" height="16.2" rx="2.4"/><path d="M9.2 4.6V3.2h5.6v1.4"/><path d="M8.8 9.6h6.4M8.8 13.2h6.4M8.8 16.8h4"/></symbol>
+  <symbol id="v15-storage" viewBox="0 0 24 24"><rect x="3" y="4.4" width="18" height="6.6" rx="2.2"/><rect x="3" y="12.8" width="18" height="6.6" rx="2.2"/><circle cx="7" cy="7.7" r=".9" class="f14"/><circle cx="7" cy="16.1" r=".9" class="f14"/></symbol>
+  <symbol id="v15-focus" viewBox="0 0 24 24"><path d="M18.6 14.6A7.6 7.6 0 0 1 9.4 5.4 7.8 7.8 0 1 0 18.6 14.6Z"/><path d="M16.4 4.2l4 4M20.4 4.2l-4 4"/></symbol>
+  <symbol id="v15-report" viewBox="0 0 24 24"><path d="M6 2.8h7.4L19 8.4v12.8H6V2.8Z"/><path d="M13.2 2.8v5.8H19"/><path d="M9 13.2h6M9 16.4h4"/></symbol>
+</svg>
+
+<!-- 剪贴板历史 -->
+<div class="v15-layer" id="v15Clip" hidden>
+  <div class="v15-clip" role="dialog" aria-modal="true">
+    <div class="v15-hd">
+      <span class="i14 i14--sm t-blue"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#v15-clipboard"/></svg></span>
+      <b data-i18n="clip_title">剪贴板历史</b>
+      <button class="v15-x" data-v15-close="clip" aria-label="关闭">×</button>
+    </div>
+    <div class="v15-clip-list" id="v15ClipList"></div>
+    <div class="v15-ft">
+      <span data-i18n="clip_hint">复制文本后会显示在这里（Ctrl+Shift+V 打开）</span>
+      <button class="v15-link" id="v15ClipClear" data-i18n="clip_clear">全部清除</button>
+    </div>
+  </div>
+</div>
+
+<!-- 存储感知 -->
+<div class="v15-layer" id="v15Storage" hidden>
+  <div class="v15-dlg" role="dialog" aria-modal="true">
+    <div class="v15-hd">
+      <span class="i14 i14--sm t-teal"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#v15-storage"/></svg></span>
+      <b data-i18n="st_title">存储感知</b>
+      <button class="v15-x" data-v15-close="storage" aria-label="关闭">×</button>
+    </div>
+    <p class="v15-sub" data-i18n="st_desc">扫描临时文件、回收站与更新缓存，释放磁盘空间。</p>
+    <div class="v15-cats" id="v15StCats"></div>
+    <div class="v15-stfoot">
+      <b id="v15StSum">—</b>
+      <div class="v15-stbtns">
+        <button class="btn" id="v15StScan" data-i18n="st_scan">扫描</button>
+        <button class="btn primary" id="v15StClean" data-i18n="st_clean" disabled>立即清理</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 快捷键指南 -->
+<div class="v15-layer" id="v15Keys" hidden>
+  <div class="v15-dlg v15-keys" role="dialog" aria-modal="true">
+    <div class="v15-hd">
+      <span class="i14 i14--sm t-violet"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#v14-keyboard"/></svg></span>
+      <b data-i18n="keys_title">键盘快捷键</b>
+      <button class="v15-x" data-v15-close="keys" aria-label="关闭">×</button>
+    </div>
+    <p class="v15-sub" data-i18n="keys_hint">按住 Win 键，或点击右下角版本号打开</p>
+    <div class="v15-kgrid">
+      <div><kbd>Win</kbd><span data-i18n="keys_win">打开开始菜单</span></div>
+      <div><kbd>Win</kbd><kbd>D</kbd><span data-i18n="keys_desk">显示桌面</span></div>
+      <div><kbd>Win</kbd><kbd>Tab</kbd><span data-i18n="keys_tv">任务视图</span></div>
+      <div><kbd>Win</kbd><kbd>←</kbd><kbd>→</kbd><span data-i18n="keys_snap">贴靠窗口</span></div>
+      <div><kbd>Win</kbd><kbd>S</kbd><span data-i18n="keys_search">全局搜索</span></div>
+      <div><kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>V</kbd><span data-i18n="keys_clip">剪贴板历史</span></div>
+      <div><kbd>Win</kbd><kbd>L</kbd><span data-i18n="keys_lock">锁定设备</span></div>
+      <div><kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>Esc</kbd><span data-i18n="keys_task">任务管理器</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- 专注助手倒计时 -->
+<button class="v15-focus" id="v15Focus" hidden>
+  <span class="i14 i14--sm t-violet"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#v15-focus"/></svg></span>
+  <span id="v15FocusTxt">专注 25:00</span>
+</button>
+
 
 
 <!-- 外部依赖：语言包加载器 + 主逻辑（语言包为 locales/*.json，需通过本地服务器访问） -->
-<script src="scripts/i18n.js?v=14.0.0"></script>
-<script src="scripts/app.js?v=14.0.0"></script>
+<script src="scripts/i18n.js?v=15.0.0"></script>
+<script src="scripts/app.js?v=15.0.0"></script>
 </body>
 </html>
