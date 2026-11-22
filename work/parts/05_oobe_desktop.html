@@ -177,8 +177,10 @@
     </div>
     <div class="sm-allapps" id="allAppsList" hidden></div>
     <div class="sm-empty" id="startNoResults" data-i18n="start_no_results" hidden>没有找到匹配的应用</div>
-    <div class="sm-row"><b>推荐</b><span>更多 &gt;</span></div>
-    <div style="font-size:11.5px;color:#7a7a7a;padding:6px 2px;">安装完成后，你最近使用的应用和文件会显示在这里。</div>
+    <div class="sm-row"><b data-i18n="rec_added">最近添加</b></div>
+    <div class="sm-recent" id="smRecentAdded"></div>
+    <div class="sm-row"><b data-i18n="rec_recent">推荐</b><span data-i18n="rec_more">更多 &gt;</span></div>
+    <div class="sm-recent" id="smRecent"></div>
     <div class="sm-foot">
       <div class="sm-user"><span class="sm-avatar" id="smAvatar">A</span><span id="smUser">Administrator</span></div>
       <div class="sm-power-wrap">
@@ -197,7 +199,7 @@
 
   <div class="toast-win" id="welcomeToast">
     <svg width="30" height="30" viewBox="0 0 32 32"><rect x="2" y="2" width="28" height="28" rx="6" fill="#0067c0"/><g fill="#fff"><rect x="8" y="8" width="7" height="7" rx="1"/><rect x="17" y="8" width="7" height="7" rx="1"/><rect x="8" y="17" width="7" height="7" rx="1"/><rect x="17" y="17" width="7" height="7" rx="1"/></g></svg>
-    <div><div class="t" data-i18n="welcome_title">欢迎使用 Windows 11</div><div class="d" data-i18n="welcome_body_v6">安装已完成。试试任务视图、贴靠布局、小组件、全局搜索，以及全新的画图、时钟和媒体播放器。</div></div>
+    <div><div class="t" data-i18n="welcome_title">欢迎使用 Windows 11</div><div class="d" data-i18n="welcome_body_v17">安装已完成。试试全新的 Copilot、开始菜单推荐、贴靠布局智能填充与桌面右键菜单。</div></div>
   </div>
 
   <div class="taskbar">
@@ -205,6 +207,9 @@
     <div class="tb-center" id="tbCenter">
       <button class="tb-btn" id="startBtn" title="开始">
         <span class="i14 i14--mono" style="color:#0b6cc4"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#v14-start"/></svg></span>
+      </button>
+      <button class="tb-btn" id="copilotBtn" title="Copilot" data-i18n-title="app_copilot">
+        <span class="i14 i14--mono"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#v17-copilot"/></svg></span>
       </button>
       <button class="tb-btn" id="searchBtn" title="搜索" data-i18n-title="search_title">
         <span class="i14 i14--mono"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#v14-search"/></svg></span>
@@ -227,6 +232,9 @@
       <div class="tb-wins" id="tbWins"></div>
     </div>
     <div class="tb-right">
+      <button class="tb-chevron" id="trayChevron" data-i18n-title="tray_hidden" title="隐藏的图标">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#v17-chevron"/></svg>
+      </button>
       <div class="tray" id="qsBtn" title="网络、声音、电池" data-i18n-title="tray_net_vol">
         <span class="i14 i14--mono"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#v14-wifi"/></svg></span>
         <span class="i14 i14--mono"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#v14-volume"/></svg></span>
@@ -251,6 +259,7 @@
     <div class="nc-body">
       <button class="nc-clear" id="ncClear" data-i18n="nc_clear">清除全部</button>
       <div class="nn-empty" data-i18n="cal_notif_empty">没有新通知</div>
+      <div class="nc-notif"><div class="nn-icon">★</div><div><div class="nn-title" data-i18n="notif_v17_title">Windows 11 安装模拟器 17.0</div><div class="nn-body" data-i18n="notif_v17_body">新增 Copilot 智能助手、开始菜单推荐、桌面右键菜单、贴靠布局智能填充、任务视图虚拟桌面壁纸、系统托盘隐藏图标与 OEM 开机动画。</div></div></div>
       <div class="nc-notif"><div class="nn-icon">★</div><div><div class="nn-title" data-i18n="notif_v16_title">Windows 11 安装模拟器 16.0</div><div class="nn-body" data-i18n="notif_v16_body">邮件应用全面重写，新增日历与待办，个性化中心支持主题预设、强调色、壁纸、任务栏对齐、图标大小与界面密度。</div></div></div>
       <div class="nc-notif"><div class="nn-icon">★</div><div><div class="nn-title" data-i18n="notif_v151_title">Windows 11 安装模拟器 15.1</div><div class="nn-body" data-i18n="notif_v151_body">质量更新：修复通知空状态、深色模式与开关对齐，任务管理器新增启动项，剪贴板支持固定。</div></div></div>
       <div class="nc-notif"><div class="nn-icon">★</div><div><div class="nn-title" data-i18n="notif_v15_title">Windows 11 安装模拟器 15.0</div><div class="nn-body" data-i18n="notif_v15_body">新增任务管理器、剪贴板历史、存储感知、专注助手、设置搜索、快捷键指南与动态主题。</div></div></div>
@@ -454,7 +463,7 @@
 
 <!-- 非桌面界面的 Shift+F10 窗口层；进入桌面时窗口会移回 #winLayer -->
 <div class="win-layer setup-win-layer" id="setupWinLayer"></div>
-<div class="version-badge" id="versionBadge" title="快捷键">v16.0</div>
+<div class="version-badge" id="versionBadge" title="快捷键">v17.0</div>
 
 <div id="toast"></div>
 

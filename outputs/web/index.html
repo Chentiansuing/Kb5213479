@@ -6,11 +6,12 @@
 <title>Windows 11 安装程序</title>
 
 <!-- 外部依赖：样式（带版本号，避免更新后仍命中旧缓存） -->
-<link rel="stylesheet" href="styles/app.css?v=16.0.0">
-<link rel="stylesheet" href="styles/windows.css?v=16.0.0">
-<link rel="stylesheet" href="styles/v14.css?v=16.0.0">
-<link rel="stylesheet" href="styles/v15.css?v=16.0.0">
-<link rel="stylesheet" href="styles/v16.css?v=16.0.0">
+<link rel="stylesheet" href="styles/app.css?v=17.0.0">
+<link rel="stylesheet" href="styles/windows.css?v=17.0.0">
+<link rel="stylesheet" href="styles/v14.css?v=17.0.0">
+<link rel="stylesheet" href="styles/v15.css?v=17.0.0">
+<link rel="stylesheet" href="styles/v16.css?v=17.0.0">
+<link rel="stylesheet" href="styles/v17.css?v=17.0.0">
 </head>
 <body>
 <body>
@@ -690,9 +691,19 @@
   <div class="dialog dialog--wide">
     <div class="dialog__bar">
       <div class="dialog__title" data-i18n="setup_title">Windows 11 安装程序</div>
-      <span class="ver-tag" id="wnVerTag" data-i18n="version_v16">16.0</span>
+      <span class="ver-tag" id="wnVerTag" data-i18n="version_v17">17.0</span>
     </div>
     <div class="dialog__body">
+      <h1 class="dlg-h" data-i18n="wn17_title">17.0 有什么新功能</h1>
+      <p class="dlg-sub" data-i18n="wn_desc17">17.0 带来了 Copilot 智能助手，并把桌面环境的真实感又推进了一大步。</p>
+      <div class="wn-group" data-i18n="wn_v17">17.0 新增</div>
+      <div class="wn-item"><b data-i18n="wn_copilot">Copilot 智能助手</b><span data-i18n="wn_copilot_d">任务栏一键唤出右侧助手面板，能打开应用、切换主题、查询天气、起草邮件，支持建议问题与打字机式回复。</span></div>
+      <div class="wn-item"><b data-i18n="wn_recent">开始菜单推荐</b><span data-i18n="wn_recent_d">「推荐」区域动态显示最近使用的应用与最近打开的文件，点击即可直接打开。</span></div>
+      <div class="wn-item"><b data-i18n="wn_ctx2">桌面右键菜单 2.0</b><span data-i18n="wn_ctx2_d">桌面空白处右键新增查看、排序方式、新建子菜单；桌面图标右键支持打开、固定、重命名与删除。</span></div>
+      <div class="wn-item"><b data-i18n="wn_snap2">贴靠布局智能填充</b><span data-i18n="wn_snap2_d">把窗口贴靠到一侧后，自动列出其余窗口供你选择并填充到剩余区域。</span></div>
+      <div class="wn-item"><b data-i18n="wn_tv2">任务视图 2.0</b><span data-i18n="wn_tv2_d">虚拟桌面缩略图显示独立壁纸，可重命名桌面，每个桌面能设置不同壁纸并随切换即时生效。</span></div>
+      <div class="wn-item"><b data-i18n="wn_tray">系统托盘隐藏图标</b><span data-i18n="wn_tray_d">任务栏右侧新增隐藏图标展开按钮，可查看 OneDrive、安全中心等后台图标。</span></div>
+      <div class="wn-item"><b data-i18n="wn_boot">OEM 开机动画</b><span data-i18n="wn_boot_d">重启或关机时显示品牌 Logo 与启动转圈，再进入锁屏，流程更接近真实 Windows。</span></div>
       <h1 class="dlg-h" data-i18n="wn16_title">16.0 有什么新功能</h1>
       <p class="dlg-sub" data-i18n="wn_desc16">16.0 补充了邮件、日历与待办，并把个性化做到了可实时预览的程度。</p>
       <div class="wn-group" data-i18n="wn_v16">16.0 新增</div>
@@ -1484,8 +1495,10 @@
     </div>
     <div class="sm-allapps" id="allAppsList" hidden></div>
     <div class="sm-empty" id="startNoResults" data-i18n="start_no_results" hidden>没有找到匹配的应用</div>
-    <div class="sm-row"><b data-i18n="img_recommend">推荐</b><span>更多 &gt;</span></div>
-    <div style="font-size:11.5px;color:#7a7a7a;padding:6px 2px;" data-i18n="start_recent_hint">安装完成后，你最近使用的应用和文件会显示在这里。</div>
+    <div class="sm-row"><b data-i18n="rec_added">最近添加</b></div>
+    <div class="sm-recent" id="smRecentAdded"></div>
+    <div class="sm-row"><b data-i18n="rec_recent">推荐</b><span data-i18n="rec_more">更多 &gt;</span></div>
+    <div class="sm-recent" id="smRecent"></div>
     <div class="sm-foot">
       <div class="sm-user"><span class="sm-avatar" id="smAvatar">A</span><span id="smUser">Administrator</span></div>
       <div class="sm-power-wrap">
@@ -1504,7 +1517,7 @@
 
   <div class="toast-win" id="welcomeToast">
     <svg width="30" height="30" viewBox="0 0 32 32"><rect x="2" y="2" width="28" height="28" rx="6" fill="#0067c0"/><g fill="#fff"><rect x="8" y="8" width="7" height="7" rx="1"/><rect x="17" y="8" width="7" height="7" rx="1"/><rect x="8" y="17" width="7" height="7" rx="1"/><rect x="17" y="17" width="7" height="7" rx="1"/></g></svg>
-    <div><div class="t" data-i18n="welcome_title">欢迎使用 Windows 11</div><div class="d" data-i18n="welcome_body_v6">安装已完成。试试任务视图、贴靠布局、小组件、全局搜索，以及全新的画图、时钟和媒体播放器。</div></div>
+    <div><div class="t" data-i18n="welcome_title">欢迎使用 Windows 11</div><div class="d" data-i18n="welcome_body_v17">安装已完成。试试全新的 Copilot、开始菜单推荐、贴靠布局智能填充与桌面右键菜单。</div></div>
   </div>
 
   <div class="taskbar">
@@ -1512,6 +1525,9 @@
     <div class="tb-center" id="tbCenter">
       <button class="tb-btn" id="startBtn" title="开始">
         <span class="i14 i14--mono" style="color:#0b6cc4"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#v14-start"/></svg></span>
+      </button>
+      <button class="tb-btn" id="copilotBtn" title="Copilot" data-i18n-title="app_copilot">
+        <span class="i14 i14--mono"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#v17-copilot"/></svg></span>
       </button>
       <button class="tb-btn" id="searchBtn" title="搜索" data-i18n-title="search_title">
         <span class="i14 i14--mono"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#v14-search"/></svg></span>
@@ -1534,6 +1550,9 @@
       <div class="tb-wins" id="tbWins"></div>
     </div>
     <div class="tb-right">
+      <button class="tb-chevron" id="trayChevron" data-i18n-title="tray_hidden" title="隐藏的图标">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#v17-chevron"/></svg>
+      </button>
       <div class="tray" id="qsBtn" title="网络、声音、电池" data-i18n-title="tray_net_vol">
         <span class="i14 i14--mono"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#v14-wifi"/></svg></span>
         <span class="i14 i14--mono"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#v14-volume"/></svg></span>
@@ -1558,6 +1577,7 @@
     <div class="nc-body">
       <button class="nc-clear" id="ncClear" data-i18n="nc_clear">清除全部</button>
       <div class="nn-empty" data-i18n="cal_notif_empty">没有新通知</div>
+      <div class="nc-notif"><div class="nn-icon">★</div><div><div class="nn-title" data-i18n="notif_v17_title">Windows 11 安装模拟器 17.0</div><div class="nn-body" data-i18n="notif_v17_body">新增 Copilot 智能助手、开始菜单推荐、桌面右键菜单、贴靠布局智能填充、任务视图虚拟桌面壁纸、系统托盘隐藏图标与 OEM 开机动画。</div></div></div>
       <div class="nc-notif"><div class="nn-icon">★</div><div><div class="nn-title" data-i18n="notif_v16_title">Windows 11 安装模拟器 16.0</div><div class="nn-body" data-i18n="notif_v16_body">邮件应用全面重写，新增日历与待办，个性化中心支持主题预设、强调色、壁纸、任务栏对齐、图标大小与界面密度。</div></div></div>
       <div class="nc-notif"><div class="nn-icon">★</div><div><div class="nn-title" data-i18n="notif_v151_title">Windows 11 安装模拟器 15.1</div><div class="nn-body" data-i18n="notif_v151_body">质量更新：修复通知空状态、深色模式与开关对齐，任务管理器新增启动项，剪贴板支持固定。</div></div></div>
       <div class="nc-notif"><div class="nn-icon">★</div><div><div class="nn-title" data-i18n="notif_v15_title">Windows 11 安装模拟器 15.0</div><div class="nn-body" data-i18n="notif_v15_body">新增任务管理器、剪贴板历史、存储感知、专注助手、设置搜索、快捷键指南与动态主题。</div></div></div>
@@ -1761,7 +1781,7 @@
 
 <!-- 非桌面界面的 Shift+F10 窗口层；进入桌面时窗口会移回 #winLayer -->
 <div class="win-layer setup-win-layer" id="setupWinLayer"></div>
-<div class="version-badge" id="versionBadge" title="快捷键">v16.0</div>
+<div class="version-badge" id="versionBadge" title="快捷键">v17.0</div>
 
 <div id="toast"></div>
 
@@ -1914,10 +1934,131 @@
   <symbol id="v16-inbox" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3.4 13.2l2.2-8h13l2.2 8v6.2H3.4z"/><path d="M3.4 13.2h4.4l1.2 2.2h6l1.2-2.2h4.4"/></symbol>
 </svg>
 
+<!-- ============ v17.0 图标精灵 ============ -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="v17-copilot" viewBox="0 0 32 32">
+    <g fill="none" stroke-linecap="round" stroke-width="4.6">
+      <path stroke="#4f6bed" d="M16 4.5a11.5 11.5 0 0 1 11.5 11.5"/>
+      <path stroke="#22c1c3" d="M27.5 16a11.5 11.5 0 0 1-11.5 11.5"/>
+      <path stroke="#8b5cf6" d="M16 27.5A11.5 11.5 0 0 1 4.5 16"/>
+      <path stroke="#ec4899" d="M4.5 16A11.5 11.5 0 0 1 16 4.5"/>
+    </g>
+    <circle cx="16" cy="16" r="3.6" fill="#ffffff"/>
+  </symbol>
+  <symbol id="v17-send" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7Z"/>
+  </symbol>
+  <symbol id="v17-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m6 15 6-6 6 6"/>
+  </symbol>
+  <symbol id="v17-chevron-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m9 6 6 6-6 6"/>
+  </symbol>
+  <symbol id="v17-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 17v5"/><path d="M9 3h6l-1 5 3 3v2H7v-2l3-3-1-5Z"/>
+  </symbol>
+  <symbol id="v17-pen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5Z"/>
+  </symbol>
+  <symbol id="v17-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/>
+  </symbol>
+  <symbol id="v17-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><circle cx="12" cy="8" r="1" fill="currentColor" stroke="none"/>
+  </symbol>
+  <symbol id="v17-cloud" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M7 18a4 4 0 0 1-.5-7.97A5.5 5.5 0 0 1 17 9.5a4 4 0 0 1 .5 7.97"/>
+  </symbol>
+  <symbol id="v17-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 3 5 6v5c0 4.5 3 8 7 10 4-2 7-5.5 7-10V6l-7-3Z"/><path d="m9 12 2 2 4-4"/>
+  </symbol>
+  <symbol id="v17-keyboard" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="2" y="6" width="20" height="13" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M6 14h12"/>
+  </symbol>
+  <symbol id="v17-project" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="4" width="13" height="9" rx="1.5"/><path d="M8 20h13M10.5 17 16 20l-5.5 3"/><path d="M19 8V5"/>
+  </symbol>
+  <symbol id="v17-palette" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 3a9 9 0 1 0 0 18c1.1 0 2-.9 2-2 0-.5-.2-1-.6-1.3-.3-.4-.4-.8-.4-1.2 0-1 .9-1.8 2-1.8h1.4A4.6 4.6 0 0 0 21 10c0-3.9-4-7-9-7Z"/>
+    <circle cx="7.5" cy="10.5" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="7.5" r="1" fill="currentColor" stroke="none"/><circle cx="16.5" cy="10.5" r="1" fill="currentColor" stroke="none"/>
+  </symbol>
+  <symbol id="v17-doc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5Z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h6"/>
+  </symbol>
+</svg>
+
+<!-- ============ v17.0 Copilot 侧边栏 ============ -->
+<aside class="copilot" id="copilotPanel" hidden>
+  <div class="cp-hd">
+    <span class="cp-logo"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#v17-copilot"/></svg></span>
+    <div class="cp-hd-txt">
+      <b data-i18n="cp_title">Copilot</b>
+      <span class="cp-sub">Microsoft Copilot</span>
+    </div>
+    <button class="cp-close" id="cpClose" title="×">×</button>
+  </div>
+  <div class="cp-chat" id="cpChat"></div>
+  <div class="cp-sug" id="cpSug">
+    <div class="cp-sug-label" data-i18n="cp_suggest">试试这些</div>
+    <div class="cp-chips">
+      <button class="cp-chip" data-cp-send data-i18n="cp_sug_open_settings">打开设置</button>
+      <button class="cp-chip" data-cp-send data-i18n="cp_sug_dark">切换深色模式</button>
+      <button class="cp-chip" data-cp-send data-i18n="cp_sug_weather">今天天气怎么样</button>
+      <button class="cp-chip" data-cp-send data-i18n="cp_sug_mail">帮我写封邮件</button>
+      <button class="cp-chip" data-cp-send data-i18n="cp_sug_clear">清除通知</button>
+    </div>
+  </div>
+  <div class="cp-input-row">
+    <input class="cp-input" id="cpInput" data-i18n-ph="cp_ph" placeholder="向 Copilot 提问…" autocomplete="off" spellcheck="false">
+    <button class="cp-send" id="cpSend" data-i18n-title="cp_send" title="发送"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#v17-send"/></svg></button>
+  </div>
+</aside>
+
+<!-- ============ v17.0 托盘隐藏图标 ============ -->
+<div class="tray-flyout" id="trayFlyout" hidden>
+  <div class="tf-title" data-i18n="tray_hidden">隐藏的图标</div>
+  <div class="tf-grid">
+    <button class="tf-icon" data-tray="onedrive" data-i18n-title="tray_onedrive" title="OneDrive — 已同步"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#v17-cloud"/></svg></button>
+    <button class="tf-icon" data-tray="security" data-i18n-title="tray_security" title="Windows 安全中心 — 无操作"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#v17-shield"/></svg></button>
+    <button class="tf-icon" data-tray="keyboard" data-i18n-title="tray_keyboard" title="触摸键盘"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#v17-keyboard"/></svg></button>
+    <button class="tf-icon" data-tray="project" data-i18n-title="tray_project" title="投影到这台电脑"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#v17-project"/></svg></button>
+  </div>
+</div>
+
+<!-- ============ v17.0 桌面图标右键菜单 ============ -->
+<div class="ctx-menu ctx-icon-menu" id="ctxIconMenu" hidden>
+  <button data-ictx="open" data-i18n="ctx_open">打开</button>
+  <button data-ictx="pin" data-i18n="ctx_pin_start">固定到“开始”屏幕</button>
+  <div class="ctx-sep"></div>
+  <button data-ictx="rename" data-i18n="ctx_rename">重命名</button>
+  <button data-ictx="delete" data-i18n="ctx_delete">删除</button>
+  <div class="ctx-sep"></div>
+  <button data-ictx="props" data-i18n="ctx_props">属性</button>
+</div>
+
+<!-- ============ v17.0 贴靠智能填充 ============ -->
+<div class="snap-fill" id="snapFill" hidden>
+  <div class="sf-title" data-i18n="snap_fill_title">选择要贴靠的窗口</div>
+  <div class="sf-list" id="snapFillList"></div>
+  <div class="sf-empty" id="snapFillEmpty" data-i18n="snap_fill_empty" hidden>没有其他可贴靠的窗口</div>
+</div>
+
+<!-- ============ v17.0 OEM 启动画面 ============ -->
+<div class="boot-oem" id="bootScreen" hidden>
+  <div class="bo-inner">
+    <svg class="bo-logo" viewBox="0 0 64 64" aria-hidden="true">
+      <g fill="#ffffff"><rect x="2" y="2" width="27" height="27" rx="1.5"/><rect x="35" y="2" width="27" height="27" rx="1.5"/><rect x="2" y="35" width="27" height="27" rx="1.5"/><rect x="35" y="35" width="27" height="27" rx="1.5"/></g>
+    </svg>
+    <div class="bo-spin"></div>
+    <div class="bo-text" id="bootText" data-i18n="boot_preparing">正在准备 Windows</div>
+    <div class="bo-brand" data-i18n="boot_oem">Windows 11 安装模拟器</div>
+  </div>
+</div>
+
 
 
 <!-- 外部依赖：语言包加载器 + 主逻辑（语言包为 locales/*.json，需通过本地服务器访问） -->
-<script src="scripts/i18n.js?v=16.0.0"></script>
-<script src="scripts/app.js?v=16.0.0"></script>
+<script src="scripts/i18n.js?v=17.0.0"></script>
+<script src="scripts/app.js?v=17.0.0"></script>
 </body>
 </html>
