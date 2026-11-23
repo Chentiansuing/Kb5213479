@@ -1,0 +1,360 @@
+/* ============================================================
+   v18.0 样式：Windows 更新 / 便笺 / 实时字幕 / 放大镜
+              小组件配置 / 专注会话 / 投影多屏幕
+   ============================================================ */
+
+/* ---------- 便笺浮动层（位于壁纸/图标之上，窗口/任务栏之下） ---------- */
+#v18StickyLayer { position: absolute; inset: 0; z-index: 4; pointer-events: none; }
+
+/* ---------- 共享：浮层基础 ---------- */
+.v18-cap, .v18-magbar, .v18-proj, .v18-monitor, .v18-upd-banner, .v18-wgpick {
+  position: fixed; z-index: 2300;
+  font-family: "Segoe UI Variable", "Segoe UI", "Microsoft YaHei UI", system-ui, sans-serif;
+  color: #1a1a1a;
+}
+
+/* ---------- 实时字幕 ---------- */
+.v18-cap {
+  left: 50%; transform: translateX(-50%);
+  width: min(720px, 86vw);
+  background: rgba(32, 32, 32, 0.92);
+  backdrop-filter: blur(24px) saturate(140%);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+  color: #fff;
+  padding: 10px 14px 12px;
+  transition: opacity .2s, transform .2s;
+}
+.v18-cap.v18-cap-top { top: 70px; bottom: auto; }
+.v18-cap.v18-cap-bottom { bottom: 64px; top: auto; }
+.v18-cap-bar {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 12px; color: #cfcfcf; margin-bottom: 6px;
+}
+.v18-cap-live { display: inline-flex; align-items: center; gap: 6px; color: #4ec9b0; font-weight: 600; }
+.v18-cap-live i { width: 8px; height: 8px; border-radius: 50%; background: #4ec9b0; animation: v18pulse 1.4s infinite; }
+@keyframes v18pulse { 0%,100%{opacity:1;} 50%{opacity:.3;} }
+.v18-cap-lang { margin-left: auto; opacity: .75; }
+.v18-cap-set {
+  background: none; border: 0; color: #ddd; cursor: pointer; font-size: 15px;
+  width: 26px; height: 26px; border-radius: 6px; line-height: 1;
+}
+.v18-cap-set:hover { background: rgba(255,255,255,0.12); }
+.v18-cap-text {
+  font-size: 22px; line-height: 1.4; font-weight: 600; text-align: center;
+  min-height: 32px; padding: 2px 8px; transition: font-size .15s;
+}
+.v18-cap[data-size="s"] .v18-cap-text { font-size: 16px; }
+.v18-cap[data-size="m"] .v18-cap-text { font-size: 22px; }
+.v18-cap[data-size="l"] .v18-cap-text { font-size: 30px; }
+.v18-cap-menu {
+  margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.1);
+  display: flex; flex-direction: column; gap: 8px;
+}
+.v18-cap-row { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #ccc; }
+.v18-cap-row span { width: 42px; opacity: .8; }
+.v18-cap-row button {
+  background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1);
+  color: #eee; padding: 4px 12px; border-radius: 6px; cursor: pointer; font-size: 12px;
+}
+.v18-cap-row button:hover { background: rgba(255,255,255,0.16); }
+.v18-cap-row button.on { background: var(--accent, #0067c0); border-color: var(--accent, #0067c0); color: #fff; }
+.v18-cap-row button[data-cap-size="l"] { font-size: 16px; }
+.v18-cap-row button[data-cap-size="s"] { font-size: 11px; }
+
+/* ---------- 放大镜控制条 ---------- */
+.v18-magbar {
+  top: 70px; left: 50%; transform: translateX(-50%);
+  display: flex; align-items: center; gap: 4px;
+  background: rgba(40,40,40,0.92); backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.1); border-radius: 10px;
+  padding: 4px 6px; box-shadow: 0 8px 30px rgba(0,0,0,0.4); color: #fff;
+}
+.v18-magbar button {
+  background: none; border: 0; color: #fff; cursor: pointer;
+  width: 32px; height: 30px; border-radius: 6px; font-size: 18px; line-height: 1;
+}
+.v18-magbar button:hover { background: rgba(255,255,255,0.14); }
+.v18-magbar #v18MagVal { min-width: 52px; text-align: center; font-size: 13px; font-weight: 600; }
+
+/* ---------- 投影面板 ---------- */
+.v18-proj {
+  bottom: 70px; right: 16px; width: 300px;
+  background: rgba(243,243,243,0.85); backdrop-filter: blur(30px) saturate(160%);
+  border: 1px solid rgba(0,0,0,0.08); border-radius: 12px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.25); padding: 10px;
+}
+.v18-proj-hd { display: flex; align-items: center; justify-content: space-between; padding: 4px 6px 8px; }
+.v18-proj-hd b { font-size: 14px; }
+.v18-proj-hd button, .v18-mon-hd button, .v18-wgp-hd button {
+  background: none; border: 0; cursor: pointer; color: #555; font-size: 16px;
+  width: 24px; height: 24px; border-radius: 6px; line-height: 1;
+}
+.v18-proj-hd button:hover, .v18-mon-hd button:hover, .v18-wgp-hd button:hover { background: rgba(0,0,0,0.08); }
+.v18-proj-list { display: flex; flex-direction: column; gap: 2px; }
+.v18-proj-list button {
+  display: flex; align-items: center; gap: 10px; text-align: left;
+  background: none; border: 0; cursor: pointer; padding: 8px 10px; border-radius: 8px;
+  color: #1a1a1a; font-size: 13px;
+}
+.v18-proj-list button:hover { background: rgba(0,0,0,0.06); }
+.v18-proj-list button.on { background: var(--accent, #0067c0); color: #fff; }
+.v18-proj-list button.on svg { color: #fff; }
+.v18-proj-ic { width: 18px; height: 18px; color: var(--accent, #0067c0); }
+.v18-proj-ic svg { width: 100%; height: 100%; }
+.v18-proj-status { padding: 8px 10px 2px; font-size: 12px; color: #666; }
+
+/* ---------- 第二屏幕预览 ---------- */
+.v18-monitor {
+  top: 90px; right: 24px; width: 380px;
+  background: #1f1f1f; border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 10px; box-shadow: 0 18px 50px rgba(0,0,0,0.5);
+  overflow: hidden;
+}
+.v18-mon-hd {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 6px 8px; background: rgba(255,255,255,0.06); cursor: move;
+  color: #eee; font-size: 12px;
+}
+.v18-mon-tit { display: inline-flex; align-items: center; gap: 6px; }
+.v18-mon-tit svg { width: 14px; height: 14px; color: #4ec9b0; }
+.v18-mon-screen {
+  height: 230px; position: relative; overflow: hidden;
+  background: linear-gradient(135deg, #0f6cbd 0%, #6d3fe0 100%);
+}
+.v18-mon-screen::before {
+  content: ""; position: absolute; inset: 0;
+  background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.25), transparent 60%);
+}
+.v18-mon-taskbar {
+  position: absolute; left: 8px; right: 8px; bottom: 8px; height: 32px;
+  background: rgba(32,32,32,0.7); backdrop-filter: blur(10px); border-radius: 8px;
+  display: flex; align-items: center; gap: 8px; padding: 0 10px;
+}
+.v18-mon-taskbar i { width: 14px; height: 14px; border-radius: 3px; background: #fff; opacity: .8; }
+.v18-mon-clock { position: absolute; top: 14px; right: 16px; color: #fff; font-size: 26px; font-weight: 300; }
+.v18-mon-apps { position: absolute; top: 14px; left: 16px; display: flex; flex-direction: column; gap: 8px; }
+.v18-mon-apps span { color: #fff; font-size: 12px; background: rgba(0,0,0,0.25); padding: 3px 8px; border-radius: 10px; }
+
+/* ---------- 更新待重启横幅 ---------- */
+.v18-upd-banner {
+  top: 12px; left: 50%; transform: translateX(-50%);
+  display: flex; align-items: center; gap: 10px;
+  background: rgba(245,245,245,0.92); backdrop-filter: blur(20px);
+  border: 1px solid rgba(0,0,0,0.08); border-radius: 10px;
+  padding: 7px 10px 7px 12px; box-shadow: 0 8px 28px rgba(0,0,0,0.18);
+  font-size: 13px;
+}
+.v18-ub-ic { width: 18px; height: 18px; color: #f5a623; display: inline-flex; }
+.v18-ub-ic svg { width: 100%; height: 100%; }
+.v18-ub-txt { color: #1a1a1a; }
+.v18-ub-btn {
+  background: rgba(0,0,0,0.06); border: 0; cursor: pointer; padding: 5px 12px;
+  border-radius: 6px; font-size: 12px; color: #1a1a1a;
+}
+.v18-ub-btn:hover { background: rgba(0,0,0,0.1); }
+.v18-ub-primary { background: var(--accent, #0067c0); color: #fff; }
+.v18-ub-primary:hover { filter: brightness(1.08); background: var(--accent, #0067c0); }
+
+/* ---------- 小组件选择器 ---------- */
+.v18-wgpick {
+  top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: 440px; max-width: 92vw; max-height: 80vh;
+  background: rgba(243,243,243,0.92); backdrop-filter: blur(30px) saturate(160%);
+  border: 1px solid rgba(0,0,0,0.08); border-radius: 14px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3); padding: 12px;
+  display: flex; flex-direction: column;
+}
+.v18-wgp-hd { display: flex; align-items: center; justify-content: space-between; padding: 4px 6px 10px; }
+.v18-wgp-hd b { font-size: 15px; }
+.v18-wgp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; overflow-y: auto; padding: 2px; }
+.v18-wgp-item {
+  display: flex; align-items: center; gap: 10px; padding: 10px;
+  background: rgba(255,255,255,0.6); border: 1px solid rgba(0,0,0,0.06);
+  border-radius: 10px; cursor: pointer; font-size: 13px; transition: background .15s;
+}
+.v18-wgp-item:hover { background: #fff; }
+.v18-wgp-item.on { border-color: var(--accent, #0067c0); background: rgba(0,103,192,0.08); }
+.v18-wgp-item svg { width: 18px; height: 18px; color: var(--accent, #0067c0); flex: none; }
+.v18-wgp-item .v18-wgp-check { margin-left: auto; color: var(--accent, #0067c0); width: 16px; height: 16px; }
+.v18-wgp-foot { padding: 10px 4px 2px; text-align: right; }
+.v18-wgp-done {
+  background: var(--accent, #0067c0); color: #fff; border: 0; cursor: pointer;
+  padding: 6px 18px; border-radius: 6px; font-size: 13px;
+}
+
+/* 小组件卡片：控制按钮 */
+.wg-card { position: relative; }
+.wg-card .wg-ctl {
+  position: absolute; top: 8px; right: 8px; display: none; gap: 2px; z-index: 2;
+}
+.wg-card:hover .wg-ctl { display: flex; }
+.wg-card .wg-ctl button {
+  width: 22px; height: 22px; border: 0; border-radius: 5px; cursor: pointer;
+  background: rgba(0,0,0,0.45); color: #fff; display: flex; align-items: center; justify-content: center;
+}
+.wg-card .wg-ctl button:hover { background: rgba(0,0,0,0.7); }
+.wg-card .wg-ctl svg { width: 12px; height: 12px; }
+.wg-card .wg-ctl .wg-rm:hover { background: #c42b1c; }
+.wg-add-row { grid-column: 1 / -1; text-align: center; }
+.wg-add-btn {
+  display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
+  background: rgba(0,103,192,0.1); color: var(--accent, #0067c0);
+  border: 1px dashed rgba(0,103,192,0.4); border-radius: 10px; padding: 14px; width: 100%;
+  justify-content: center; font-size: 13px; font-weight: 600;
+}
+.wg-add-btn:hover { background: rgba(0,103,192,0.16); }
+.wg-add-btn svg { width: 14px; height: 14px; }
+
+/* 小组件：新增卡片内容 */
+.wg-photos .wg-ph-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 4px; margin-top: 6px; }
+.wg-photos .wg-ph-grid i { display: block; aspect-ratio: 1; border-radius: 6px; background: linear-gradient(135deg,#4ec9b0,#0f6cbd); }
+.wg-photos .wg-ph-grid i:nth-child(2){background:linear-gradient(135deg,#f5c04a,#c42b1c);}
+.wg-photos .wg-ph-grid i:nth-child(3){background:linear-gradient(135deg,#8b5cf6,#ec4899);}
+.wg-photos .wg-ph-grid i:nth-child(4){background:linear-gradient(135deg,#22c1c3,#4f6bed);}
+.wg-photos .wg-ph-grid i:nth-child(5){background:linear-gradient(135deg,#0f7b3f,#bcd7f0);}
+.wg-photos .wg-ph-grid i:nth-child(6){background:linear-gradient(135deg,#c0266b,#f5c04a);}
+.wg-mail .wg-mail-list { margin-top: 6px; display: flex; flex-direction: column; gap: 6px; }
+.wg-mail .wg-mail-row { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+.wg-mail .wg-mail-row i { width: 26px; height: 26px; border-radius: 50%; background: var(--accent,#0067c0); flex: none; }
+.wg-mail .wg-mail-row b { display:block; font-size: 12px; }
+.wg-mail .wg-mail-row span { color: #666; font-size: 11px; }
+.wg-todo .wg-todo-list { margin-top: 6px; display: flex; flex-direction: column; gap: 5px; }
+.wg-todo .wg-todo-row { display: flex; align-items: center; gap: 7px; font-size: 12px; }
+.wg-todo .wg-todo-row i { width: 13px; height: 13px; border-radius: 3px; border: 1.5px solid #888; flex: none; }
+.wg-todo .wg-todo-row.done i { background: var(--accent,#0067c0); border-color: var(--accent,#0067c0); position: relative; }
+.wg-todo .wg-todo-row.done i::after { content: "✓"; color: #fff; font-size: 9px; position: absolute; top: -3px; left: 1px; }
+.wg-todo .wg-todo-row.done span { text-decoration: line-through; color: #888; }
+.wg-clock .wg-clock-face { margin: 6px auto 0; width: 90px; height: 90px; border-radius: 50%; border: 2px solid var(--accent,#0067c0); position: relative; }
+.wg-clock .wg-clock-face::before, .wg-clock .wg-clock-face::after { content: ""; position: absolute; left: 50%; bottom: 50%; background: #333; transform-origin: bottom; }
+.wg-clock .wg-clock-face::before { width: 2px; height: 24px; margin-left: -1px; transform: rotate(0deg); }
+.wg-clock .wg-clock-face::after { width: 2px; height: 32px; margin-left: -1px; transform: rotate(110deg); background: var(--accent,#0067c0); }
+.wg-clock .wg-clock-tz { text-align: center; font-size: 11px; color: #666; margin-top: 4px; }
+
+/* ---------- Windows 更新 应用窗口 ---------- */
+.v18-upd { padding: 16px; }
+.v18-upd-hero {
+  display: flex; gap: 14px; align-items: flex-start; padding: 14px;
+  background: rgba(0,103,192,0.07); border-radius: 10px; margin-bottom: 14px;
+}
+.v18-upd-hero .v18-uh-ic { width: 36px; height: 36px; color: var(--accent,#0067c0); flex: none; }
+.v18-upd-hero .v18-uh-ic svg { width: 100%; height: 100%; }
+.v18-upd-hero b { font-size: 15px; display: block; }
+.v18-upd-hero span { font-size: 12px; color: #666; }
+.v18-upd-hero .v18-uh-btn { margin-left: auto; }
+.v18-btn {
+  background: var(--accent,#0067c0); color: #fff; border: 0; cursor: pointer;
+  padding: 7px 16px; border-radius: 6px; font-size: 13px;
+}
+.v18-btn:hover { filter: brightness(1.08); }
+.v18-btn.sec { background: rgba(0,0,0,0.06); color: #1a1a1a; }
+.v18-btn:disabled { opacity: .5; cursor: default; filter: none; }
+.v18-upd-status { font-size: 13px; color: #555; margin: 4px 0 8px; }
+.v18-prog { height: 8px; background: rgba(0,0,0,0.08); border-radius: 4px; overflow: hidden; margin: 6px 0; }
+.v18-prog i { display: block; height: 100%; background: var(--accent,#0067c0); width: 0; transition: width .3s; border-radius: 4px; }
+.v18-upd-list-title { font-size: 13px; font-weight: 600; margin: 14px 0 6px; }
+.v18-upd-item {
+  display: flex; align-items: center; gap: 10px; padding: 9px 10px;
+  border: 1px solid rgba(0,0,0,0.06); border-radius: 8px; margin-bottom: 6px; font-size: 12px;
+}
+.v18-upd-item .v18-ui-k { font-weight: 600; }
+.v18-upd-item .v18-ui-s { margin-left: auto; color: #888; }
+.v18-upd-item .v18-ui-s.ok { color: #0f7b3f; }
+.v18-upd-build { font-size: 11px; color: #999; margin-top: 10px; }
+
+/* ---------- 便笺 应用窗口 ---------- */
+.v18-sticky-app { padding: 14px; height: 100%; box-sizing: border-box; display: flex; flex-direction: column; }
+.v18-sa-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.v18-sa-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px,1fr)); gap: 10px; overflow-y: auto; flex: 1; }
+.v18-sa-card {
+  aspect-ratio: 1.1; border-radius: 10px; padding: 10px; cursor: pointer; position: relative;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12); font-size: 12px; overflow: hidden; color: #1a1a1a;
+  display: flex; flex-direction: column;
+}
+.v18-sa-card:hover { transform: translateY(-2px); transition: transform .15s; }
+.v18-sa-card .v18-sa-empty { color: rgba(0,0,0,0.4); }
+.v18-sa-empty-state { text-align: center; color: #999; font-size: 13px; padding: 30px 10px; }
+
+/* 浮动便签 */
+.v18-note {
+  position: absolute; width: 200px; min-height: 160px; border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.28); z-index: 50;
+  display: flex; flex-direction: column; color: #1a1a1a;
+}
+.v18-note-bar {
+  display: flex; align-items: center; gap: 4px; padding: 6px 8px; cursor: move;
+  background: rgba(0,0,0,0.12); border-radius: 10px 10px 0 0;
+}
+.v18-note-bar .v18-nb-spacer { flex: 1; }
+.v18-note-bar button {
+  width: 22px; height: 22px; border: 0; border-radius: 5px; background: rgba(0,0,0,0.15);
+  color: #1a1a1a; cursor: pointer; font-size: 12px; line-height: 1; display: flex; align-items: center; justify-content: center;
+}
+.v18-note-bar button:hover { background: rgba(0,0,0,0.25); }
+.v18-note-colors { display: none; gap: 4px; position: absolute; top: 32px; right: 8px; z-index: 3; background: rgba(0,0,0,0.2); padding: 4px; border-radius: 6px; }
+.v18-note-colors.open { display: flex; }
+.v18-note-colors i { width: 14px; height: 14px; border-radius: 50%; cursor: pointer; border: 1px solid rgba(0,0,0,0.2); }
+.v18-note textarea {
+  flex: 1; border: 0; outline: 0; background: transparent; resize: none;
+  padding: 10px; font-size: 13px; line-height: 1.5; font-family: inherit; color: inherit; width: 100%; box-sizing: border-box;
+}
+.v18-note-c-yellow { background: #fff4b8; }
+.v18-note-c-green { background: #c8f0c8; }
+.v18-note-c-blue { background: #b8dcff; }
+.v18-note-c-pink { background: #ffc8d8; }
+.v18-note-c-purple { background: #e0c8ff; }
+
+/* ---------- 专注会话 应用窗口 ---------- */
+.v18-focus-app { padding: 18px; height: 100%; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; }
+.v18-focus-ring { position: relative; width: 200px; height: 200px; margin: 6px 0 14px; }
+.v18-focus-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.v18-focus-ring .v18-fr-bg { fill: none; stroke: rgba(0,0,0,0.08); stroke-width: 10; }
+.v18-focus-ring .v18-fr-fg { fill: none; stroke: var(--accent,#0067c0); stroke-width: 10; stroke-linecap: round; transition: stroke-dashoffset .5s; }
+.v18-focus-time { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.v18-focus-time b { font-size: 40px; font-weight: 300; letter-spacing: 1px; }
+.v18-focus-time span { font-size: 12px; color: #888; margin-top: 2px; }
+.v18-focus-presets { display: flex; gap: 8px; margin-bottom: 14px; }
+.v18-focus-presets button {
+  background: rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.08); cursor: pointer;
+  padding: 7px 14px; border-radius: 18px; font-size: 12px; color: #333;
+}
+.v18-focus-presets button.on { background: var(--accent,#0067c0); color: #fff; border-color: var(--accent,#0067c0); }
+.v18-focus-actions { display: flex; gap: 8px; }
+.v18-focus-stats { font-size: 12px; color: #888; margin-top: 14px; }
+.v18-focus-celebrate {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  background: rgba(255,255,255,0.7); backdrop-filter: blur(6px); border-radius: 8px;
+  font-size: 16px; font-weight: 600; color: var(--accent,#0067c0); flex-direction: column; gap: 8px;
+}
+.v18-focus-celebrate .v18-fc-emoji { font-size: 40px; }
+
+/* ---------- 深色模式适配 ---------- */
+body[data-theme="dark"] .v18-proj,
+body[data-theme="dark"] .v18-wgpick,
+body[data-theme="dark"] .v18-upd-banner {
+  background: rgba(40,40,40,0.85); border-color: rgba(255,255,255,0.08); color: #f0f0f0;
+}
+body[data-theme="dark"] .v18-ub-txt { color: #f0f0f0; }
+body[data-theme="dark"] .v18-ub-btn { background: rgba(255,255,255,0.1); color: #eee; }
+body[data-theme="dark"] .v18-ub-btn:hover { background: rgba(255,255,255,0.18); }
+body[data-theme="dark"] .v18-proj-list button { color: #eee; }
+body[data-theme="dark"] .v18-proj-list button:hover { background: rgba(255,255,255,0.08); }
+body[data-theme="dark"] .v18-proj-status { color: #aaa; }
+body[data-theme="dark"] .v18-wgp-item { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.06); color: #eee; }
+body[data-theme="dark"] .v18-wgp-item:hover { background: rgba(255,255,255,0.1); }
+body[data-theme="dark"] .v18-upd-hero { background: rgba(255,255,255,0.06); }
+body[data-theme="dark"] .v18-upd-hero span { color: #aaa; }
+body[data-theme="dark"] .v18-btn.sec { background: rgba(255,255,255,0.1); color: #eee; }
+body[data-theme="dark"] .v18-upd-status { color: #bbb; }
+body[data-theme="dark"] .v18-prog { background: rgba(255,255,255,0.1); }
+body[data-theme="dark"] .v18-upd-item { border-color: rgba(255,255,255,0.08); color: #ddd; }
+body[data-theme="dark"] .v18-upd-item .v18-ui-s { color: #aaa; }
+body[data-theme="dark"] .v18-sa-card { color: #1a1a1a; }
+body[data-theme="dark"] .v18-sa-empty-state { color: #888; }
+body[data-theme="dark"] .v18-focus-presets button { background: rgba(255,255,255,0.08); color: #ddd; border-color: rgba(255,255,255,0.1); }
+body[data-theme="dark"] .v18-focus-ring .v18-fr-bg { stroke: rgba(255,255,255,0.1); }
+body[data-theme="dark"] .v18-focus-time b { color: #f0f0f0; }
+body[data-theme="dark"] .wg-mail .wg-mail-row span,
+body[data-theme="dark"] .wg-clock .wg-clock-tz { color: #aaa; }
+body[data-theme="dark"] .v18-focus-celebrate { background: rgba(20,20,20,0.6); }

@@ -1,0 +1,81 @@
+<!-- ============ v19.0 图标精灵 ============ -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="v19-voice" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="9" y="2.5" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0"/><path d="M12 17.5V21M8.5 21h7"/>
+  </symbol>
+  <symbol id="v19-emoji" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="9"/><path d="M8.5 14.5a4.5 4.5 0 0 0 7 0"/><circle cx="9" cy="9.5" r=".9" fill="currentColor"/><circle cx="15" cy="9.5" r=".9" fill="currentColor"/>
+  </symbol>
+  <symbol id="v19-filter" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="9" cy="12" r="6"/><circle cx="15" cy="12" r="6"/><path d="M12 6.8a6 6 0 0 1 0 10.4"/>
+  </symbol>
+  <symbol id="v19-battery" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="2.5" y="7" width="16" height="10" rx="2.5"/><path d="M21 10.5v3"/><rect x="4.8" y="9.3" width="9" height="5.4" rx="1.2" fill="currentColor" stroke="none"/>
+  </symbol>
+  <symbol id="v19-restore" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3 12a9 9 0 1 0 2.6-6.3"/><path d="M3 4.5V10h5.5"/><path d="M12 8v4.5l3 1.8"/>
+  </symbol>
+  <symbol id="v19-gamebar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="2" y="6" width="20" height="12" rx="4"/><path d="M7.5 12h2.5M8.75 10.75v2.5"/><circle cx="15.5" cy="11" r="1" fill="currentColor"/><circle cx="17.8" cy="13.2" r="1" fill="currentColor"/>
+  </symbol>
+  <symbol id="v19-phone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M10.5 5.5h3"/><circle cx="12" cy="18.4" r=".9" fill="currentColor" stroke="none"/>
+  </symbol>
+</svg>
+
+<!-- ============ v19.0 语音输入浮层 ============ -->
+<div id="v19Voice" class="v19-voice" hidden>
+  <div class="v19-voice-head">
+    <span class="v19-vdot"></span>
+    <b data-i18n="voice_title">语音输入</b>
+    <span class="v19-vlang" id="v19VoiceLang" data-i18n="voice_lang">中文（简体）</span>
+    <button class="v19-x" id="v19VoiceClose" aria-label="close">✕</button>
+  </div>
+  <div class="v19-wave" id="v19Wave" aria-hidden="true">
+    <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+  </div>
+  <div class="v19-voice-text" id="v19VoiceText"></div>
+  <div class="v19-voice-foot">
+    <button class="v19-vmic" id="v19VoiceMic" aria-label="mic">
+      <svg viewBox="0 0 24 24"><use href="#v19-voice"/></svg>
+    </button>
+    <span class="v19-vhint" data-i18n="voice_hint">说完一句话后会自动写入当前输入框</span>
+  </div>
+</div>
+
+<!-- ============ v19.0 表情符号面板 ============ -->
+<div id="v19Emoji" class="v19-emoji" hidden>
+  <div class="v19-emoji-head">
+    <b data-i18n="emoji_title">表情符号</b>
+    <button class="v19-x" id="v19EmojiClose" aria-label="close">✕</button>
+  </div>
+  <div class="v19-emoji-tabs" id="v19EmojiTabs"></div>
+  <div class="v19-emoji-grid" id="v19EmojiGrid"></div>
+  <div class="v19-emoji-foot" data-i18n="emoji_hint">点击表情即可插入到当前输入框</div>
+</div>
+
+<!-- ============ v19.0 颜色滤镜条 ============ -->
+<div id="v19FilterBar" class="v19-fbar" hidden>
+  <b data-i18n="filter_title">颜色滤镜</b>
+  <div class="v19-fchips" id="v19FilterChips"></div>
+</div>
+
+<!-- ============ v19.0 游戏栏叠加层 ============ -->
+<div id="v19GameBar" class="v19-gb" hidden>
+  <div class="v19-gb-head">
+    <b data-i18n="gb_title">游戏栏</b>
+    <span class="v19-gb-fps"><b id="v19GbFps">0</b><em data-i18n="gb_fps">帧率</em></span>
+    <button class="v19-x" id="v19GbClose" aria-label="close">✕</button>
+  </div>
+  <div class="v19-gb-bars" id="v19GbBars"></div>
+  <div class="v19-gb-meters">
+    <div class="v19-gbm"><span data-i18n="gb_cpu">CPU</span><div class="v19-meter"><i id="v19GbCpu"></i></div><b id="v19GbCpuV">0%</b></div>
+    <div class="v19-gbm"><span data-i18n="gb_gpu">GPU</span><div class="v19-meter"><i id="v19GbGpu"></i></div><b id="v19GbGpuV">0%</b></div>
+    <div class="v19-gbm"><span data-i18n="gb_mem">显存</span><div class="v19-meter"><i id="v19GbMem"></i></div><b id="v19GbMemV">0%</b></div>
+  </div>
+  <div class="v19-gb-actions">
+    <button id="v19GbShot" data-i18n="gb_capture">截图</button>
+    <button id="v19GbRec" data-i18n="gb_record">录制</button>
+  </div>
+  <div class="v19-gb-hint" data-i18n="gb_hint">按 Win+G 打开或关闭游戏栏</div>
+</div>

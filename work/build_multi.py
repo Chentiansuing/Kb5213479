@@ -21,7 +21,7 @@ import json, pathlib, re, sys
 ROOT = pathlib.Path(r"c:\Users\Administrator\Documents\Kb5213479\2026-11-15\windows-installer-sim")
 PARTS = ROOT / "work" / "parts"
 OUT = ROOT / "outputs" / "web"
-VERSION = "17.0.0"
+VERSION = "19.0.0"
 
 sys.path.insert(0, str(ROOT / "work"))
 from locales_data import LANG_JSON, LANG_CSS, LANG_LABELS, LANG_ORDER  # noqa: E402
@@ -42,6 +42,8 @@ from extra_v15 import EXTRA_V15  # noqa: E402
 from extra_v15_1 import EXTRA_V151  # noqa: E402
 from extra_v16 import EXTRA_V16  # noqa: E402
 from extra_v17 import EXTRA_V17  # noqa: E402
+from extra_v18 import EXTRA_V18  # noqa: E402
+from extra_v19 import EXTRA_V19  # noqa: E402
 from extra_cam import EXTRA_CAM  # noqa: E402
 
 for _code in LANG_ORDER:
@@ -62,6 +64,8 @@ for _code in LANG_ORDER:
     LANG_JSON[_code].update(EXTRA_V151[_code])
     LANG_JSON[_code].update(EXTRA_V16[_code])
     LANG_JSON[_code].update(EXTRA_V17[_code])
+    LANG_JSON[_code].update(EXTRA_V18[_code])
+    LANG_JSON[_code].update(EXTRA_V19[_code])
     LANG_JSON[_code].update(EXTRA_CAM[_code])
 assert all(len(v) == len(LANG_JSON[LANG_ORDER[0]]) for v in LANG_JSON.values()), "语言包键数不一致"
 
@@ -95,6 +99,14 @@ v17_css = (PARTS / "10_v17.css").read_text(encoding="utf-8")
 v17_body = (PARTS / "10_v17_body.html").read_text(encoding="utf-8")
 v17_js = (PARTS / "10_v17.js").read_text(encoding="utf-8").strip()
 
+v18_css = (PARTS / "11_v18.css").read_text(encoding="utf-8")
+v18_body = (PARTS / "11_v18_body.html").read_text(encoding="utf-8")
+v18_js = (PARTS / "11_v18.js").read_text(encoding="utf-8").strip()
+
+v19_css = (PARTS / "12_v19.css").read_text(encoding="utf-8")
+v19_body = (PARTS / "12_v19_body.html").read_text(encoding="utf-8")
+v19_js = (PARTS / "12_v19.js").read_text(encoding="utf-8").strip()
+
 # ---------- 2. 拼 body ----------
 body = ""
 for name in ("03_setup.html", "04_flow.html", "05_oobe_desktop.html"):
@@ -103,6 +115,8 @@ body += v14_body + "\n"
 body += v15_body + "\n"
 body += v16_body + "\n"
 body += v17_body + "\n"
+body += v18_body + "\n"
+body += v19_body + "\n"
 
 # ---------- 2.1 给静态文案补 data-i18n ----------
 TAG_RE = re.compile(r'<(/?)([a-zA-Z][a-zA-Z0-9-]*)((?:[^>"\']|"[^"]*"|\'[^\']*\')*)>')
@@ -263,7 +277,7 @@ new_boot = """  window.__installer = {
     bootApp();
   }"""
 assert old_boot in app_js, "主脚本启动段没匹配上，无法改为异步启动"
-app_js = app_js.replace(old_boot, v14_js + "\n\n" + v15_js + "\n\n" + v16_js + "\n\n" + v17_js + "\n\n" + new_boot, 1)
+app_js = app_js.replace(old_boot, v14_js + "\n\n" + v15_js + "\n\n" + v16_js + "\n\n" + v17_js + "\n\n" + v18_js + "\n\n" + v19_js + "\n\n" + new_boot, 1)
 
 # ---------- 5. 组装各文件 ----------
 OUT.mkdir(parents=True, exist_ok=True)
@@ -292,6 +306,14 @@ OUT.mkdir(parents=True, exist_ok=True)
 
 (OUT / "styles" / "v17.css").write_text(
     f"/* Windows 11 Setup Simulator {VERSION} — Copilot / 开始推荐 / 右键菜单 2.0 / 贴靠 / 任务视图 2.0 / 托盘 / 启动 */\n" + v17_css,
+    encoding="utf-8")
+
+(OUT / "styles" / "v18.css").write_text(
+    f"/* Windows 11 Setup Simulator {VERSION} — Windows 更新 / 便笺 / 实时字幕 / 放大镜 / 小组件配置 / 专注会话 / 投影 */\n" + v18_css,
+    encoding="utf-8")
+
+(OUT / "styles" / "v19.css").write_text(
+    f"/* Windows 11 Setup Simulator {VERSION} — 语音输入 / 表情符号 / 颜色滤镜 / 电源和电池 / 系统还原 / 游戏栏 / 手机连接 */\n" + v19_css,
     encoding="utf-8")
 
 # 语言清单 + 各语言包
@@ -473,6 +495,8 @@ index_html = f"""<!DOCTYPE html>
 <link rel="stylesheet" href="styles/v15.css?v={VERSION}">
 <link rel="stylesheet" href="styles/v16.css?v={VERSION}">
 <link rel="stylesheet" href="styles/v17.css?v={VERSION}">
+<link rel="stylesheet" href="styles/v18.css?v={VERSION}">
+<link rel="stylesheet" href="styles/v19.css?v={VERSION}">
 </head>
 <body>
 {body}
