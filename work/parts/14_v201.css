@@ -1,0 +1,62 @@
+/* ============================================================
+   v20.1 样式：锁屏密码 / PIN 验证 + 设置中的登录选项
+   ============================================================ */
+
+/* ---- 锁屏登录区 ---- */
+.lock-signin{flex-wrap:wrap; row-gap:10px;}
+.ls-field{position:relative; display:block;}
+.ls-err{
+  position:absolute; left:12px; top:37px; white-space:nowrap;
+  font-size:11px; color:#ffb4b4; opacity:0; transition:opacity .18s;
+  pointer-events:none;
+}
+.ls-err.show{opacity:1;}
+.ls-pass.wrong{border-color:#ff8d8d; animation:v201shake .3s;}
+@keyframes v201shake{
+  0%,100%{transform:translateX(0);}
+  20%{transform:translateX(-6px);}
+  40%{transform:translateX(6px);}
+  60%{transform:translateX(-4px);}
+  80%{transform:translateX(4px);}
+}
+
+.ls-opt{flex-basis:100%; display:flex; flex-direction:column; align-items:center; gap:6px; margin-top:2px;}
+.ls-optbtn{
+  background:none; border:0; padding:2px 4px; cursor:pointer;
+  color:rgba(255,255,255,.72); font-size:11px; font-family:inherit;
+}
+.ls-optbtn:hover{color:#fff; text-decoration:underline;}
+.ls-opts{display:none; gap:6px;}
+.ls-opts.open{display:flex;}
+.ls-opts button{
+  height:26px; padding:0 12px; border-radius:13px; cursor:pointer;
+  border:1px solid rgba(255,255,255,.3); background:rgba(255,255,255,.1);
+  color:#fff; font-size:11px; font-family:inherit;
+}
+.ls-opts button:hover{background:rgba(255,255,255,.2);}
+.ls-opts button.on{background:#fff; color:#0b1a2a; border-color:#fff; font-weight:600;}
+.ls-nocred{font-size:11px; color:rgba(255,255,255,.6);}
+.ls-nocred[hidden]{display:none;}
+
+/* ---- 设置 > 账户 > 登录选项 ---- */
+.v201-sec{margin-top:20px; padding-top:16px; border-top:1px solid rgba(0,0,0,.08);}
+.v201-hd{font-size:14px; font-weight:600; color:#1b2430; margin-bottom:6px;}
+.v201-sub{font-size:11.5px; line-height:1.55; color:#6b7280; margin-bottom:12px;}
+.v201-row{display:flex; align-items:center; gap:8px; margin:10px 0 6px;}
+.v201-row b{font-size:12px; font-weight:600; color:#1b2430;}
+.v201-row em{
+  font-style:normal; font-size:10.5px; padding:1px 8px; border-radius:9px;
+  color:#8a919c; background:rgba(0,0,0,.05);
+}
+.v201-row em.on{color:#0f7b3f; background:rgba(15,123,63,.12);}
+.v201-grid{display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
+.v201-grid .inp{width:150px; height:30px; font-size:11.5px;}
+.v201-grid .btn{height:30px; font-size:11.5px;}
+.v201-actions{margin-top:12px;}
+
+body[data-theme="dark"] .v201-sec{border-color:rgba(255,255,255,.1);}
+body[data-theme="dark"] .v201-hd,
+body[data-theme="dark"] .v201-row b{color:#f0f0f0;}
+body[data-theme="dark"] .v201-sub{color:#a9a9a9;}
+body[data-theme="dark"] .v201-row em{background:rgba(255,255,255,.08); color:#c8c8c8;}
+body[data-theme="dark"] .v201-row em.on{background:rgba(76,201,120,.16); color:#7fe0a5;}

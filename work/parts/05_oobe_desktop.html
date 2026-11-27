@@ -210,7 +210,7 @@
 
   <div class="toast-win" id="welcomeToast">
     <svg width="30" height="30" viewBox="0 0 32 32"><rect x="2" y="2" width="28" height="28" rx="6" fill="#0067c0"/><g fill="#fff"><rect x="8" y="8" width="7" height="7" rx="1"/><rect x="17" y="8" width="7" height="7" rx="1"/><rect x="8" y="17" width="7" height="7" rx="1"/><rect x="17" y="17" width="7" height="7" rx="1"/></g></svg>
-    <div><div class="t" data-i18n="welcome_title">欢迎使用 Windows 11</div><div class="d" data-i18n="welcome_body_v20">安装已完成。试试全新的语音输入、表情符号、颜色滤镜、电源管理和手机连接。</div></div>
+    <div><div class="t" data-i18n="welcome_title">欢迎使用 Windows 11</div><div class="d" data-i18n="welcome_body_v201">安装已完成。密码与 PIN 已生效，锁定屏幕时需要用它们登录。</div></div>
   </div>
 
   <div class="taskbar">
@@ -500,17 +500,28 @@
   <div class="lock-signin" id="lockSignin">
     <span class="ls-avatar" id="lsAvatar">A</span>
     <b class="ls-user" id="lsUser">Administrator</b>
-    <input class="ls-pass" id="lockPass" type="password" data-i18n-ph="lock_password_ph" placeholder="密码（可留空）" autocomplete="off">
+    <span class="ls-field">
+      <input class="ls-pass" id="lockPass" type="password" data-i18n-ph="lock_pass_ph" placeholder="输入密码" autocomplete="off">
+      <span class="ls-err" id="lockErr"></span>
+    </span>
     <div class="ls-actions">
       <button class="ls-go" id="lockGo" data-i18n="lock_signin_btn">登录</button>
       <button class="ls-back" id="lockBack" data-i18n="lock_back">返回</button>
+    </div>
+    <div class="ls-opt">
+      <span class="ls-nocred" id="lockNoCred" hidden></span>
+      <button class="ls-optbtn" id="lockOptBtn" data-i18n="lock_signin_options">登录选项</button>
+      <div class="ls-opts" id="lockOpts">
+        <button type="button" data-lockmode="pin" data-i18n="lock_use_pin">使用 PIN</button>
+        <button type="button" data-lockmode="pass" data-i18n="lock_use_pass">使用密码</button>
+      </div>
     </div>
   </div>
 </div>
 
 <!-- 非桌面界面的 Shift+F10 窗口层；进入桌面时窗口会移回 #winLayer -->
 <div class="win-layer setup-win-layer" id="setupWinLayer"></div>
-<div class="version-badge" id="versionBadge" title="快捷键">v20.0</div>
+<div class="version-badge" id="versionBadge" title="快捷键">v20.1</div>
 
 <div id="toast"></div>
 

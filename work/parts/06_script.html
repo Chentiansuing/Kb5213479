@@ -121,7 +121,7 @@
   function updateVersionBadge() {
     var badge = $('#versionBadge');
     if (!badge) return;
-    badge.textContent = 'v20.0';
+    badge.textContent = 'v20.1';
   }
 
   /* ============================================================
@@ -1632,7 +1632,7 @@
           '<h2>' + _t('about_title') + '</h2>' +
           '<div class="about-hero">' +
             '<div class="about-logo"><svg viewBox="0 0 64 64"><g fill="#fff"><rect x="2" y="2" width="27" height="27"/><rect x="35" y="2" width="27" height="27"/><rect x="2" y="35" width="27" height="27"/><rect x="35" y="35" width="27" height="27"/></g></svg></div>' +
-            '<div><div class="about-name">Windows 11</div><div class="about-ver">' + _t('about_version') + ' 20.0.0 · ' + _t('about_edition') + ': ' + (state.edition || 'Pro') + '</div></div>' +
+            '<div><div class="about-name">Windows 11</div><div class="about-ver">' + _t('about_version') + ' 20.1.0 · ' + _t('about_edition') + ': ' + (state.edition || 'Pro') + '</div></div>' +
           '</div>' +
           '<div class="about-rows">' +
             '<div class="about-row"><b>' + _t('about_os') + '</b><span>25H2</span></div>' +
@@ -3324,7 +3324,7 @@
     whatsnew: function () {
       _apply();
       var tag = $('#wnVerTag');
-      if (tag) tag.textContent = 'v' + (_t('version_v20') || '20.0');
+      if (tag) tag.textContent = 'v' + (_t('version_v201') || '20.1');
     },
     hist: function () {
       _apply();
