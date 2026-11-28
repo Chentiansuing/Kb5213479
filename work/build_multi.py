@@ -21,7 +21,7 @@ import json, pathlib, re, sys
 ROOT = pathlib.Path(r"c:\Users\Administrator\Documents\Kb5213479\2026-11-15\windows-installer-sim")
 PARTS = ROOT / "work" / "parts"
 OUT = ROOT / "outputs" / "web"
-VERSION = "20.1.0"
+VERSION = "21.0.0"
 
 sys.path.insert(0, str(ROOT / "work"))
 from locales_data import LANG_JSON, LANG_CSS, LANG_LABELS, LANG_ORDER  # noqa: E402
@@ -46,6 +46,7 @@ from extra_v18 import EXTRA_V18  # noqa: E402
 from extra_v19 import EXTRA_V19  # noqa: E402
 from extra_v20 import EXTRA_V20  # noqa: E402
 from extra_v201 import EXTRA_V201  # noqa: E402
+from extra_v21 import EXTRA_V21  # noqa: E402
 from extra_cam import EXTRA_CAM  # noqa: E402
 
 for _code in LANG_ORDER:
@@ -70,6 +71,7 @@ for _code in LANG_ORDER:
     LANG_JSON[_code].update(EXTRA_V19[_code])
     LANG_JSON[_code].update(EXTRA_V20[_code])
     LANG_JSON[_code].update(EXTRA_V201[_code])
+    LANG_JSON[_code].update(EXTRA_V21[_code])
     LANG_JSON[_code].update(EXTRA_CAM[_code])
 assert all(len(v) == len(LANG_JSON[LANG_ORDER[0]]) for v in LANG_JSON.values()), "语言包键数不一致"
 
@@ -117,6 +119,9 @@ v20_js = (PARTS / "13_v20.js").read_text(encoding="utf-8").strip()
 
 v201_css = (PARTS / "14_v201.css").read_text(encoding="utf-8")
 v201_js = (PARTS / "14_v201.js").read_text(encoding="utf-8").strip()
+
+v21_css = (PARTS / "15_v21.css").read_text(encoding="utf-8")
+v21_js = (PARTS / "15_v21.js").read_text(encoding="utf-8").strip()
 
 # ---------- 2. 拼 body ----------
 body = ""
@@ -289,7 +294,7 @@ new_boot = """  window.__installer = {
     bootApp();
   }"""
 assert old_boot in app_js, "主脚本启动段没匹配上，无法改为异步启动"
-app_js = app_js.replace(old_boot, v14_js + "\n\n" + v15_js + "\n\n" + v16_js + "\n\n" + v17_js + "\n\n" + v18_js + "\n\n" + v19_js + "\n\n" + v20_js + "\n\n" + v201_js + "\n\n" + new_boot, 1)
+app_js = app_js.replace(old_boot, v14_js + "\n\n" + v15_js + "\n\n" + v16_js + "\n\n" + v17_js + "\n\n" + v18_js + "\n\n" + v19_js + "\n\n" + v20_js + "\n\n" + v201_js + "\n\n" + v21_js + "\n\n" + new_boot, 1)
 
 # ---------- 5. 组装各文件 ----------
 OUT.mkdir(parents=True, exist_ok=True)
@@ -334,6 +339,10 @@ OUT.mkdir(parents=True, exist_ok=True)
 
 (OUT / "styles" / "v201.css").write_text(
     f"/* Windows 11 Setup Simulator {VERSION} — 密码 / PIN 登录生效 + 登录选项管理 */\n" + v201_css,
+    encoding="utf-8")
+
+(OUT / "styles" / "v21.css").write_text(
+    f"/* Windows 11 Setup Simulator {VERSION} — 真实邮件：SMTP 发送 / 账户配置 / IMAP 收件 */\n" + v21_css,
     encoding="utf-8")
 
 # 语言清单 + 各语言包
@@ -519,6 +528,7 @@ index_html = f"""<!DOCTYPE html>
 <link rel="stylesheet" href="styles/v19.css?v={VERSION}">
 <link rel="stylesheet" href="styles/v20.css?v={VERSION}">
 <link rel="stylesheet" href="styles/v201.css?v={VERSION}">
+<link rel="stylesheet" href="styles/v21.css?v={VERSION}">
 </head>
 <body>
 {body}
@@ -540,13 +550,21 @@ SERVE_PY = r'''r"""Windows 11 Setup Simulator __VERSION__ — 本地服务器。
 语言包与脚本通过 fetch 加载，必须走 http://127.0.0.1 。
 """
 import http.server
+import imaplib
 import json
 import os
 import re
+import smtplib
 import socketserver
+import ssl
 import tempfile
 import urllib.parse
 import webbrowser
+import email.message
+import email.parser
+import email.header
+import email.utils
+import email.policy
 
 PORT = 8765
 WEBROOT = os.path.dirname(os.path.abspath(__file__))
@@ -567,6 +585,170 @@ def safe_name(name):
 
 
 MAX_CONTENT = 512 * 1024
+
+# ---------- v21.0：真实邮件（SMTP 发送 / IMAP 收件），仅监听本机 ----------
+MAIL_TIMEOUT = 20
+MAIL_MAX_BODY = 256 * 1024
+
+
+def _mstr(data, key, default=""):
+    v = data.get(key, default)
+    return v if isinstance(v, str) else default
+
+
+def _mport(data, key, default):
+    try:
+        p = int(data.get(key) or default)
+    except (TypeError, ValueError):
+        p = default
+    return max(1, min(65535, p))
+
+
+def _smtp_open(data):
+    """按配置建立 SMTP 连接并完成登录，失败时抛出异常由上层转成错误文案。"""
+    host = _mstr(data, "host").strip()
+    if not host:
+        raise ValueError("缺少 SMTP 服务器地址")
+    security = _mstr(data, "security", "ssl")
+    port = _mport(data, "port", 465 if security == "ssl" else 587)
+    if security == "ssl":
+        client = smtplib.SMTP_SSL(host, port, timeout=MAIL_TIMEOUT,
+                                  context=ssl.create_default_context())
+    else:
+        client = smtplib.SMTP(host, port, timeout=MAIL_TIMEOUT)
+        client.ehlo()
+        if security == "starttls":
+            client.starttls(context=ssl.create_default_context())
+            client.ehlo()
+    user = _mstr(data, "user").strip()
+    if user:
+        client.login(user, _mstr(data, "password"))
+    return client
+
+
+def _mail_error(exc):
+    if isinstance(exc, smtplib.SMTPAuthenticationError):
+        return "SMTP 认证失败：请检查邮箱账号与授权码"
+    if isinstance(exc, imaplib.IMAP4.error):
+        return "IMAP 登录或读取失败：" + str(exc)[:200]
+    return str(exc)[:300]
+
+
+def mail_send(data):
+    to = [a.strip() for a in re.split(r"[,;]", _mstr(data, "to")) if a.strip()]
+    if not to or any("@" not in a for a in to):
+        return {"ok": False, "error": "收件人地址无效"}
+    cc = [a.strip() for a in re.split(r"[,;]", _mstr(data, "cc")) if a.strip()]
+    sender = _mstr(data, "from").strip() or _mstr(data, "user").strip()
+    if not sender or "@" not in sender:
+        return {"ok": False, "error": "缺少有效的发件人地址"}
+    subject = _mstr(data, "subject")[:200]
+    body = _mstr(data, "body")
+    if len(body.encode("utf-8")) > MAIL_MAX_BODY:
+        return {"ok": False, "error": "正文超过 256KB 限制"}
+    msg = email.message.EmailMessage()
+    msg["From"] = sender
+    msg["To"] = ", ".join(to)
+    if cc:
+        msg["Cc"] = ", ".join(cc)
+    msg["Subject"] = subject or "(无主题)"
+    msg["Date"] = email.utils.formatdate(localtime=True)
+    msg["Message-ID"] = email.utils.make_msgid()
+    msg.set_content(body, subtype="plain", charset="utf-8")
+    try:
+        client = _smtp_open(data)
+    except (smtplib.SMTPException, OSError, ValueError) as exc:
+        return {"ok": False, "error": _mail_error(exc)}
+    try:
+        client.send_message(msg, from_addr=sender, to_addrs=to + cc)
+    except (smtplib.SMTPException, OSError) as exc:
+        return {"ok": False, "error": _mail_error(exc)}
+    finally:
+        try:
+            client.quit()
+        except Exception:
+            pass
+    return {"ok": True, "to": to}
+
+
+def mail_test(data):
+    try:
+        client = _smtp_open(data)
+    except (smtplib.SMTPException, OSError, ValueError) as exc:
+        return {"ok": False, "error": _mail_error(exc)}
+    try:
+        client.quit()
+    except Exception:
+        pass
+    return {"ok": True}
+
+
+def _decode_hdr(raw):
+    if not raw:
+        return ""
+    try:
+        return str(email.header.make_header(email.header.decode_header(raw)))
+    except Exception:
+        return raw
+
+
+def mail_inbox(data):
+    host = _mstr(data, "imapHost").strip() or _mstr(data, "host").strip()
+    user = _mstr(data, "user").strip()
+    password = _mstr(data, "password")
+    if not host or not user:
+        return {"ok": False, "error": "缺少 IMAP 服务器或账号"}
+    port = _mport(data, "imapPort", 993)
+    try:
+        count = max(1, min(30, int(data.get("count") or 10)))
+    except (TypeError, ValueError):
+        count = 10
+    security = _mstr(data, "imapSecurity", "ssl")
+    try:
+        if security == "none":
+            box = imaplib.IMAP4(host, port, timeout=MAIL_TIMEOUT)
+        else:
+            box = imaplib.IMAP4_SSL(host, port, timeout=MAIL_TIMEOUT)
+    except OSError as exc:
+        return {"ok": False, "error": _mail_error(exc)}
+    try:
+        box.login(user, password)
+        box.select("INBOX", readonly=True)
+        typ, listing = box.search(None, "ALL")
+        ids = listing[0].split() if typ == "OK" and listing else []
+        messages = []
+        for mid in reversed(ids[-count:]):
+            typ, payload = box.fetch(mid, "(RFC822)")
+            if typ != "OK":
+                continue
+            raw = b"".join(p[1] for p in payload if isinstance(p, tuple))
+            parsed = email.parser.BytesParser(policy=email.policy.default).parsebytes(raw)
+            text = ""
+            try:
+                if parsed.is_multipart():
+                    for part in parsed.walk():
+                        if part.get_content_type() == "text/plain" and not part.get_filename():
+                            text = part.get_content()
+                            break
+                else:
+                    text = parsed.get_content()
+            except Exception:
+                text = ""
+            messages.append({
+                "id": mid.decode("ascii", "replace"),
+                "subject": _decode_hdr(parsed.get("Subject")) or "(无主题)",
+                "from": _decode_hdr(parsed.get("From")),
+                "date": _decode_hdr(parsed.get("Date")),
+                "body": (text or "")[:4000],
+            })
+        return {"ok": True, "messages": messages}
+    except (imaplib.IMAP4.error, OSError) as exc:
+        return {"ok": False, "error": _mail_error(exc)}
+    finally:
+        try:
+            box.logout()
+        except Exception:
+            pass
 
 
 class Handler(http.server.SimpleHTTPRequestHandler):
@@ -617,6 +799,26 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
     def do_POST(self):
         url = urllib.parse.urlparse(self.path)
+        if url.path in ("/api/mail/send", "/api/mail/test", "/api/mail/inbox"):
+            length = int(self.headers.get("Content-Length") or 0)
+            if length > MAX_CONTENT:
+                self._json({"ok": False, "error": "too large"}, 413)
+                return
+            try:
+                data = json.loads(self.rfile.read(length) or b"{}")
+            except Exception:
+                self._json({"ok": False, "error": "bad json"}, 400)
+                return
+            if not isinstance(data, dict):
+                self._json({"ok": False, "error": "bad json"}, 400)
+                return
+            if url.path == "/api/mail/send":
+                self._json(mail_send(data))
+            elif url.path == "/api/mail/test":
+                self._json(mail_test(data))
+            else:
+                self._json(mail_inbox(data))
+            return
         if url.path != "/api/save":
             self.send_error(404)
             return

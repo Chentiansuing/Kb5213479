@@ -6,16 +6,17 @@
 <title>Windows 11 安装程序</title>
 
 <!-- 外部依赖：样式（带版本号，避免更新后仍命中旧缓存） -->
-<link rel="stylesheet" href="styles/app.css?v=20.1.0">
-<link rel="stylesheet" href="styles/windows.css?v=20.1.0">
-<link rel="stylesheet" href="styles/v14.css?v=20.1.0">
-<link rel="stylesheet" href="styles/v15.css?v=20.1.0">
-<link rel="stylesheet" href="styles/v16.css?v=20.1.0">
-<link rel="stylesheet" href="styles/v17.css?v=20.1.0">
-<link rel="stylesheet" href="styles/v18.css?v=20.1.0">
-<link rel="stylesheet" href="styles/v19.css?v=20.1.0">
-<link rel="stylesheet" href="styles/v20.css?v=20.1.0">
-<link rel="stylesheet" href="styles/v201.css?v=20.1.0">
+<link rel="stylesheet" href="styles/app.css?v=21.0.0">
+<link rel="stylesheet" href="styles/windows.css?v=21.0.0">
+<link rel="stylesheet" href="styles/v14.css?v=21.0.0">
+<link rel="stylesheet" href="styles/v15.css?v=21.0.0">
+<link rel="stylesheet" href="styles/v16.css?v=21.0.0">
+<link rel="stylesheet" href="styles/v17.css?v=21.0.0">
+<link rel="stylesheet" href="styles/v18.css?v=21.0.0">
+<link rel="stylesheet" href="styles/v19.css?v=21.0.0">
+<link rel="stylesheet" href="styles/v20.css?v=21.0.0">
+<link rel="stylesheet" href="styles/v201.css?v=21.0.0">
+<link rel="stylesheet" href="styles/v21.css?v=21.0.0">
 </head>
 <body>
 <body>
@@ -695,9 +696,16 @@
   <div class="dialog dialog--wide">
     <div class="dialog__bar">
       <div class="dialog__title" data-i18n="setup_title">Windows 11 安装程序</div>
-      <span class="ver-tag" id="wnVerTag" data-i18n="version_v201">20.1</span>
+      <span class="ver-tag" id="wnVerTag" data-i18n="version_v21">21.0</span>
     </div>
     <div class="dialog__body">
+      <h1 class="dlg-h" data-i18n="wn21_title">21.0 有什么新功能</h1>
+      <p class="dlg-sub" data-i18n="wn_desc21">21.0 让邮件真正可用：通过 SMTP 真实发送邮件，支持账户配置、连接测试与 IMAP 收件箱同步，发送结果如实反馈。</p>
+      <div class="wn-group" data-i18n="wn_v21">21.0 新增</div>
+      <div class="wn-item"><b data-i18n="wn_smtp">真实邮件发送</b><span data-i18n="wn_smtp_d">写邮件后通过你自己的 SMTP 服务器真正投递，服务器确认后才进入已发送，不再只是演示动画。</span></div>
+      <div class="wn-item"><b data-i18n="wn_mailcfg">账户配置与连接测试</b><span data-i18n="wn_mailcfg_d">内置 QQ、163、Gmail、Outlook 常见配置，支持自定义服务器与加密方式，一键测试连接是否可用。</span></div>
+      <div class="wn-item"><b data-i18n="wn_imap">IMAP 收件箱同步</b><span data-i18n="wn_imap_d">同步真实收件箱邮件到邮件应用，保留发件人、主题与正文，可随时刷新。</span></div>
+      <div class="wn-item"><b data-i18n="wn_mailstat">真实状态反馈</b><span data-i18n="wn_mailstat_d">未配置、发送中、发送成功与失败原因都如实显示，认证失败、网络错误直接给出提示。</span></div>
       <h1 class="dlg-h" data-i18n="wn201_title">20.1 有什么新功能</h1>
       <p class="dlg-sub" data-i18n="wn_desc201">20.1 让安装时设置的密码与 PIN 真正生效：锁屏需要验证凭据才能进入桌面，并可在设置中随时更改。</p>
       <div class="wn-group" data-i18n="wn_v201">20.1 新增</div>
@@ -1567,7 +1575,7 @@
 
   <div class="toast-win" id="welcomeToast">
     <svg width="30" height="30" viewBox="0 0 32 32"><rect x="2" y="2" width="28" height="28" rx="6" fill="#0067c0"/><g fill="#fff"><rect x="8" y="8" width="7" height="7" rx="1"/><rect x="17" y="8" width="7" height="7" rx="1"/><rect x="8" y="17" width="7" height="7" rx="1"/><rect x="17" y="17" width="7" height="7" rx="1"/></g></svg>
-    <div><div class="t" data-i18n="welcome_title">欢迎使用 Windows 11</div><div class="d" data-i18n="welcome_body_v201">安装已完成。密码与 PIN 已生效，锁定屏幕时需要用它们登录。</div></div>
+    <div><div class="t" data-i18n="welcome_title">欢迎使用 Windows 11</div><div class="d" data-i18n="welcome_body_v21">安装已完成。邮件应用现在支持真实 SMTP 发送与 IMAP 收件，配置账户即可使用。</div></div>
   </div>
 
   <div class="taskbar">
@@ -1878,7 +1886,7 @@
 
 <!-- 非桌面界面的 Shift+F10 窗口层；进入桌面时窗口会移回 #winLayer -->
 <div class="win-layer setup-win-layer" id="setupWinLayer"></div>
-<div class="version-badge" id="versionBadge" title="快捷键">v20.1</div>
+<div class="version-badge" id="versionBadge" title="快捷键">v21.0</div>
 
 <div id="toast"></div>
 
@@ -2402,7 +2410,7 @@
 
 
 <!-- 外部依赖：语言包加载器 + 主逻辑（语言包为 locales/*.json，需通过本地服务器访问） -->
-<script src="scripts/i18n.js?v=20.1.0"></script>
-<script src="scripts/app.js?v=20.1.0"></script>
+<script src="scripts/i18n.js?v=21.0.0"></script>
+<script src="scripts/app.js?v=21.0.0"></script>
 </body>
 </html>

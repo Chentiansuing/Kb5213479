@@ -1,0 +1,53 @@
+/* ============================================================
+   v21.0 样式：邮件真实化（账户侧栏 / SMTP 配置面板 / 状态反馈）
+   ============================================================ */
+.v21-mside{margin-top:auto; padding-top:12px; display:flex; flex-direction:column; gap:6px;}
+.v21-macct{
+  font-size:10.5px; line-height:1.5; color:#8a919c; word-break:break-all;
+  padding:6px 8px; border-radius:6px; background:rgba(0,0,0,.04);
+}
+.v21-macct.on{color:#0f7b3f; background:rgba(15,123,63,.08);}
+.v21-mbtn{
+  height:28px; border-radius:6px; cursor:pointer; text-align:left;
+  border:1px solid rgba(0,0,0,.08); background:#fff; color:#3d4a58;
+  font-size:11px; font-family:inherit; padding:0 10px;
+}
+.v21-mbtn:hover{border-color:var(--accent); color:var(--accent); background:#f2f8ff;}
+
+.v21-from{
+  display:flex; align-items:center; justify-content:space-between; gap:8px;
+  font-size:10.5px; color:#6b7280; padding:4px 0 8px;
+}
+.v21-from button{
+  border:0; background:none; color:var(--accent); cursor:pointer;
+  font-size:10.5px; font-family:inherit; padding:0;
+}
+.v21-from button:hover{text-decoration:underline;}
+
+.v21-mcfg{display:flex; flex-direction:column; gap:10px; overflow:auto; padding:2px;}
+.v21-mcfg label{display:flex; flex-direction:column; gap:4px; font-size:11px; color:#4a5a6b;}
+.v21-mcfg .inp{height:30px; font-size:11.5px;}
+.v21-grid2{display:grid; grid-template-columns:1fr 110px; gap:10px;}
+.v21-notice{
+  font-size:11px; color:#9a5b00; background:rgba(255,193,84,.16);
+  border:1px solid rgba(255,193,84,.35); border-radius:6px; padding:7px 10px;
+}
+.v21-hint{font-size:10.5px; line-height:1.6; color:#8a919c;}
+.v21-cfgres{font-size:11px; min-height:16px; color:#4a5a6b; word-break:break-all;}
+.v21-cfgres.ok{color:#0f7b3f;}
+.v21-cfgres.bad{color:#c43d3d;}
+.v21-real{
+  font-style:normal; font-size:10px; color:#0f7b3f; vertical-align:middle;
+  border:1px solid rgba(15,123,63,.35); border-radius:8px; padding:0 6px; margin-left:4px;
+}
+
+body[data-theme="dark"] .v21-macct{background:rgba(255,255,255,.06); color:#a9a9a9;}
+body[data-theme="dark"] .v21-macct.on{background:rgba(76,201,120,.12); color:#7fe0a5;}
+body[data-theme="dark"] .v21-mbtn{background:#2b2b2b; border-color:rgba(255,255,255,.1); color:#d8d8d8;}
+body[data-theme="dark"] .v21-mbtn:hover{background:#333;}
+body[data-theme="dark"] .v21-mcfg label,
+body[data-theme="dark"] .v21-cfgres{color:#c8c8c8;}
+body[data-theme="dark"] .v21-cfgres.ok{color:#7fe0a5;}
+body[data-theme="dark"] .v21-cfgres.bad{color:#ff9a9a;}
+body[data-theme="dark"] .v21-from,
+body[data-theme="dark"] .v21-hint{color:#a9a9a9;}
